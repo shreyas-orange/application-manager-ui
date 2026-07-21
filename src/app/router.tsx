@@ -16,7 +16,7 @@ import UsersPage from "@/features/users/pages/UsersPage";
 
 import DashboardPage from "@/features/dashboard/pages/DashboardPage";
 import ApplicationsPage from "@/features/applications/pages/ApplicationsPage";
-
+import UploadFilePage from "@/features/uploads/pages/UploadFilePage";
 
 
 function ForbiddenPage() {
@@ -88,6 +88,10 @@ export const router = createBrowserRouter([
                 path: "/users",
                 element: <UsersPage />,
               },
+              {
+          path: "/uploads",
+          element: <UploadFilePage />,
+                      }
             ],
           },
         ],

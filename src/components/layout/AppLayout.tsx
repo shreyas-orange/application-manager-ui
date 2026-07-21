@@ -78,6 +78,21 @@ export function AppLayout() {
             Applications
           </NavLink>
 
+            <NavLink
+            to="/uploads"
+            className={({ isActive }) =>
+              isActive
+                ? "sidebar-link sidebar-link--active"
+                : "sidebar-link"
+            }
+          >
+            <span className="sidebar-link__icon">
+              ◫
+            </span>
+
+            Upload Files
+          </NavLink>
+
           {role === "admin" && (
             <NavLink
               to="/users"

@@ -1,0 +1,122 @@
+import axios, {
+  AxiosError,
+  type InternalAxiosRequestConfig,
+} from "axios";
+
+import { tokenService } from "@/services/token.service";
+
+interface RetryableRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
+interface RefreshResponse {
+  access_token: string;
+  refresh_token?: string;
+  token_type: string;
+}
+
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+if (!apiBaseUrl) {
+  throw new Error("VITE_API_BASE_URL is not configured");
+}
+
+export const apiClient = axios.create({
+  baseURL: apiBaseUrl,
+  timeout: 15_000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+apiClient.interceptors.request.use(
+  (config) => {
+    const accessToken = tokenService.getAccessToken();
+
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+
+    return config;
+  },
+  (error: AxiosError) => Promise.reject(error),
+);
+
+let refreshPromise: Promise<string> | null = null;
+
+async function refreshAccessToken(): Promise<string> {
+  const refreshToken = tokenService.getRefreshToken();
+
+  if (!refreshToken) {
+    throw new Error("Refresh token is missing");
+  }
+
+  const response = await axios.post<RefreshResponse>(
+    `${apiBaseUrl}/auth/refresh`,
+    {
+      refresh_token: refreshToken,
+    },
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      timeout: 15_000,
+    },
+  );
+
+  tokenService.setTokens(
+    response.data.access_token,
+    response.data.refresh_token,
+  );
+
+  return response.data.access_token;
+}
+
+apiClient.interceptors.response.use(
+  (response) => response,
+
+  async (error: AxiosError) => {
+    const originalRequest =
+      error.config as RetryableRequestConfig | undefined;
+
+    const isUnauthorized = error.response?.status === 401;
+
+    const isAuthRequest =
+      originalRequest?.url?.includes("/auth/login") ||
+      originalRequest?.url?.includes("/auth/register") ||
+      originalRequest?.url?.includes("/auth/refresh");
+
+    if (
+      !isUnauthorized ||
+      !originalRequest ||
+      originalRequest._retry ||
+      isAuthRequest
+    ) {
+      return Promise.reject(error);
+    }
+
+    originalRequest._retry = true;
+
+    try {
+      if (!refreshPromise) {
+        refreshPromise = refreshAccessToken().finally(() => {
+          refreshPromise = null;
+        });
+      }
+
+      const accessToken = await refreshPromise;
+
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+
+      return apiClient(originalRequest);
+    } catch (refreshError) {
+      tokenService.clearTokens();
+
+      if (window.location.pathname !== "/login") {
+        window.location.replace("/login");
+      }
+
+      return Promise.reject(refreshError);
+    }
+  },
+);

@@ -401,51 +401,6 @@ export default function DashboardPage() {
             </div>
           )}
         </section>
-
-        <section className="dashboard-panel">
-          <div className="dashboard-panel-header">
-            <h2>Recent Audit Logs</h2>
-          </div>
-
-          {recentAuditLogs.length === 0 ? (
-            <p className="dashboard-empty">
-              No recent audit logs found.
-            </p>
-          ) : (
-            <div className="audit-log-list">
-              {recentAuditLogs.map((log, index) => (
-                <article
-                  className="audit-log-item"
-                  key={`${log.created_at}-${index}`}
-                >
-                  <div className="audit-log-header">
-                    <div>
-                      <strong>{log.user || "System"}</strong>
-
-                      <span className="audit-log-module">
-                        {log.module || "Unknown module"}
-                      </span>
-                    </div>
-
-                    <span
-                      className={getAuditActionClass(
-                        log.action,
-                      )}
-                    >
-                      {log.action}
-                    </span>
-                  </div>
-
-                  <p>{log.description || "—"}</p>
-
-                  <time>
-                    {formatDate(log.created_at)}
-                  </time>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
       </div>
     </section>
   );

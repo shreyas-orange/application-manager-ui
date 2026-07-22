@@ -15,6 +15,7 @@ import {
 import { useUploadFile } from "../hooks/useUploadFile";
 
 import "../styles/upload-file.css";
+import UploadedFilesList from "../components/UploadedFilesList";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -24,14 +25,20 @@ const ALLOWED_EXTENSIONS = [
   "xlsx",
 ];
 
-function getFileExtension(fileName: string): string {
-  return fileName
-    .split(".")
-    .pop()
-    ?.toLowerCase() ?? "";
+function getFileExtension(
+  fileName: string,
+): string {
+  return (
+    fileName
+      .split(".")
+      .pop()
+      ?.toLowerCase() ?? ""
+  );
 }
 
-function formatFileSize(size: number): string {
+function formatFileSize(
+  size: number,
+): string {
   if (size < 1024) {
     return `${size} bytes`;
   }
@@ -40,14 +47,18 @@ function formatFileSize(size: number): string {
     return `${(size / 1024).toFixed(1)} KB`;
   }
 
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(
+    size /
+    (1024 * 1024)
+  ).toFixed(1)} MB`;
 }
 
 export default function UploadFilePage() {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef =
+    useRef<HTMLInputElement>(null);
 
-  const [selectedFile, setSelectedFile] =
-    useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] =
+    useState<File[]>([]);
 
   const [validationError, setValidationError] =
     useState("");
@@ -57,39 +68,75 @@ export default function UploadFilePage() {
 
   const uploadMutation = useUploadFile();
 
-  const validateAndSelectFile = (file: File) => {
+  const validateAndSelectFiles = (
+    files: File[],
+  ) => {
     setValidationError("");
     uploadMutation.reset();
 
-    const extension = getFileExtension(file.name);
+    if (files.length === 0) {
+      return;
+    }
 
-    if (!ALLOWED_EXTENSIONS.includes(extension)) {
-      setSelectedFile(null);
+    const invalidExtensionFile =
+      files.find((file) => {
+        const extension =
+          getFileExtension(file.name);
+
+        return !ALLOWED_EXTENSIONS.includes(
+          extension,
+        );
+      });
+
+    if (invalidExtensionFile) {
       setValidationError(
-        "Only CSV, XLS and XLSX files are allowed.",
+        `${invalidExtensionFile.name}: only CSV, XLS and XLSX files are allowed.`,
       );
       return;
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      setSelectedFile(null);
+    const oversizedFile = files.find(
+      (file) =>
+        file.size > MAX_FILE_SIZE,
+    );
+
+    if (oversizedFile) {
       setValidationError(
-        "The selected file must be smaller than 10 MB.",
+        `${oversizedFile.name}: each file must be smaller than 10 MB.`,
       );
       return;
     }
 
-    setSelectedFile(file);
+    setSelectedFiles((currentFiles) => {
+      const existingFiles = new Set(
+        currentFiles.map(
+          (file) =>
+            `${file.name}-${file.size}-${file.lastModified}`,
+        ),
+      );
+
+      const newFiles = files.filter(
+        (file) =>
+          !existingFiles.has(
+            `${file.name}-${file.size}-${file.lastModified}`,
+          ),
+      );
+
+      return [
+        ...currentFiles,
+        ...newFiles,
+      ];
+    });
   };
 
   const handleFileChange = (
     event: ChangeEvent<HTMLInputElement>,
   ) => {
-    const file = event.target.files?.[0];
+    const files = Array.from(
+      event.target.files ?? [],
+    );
 
-    if (file) {
-      validateAndSelectFile(file);
-    }
+    validateAndSelectFiles(files);
 
     event.target.value = "";
   };
@@ -114,30 +161,47 @@ export default function UploadFilePage() {
     event.preventDefault();
     setIsDragging(false);
 
-    const file = event.dataTransfer.files?.[0];
+    const files = Array.from(
+      event.dataTransfer.files ?? [],
+    );
 
-    if (file) {
-      validateAndSelectFile(file);
-    }
+    validateAndSelectFiles(files);
   };
 
-  const removeSelectedFile = () => {
-    setSelectedFile(null);
+  const removeSelectedFile = (
+    indexToRemove: number,
+  ) => {
+    setSelectedFiles((currentFiles) =>
+      currentFiles.filter(
+        (_, index) =>
+          index !== indexToRemove,
+      ),
+    );
+
+    setValidationError("");
+    uploadMutation.reset();
+  };
+
+  const clearSelectedFiles = () => {
+    setSelectedFiles([]);
     setValidationError("");
     uploadMutation.reset();
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) {
+    if (selectedFiles.length === 0) {
       setValidationError(
-        "Please select a file before uploading.",
+        "Please select at least one file before uploading.",
       );
       return;
     }
 
     try {
-      await uploadMutation.mutateAsync(selectedFile);
-      setSelectedFile(null);
+      await uploadMutation.mutateAsync(
+        selectedFiles,
+      );
+
+      setSelectedFiles([]);
     } catch {
       // Mutation error is displayed below.
     }
@@ -146,11 +210,11 @@ export default function UploadFilePage() {
   return (
     <section className="upload-page">
       <div className="upload-page-header">
-        <h1>Upload File</h1>
+        <h1>Upload Files</h1>
 
         <p>
-          Upload application data using a CSV or Excel
-          file.
+          Upload application data using CSV
+          or Excel files.
         </p>
       </div>
 
@@ -161,10 +225,11 @@ export default function UploadFilePage() {
           </div>
 
           <div>
-            <h2>Application data file</h2>
+            <h2>Application data files</h2>
 
             <p>
-              Select a CSV, XLS or XLSX file up to 10 MB.
+              Select one or more CSV, XLS or
+              XLSX files up to 10 MB each.
             </p>
           </div>
         </div>
@@ -181,53 +246,81 @@ export default function UploadFilePage() {
         >
           <UploadCloud size={42} />
 
-          <h3>Drag and drop your file here</h3>
+          <h3>
+            Drag and drop your files here
+          </h3>
 
-          <p>or select a file from your computer</p>
+          <p>
+            or select files from your computer
+          </p>
 
           <button
             type="button"
             className="upload-browse-button"
-            disabled={uploadMutation.isPending}
+            disabled={
+              uploadMutation.isPending
+            }
             onClick={() => {
               inputRef.current?.click();
             }}
           >
-            Browse File
+            Browse Files
           </button>
 
           <input
             ref={inputRef}
             type="file"
+            multiple
             className="upload-hidden-input"
             accept=".csv,.xls,.xlsx"
             onChange={handleFileChange}
           />
         </div>
 
-        {selectedFile && (
-          <div className="upload-selected-file">
-            <div className="upload-file-icon">
-              <FileSpreadsheet size={22} />
-            </div>
+        {selectedFiles.length > 0 && (
+          <div className="upload-selected-files">
+            {selectedFiles.map(
+              (file, index) => (
+                <div
+                  className="upload-selected-file"
+                  key={`${file.name}-${file.size}-${file.lastModified}`}
+                >
+                  <div className="upload-file-icon">
+                    <FileSpreadsheet
+                      size={22}
+                    />
+                  </div>
 
-            <div className="upload-file-details">
-              <strong>{selectedFile.name}</strong>
+                  <div className="upload-file-details">
+                    <strong>
+                      {file.name}
+                    </strong>
 
-              <span>
-                {formatFileSize(selectedFile.size)}
-              </span>
-            </div>
+                    <span>
+                      {formatFileSize(
+                        file.size,
+                      )}
+                    </span>
+                  </div>
 
-            <button
-              type="button"
-              className="upload-remove-button"
-              disabled={uploadMutation.isPending}
-              onClick={removeSelectedFile}
-              aria-label="Remove selected file"
-            >
-              <X size={18} />
-            </button>
+                  <button
+                    type="button"
+                    className="upload-remove-button"
+                    disabled={
+                      uploadMutation.isPending
+                    }
+                    onClick={() => {
+                      removeSelectedFile(
+                        index,
+                      );
+                    }}
+                    aria-label={`Remove ${file.name}`}
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              ),
+            )}
           </div>
         )}
 
@@ -239,9 +332,10 @@ export default function UploadFilePage() {
 
         {uploadMutation.isError && (
           <div className="upload-message upload-message--error">
-            {uploadMutation.error instanceof Error
+            {uploadMutation.error instanceof
+            Error
               ? uploadMutation.error.message
-              : "Unable to upload the file."}
+              : "Unable to upload the files."}
           </div>
         )}
 
@@ -251,40 +345,70 @@ export default function UploadFilePage() {
               <CheckCircle2 size={18} />
 
               <span>
-                {uploadMutation.data.original_file_name ||
-                  uploadMutation.data.file_name}{" "}
+                {uploadMutation.data.length}{" "}
+                file
+                {uploadMutation.data.length ===
+                1
+                  ? ""
+                  : "s"}{" "}
                 uploaded successfully.
               </span>
             </div>
 
-            <div className="upload-result-grid">
-              <div>
-                <span>Status</span>
-                <strong>
-                  {uploadMutation.data.status}
-                </strong>
-              </div>
+            <div className="upload-results-list">
+              {uploadMutation.data.map(
+                (uploadedFile) => (
+                  <div
+                    className="upload-result-item"
+                    key={uploadedFile.id}
+                  >
+                    <div>
+                      <strong>
+                        {uploadedFile.original_file_name ||
+                          uploadedFile.file_name}
+                      </strong>
+                    </div>
 
-              <div>
-                <span>Total rows</span>
-                <strong>
-                  {uploadMutation.data.total_rows}
-                </strong>
-              </div>
+                    <div className="upload-result-grid">
+                      <div>
+                        <span>Status</span>
+                        <strong>
+                          {uploadedFile.status}
+                        </strong>
+                      </div>
 
-              <div>
-                <span>Processed rows</span>
-                <strong>
-                  {uploadMutation.data.processed_rows}
-                </strong>
-              </div>
+                      <div>
+                        <span>
+                          Total rows
+                        </span>
+                        <strong>
+                          {uploadedFile.total_rows}
+                        </strong>
+                      </div>
 
-              <div>
-                <span>Failed rows</span>
-                <strong>
-                  {uploadMutation.data.failed_rows}
-                </strong>
-              </div>
+                      <div>
+                        <span>
+                          Processed rows
+                        </span>
+                        <strong>
+                          {
+                            uploadedFile.processed_rows
+                          }
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Failed rows
+                        </span>
+                        <strong>
+                          {uploadedFile.failed_rows}
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+                ),
+              )}
             </div>
           </div>
         )}
@@ -294,10 +418,12 @@ export default function UploadFilePage() {
             type="button"
             className="upload-clear-button"
             disabled={
-              !selectedFile ||
+              selectedFiles.length === 0 ||
               uploadMutation.isPending
             }
-            onClick={removeSelectedFile}
+            onClick={
+              clearSelectedFiles
+            }
           >
             Clear
           </button>
@@ -306,7 +432,7 @@ export default function UploadFilePage() {
             type="button"
             className="upload-submit-button"
             disabled={
-              !selectedFile ||
+              selectedFiles.length === 0 ||
               uploadMutation.isPending
             }
             onClick={() => {
@@ -317,10 +443,18 @@ export default function UploadFilePage() {
 
             {uploadMutation.isPending
               ? "Uploading..."
-              : "Upload File"}
+              : `Upload ${
+                  selectedFiles.length
+                } File${
+                  selectedFiles.length === 1
+                    ? ""
+                    : "s"
+                }`}
           </button>
         </div>
       </div>
+    <UploadedFilesList />
+
     </section>
   );
 }

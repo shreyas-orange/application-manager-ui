@@ -1,4 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+} from "@tanstack/react-query";
 
 import {
   getUsers,
@@ -11,10 +14,15 @@ export function useUsers(
   return useQuery({
     queryKey: [
       "users",
-      params.page,
-      params.pageSize,
-      params.search,
+      {
+        page: params.page,
+        pageSize: params.pageSize,
+        search: params.search,
+      },
     ],
+
     queryFn: () => getUsers(params),
+
+    placeholderData: keepPreviousData,
   });
 }

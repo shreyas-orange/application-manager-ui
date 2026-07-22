@@ -6,6 +6,12 @@ import {
 
 import "./AppLayout.css";
 
+
+import {
+  Cloud,
+  ScrollText,
+} from "lucide-react";
+
 export function AppLayout() {
   const navigate = useNavigate();
 
@@ -109,6 +115,28 @@ export function AppLayout() {
               Users
             </NavLink>
           )}
+          <NavLink
+            to="/audit-logs"
+            className={({ isActive }) =>
+              isActive
+                ? "sidebar-link sidebar-link--active"
+                : "sidebar-link"
+            }
+          >
+            <ScrollText size={19} />
+            <span>Audit Logs</span>
+        </NavLink>
+        <NavLink
+          to="/cloud"
+          className={({ isActive }) =>
+            isActive
+              ? "sidebar-link sidebar-link--active"
+              : "sidebar-link"
+          }
+        >
+          <Cloud size={19} />
+          <span>Cloud</span>
+        </NavLink>
         </nav>
 
         <div className="app-sidebar__footer">

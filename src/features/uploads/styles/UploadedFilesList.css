@@ -1,0 +1,310 @@
+/* ===============================
+   Uploaded Files Section
+================================== */
+
+.uploads-list-section {
+  margin-top: 2rem;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.uploads-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.uploads-list-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: #111827;
+}
+
+.uploads-list-header p {
+  margin-top: 0.35rem;
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.uploads-list-header form {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.uploads-list-header input {
+  width: 280px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  outline: none;
+  color: #94a3b8 !important;
+  transition: 0.2s;
+}
+
+.uploads-list-header input:focus {
+   background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgb(99 102 241 / 12%);
+}
+
+.uploads-list-header button {
+  border: none;
+  cursor: pointer;
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.uploads-list-header button:hover {
+  background: #1d4ed8;
+}
+
+/* ===============================
+   Table
+================================== */
+
+.uploads-table-wrapper {
+  overflow-x: auto;
+}
+
+.uploads-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+.uploads-table thead {
+  background: #f8fafc;
+}
+
+.uploads-table th {
+  text-align: left;
+  padding: 14px;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: #64748b;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.uploads-table td {
+  padding: 15px 14px;
+  border-bottom: 1px solid #eef2f7;
+  color: #374151;
+}
+
+.uploads-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* ===============================
+   File Name
+================================== */
+
+.uploaded-file-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+}
+
+.uploaded-file-name svg {
+  color: #2563eb;
+}
+
+/* ===============================
+   Status Badge
+================================== */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-success {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-processing {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status-failed {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.status-pending {
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+/* ===============================
+   Actions
+================================== */
+
+.upload-row-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.upload-row-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.85rem;
+  transition: 0.2s;
+}
+
+.upload-row-actions button:first-child {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.upload-row-actions button:first-child:hover {
+  background: #dbeafe;
+}
+
+.upload-row-actions button:last-child {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.upload-row-actions button:last-child:hover {
+  background: #fee2e2;
+}
+
+.upload-row-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===============================
+   Messages
+================================== */
+
+.upload-message {
+  margin-bottom: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.upload-message--error {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.upload-message--success {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+/* ===============================
+   Pagination
+================================== */
+
+.uploads-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.uploads-pagination button {
+  border: none;
+  cursor: pointer;
+  background: #2563eb;
+  color: white;
+  padding: 0.65rem 1.1rem;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+
+.uploads-pagination button:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.uploads-pagination button:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.uploads-pagination span {
+  color: #475569;
+  font-weight: 500;
+}
+
+/* ===============================
+   Empty State
+================================== */
+
+.uploads-empty {
+  padding: 3rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+/* ===============================
+   Loading
+================================== */
+
+.uploads-loading {
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+}
+
+/* ===============================
+   Responsive
+================================== */
+
+@media (max-width: 768px) {
+
+  .uploads-list-header {
+    flex-direction: column;
+  }
+
+  .uploads-list-header form {
+    width: 100%;
+  }
+
+  .uploads-list-header input {
+    width: 100%;
+  }
+
+  .uploads-pagination {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .upload-row-actions {
+    flex-direction: column;
+  }
+
+  .upload-row-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+

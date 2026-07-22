@@ -17,7 +17,9 @@ import UsersPage from "@/features/users/pages/UsersPage";
 import DashboardPage from "@/features/dashboard/pages/DashboardPage";
 import ApplicationsPage from "@/features/applications/pages/ApplicationsPage";
 import UploadFilePage from "@/features/uploads/pages/UploadFilePage";
+import AuditLogsPage from  "../features/audit-logs/pages/AuditLogsPage";
 
+import CloudPage from "@/features/cloud/pages/CloudPage";
 
 function ForbiddenPage() {
   return (
@@ -89,9 +91,17 @@ export const router = createBrowserRouter([
                 element: <UsersPage />,
               },
               {
-          path: "/uploads",
-          element: <UploadFilePage />,
-                      }
+                path: "/uploads",
+                element: <UploadFilePage />,
+              },
+              {
+                path: "/audit-logs",
+                element: <AuditLogsPage />,
+              },
+              {
+              path: "/cloud",
+              element: <CloudPage />,
+            },
             ],
           },
         ],

@@ -1,34 +1,66 @@
 import { apiClient } from "@/lib/api-client";
 
 import type {
-  User,
   UsersResponse,
-} from "../types/user.types";
+  UpdateUserRequest,
+  User,
+  CreateUserRequest,
+} from "../types/users.types";
+
 
 export interface GetUsersParams {
-  page?: number;
-  pageSize?: number;
+  page: number;
+  pageSize: number;
   search?: string;
 }
 
-export async function getUsers({
-  page = 1,
-  pageSize = 10,
-  search = "",
-}: GetUsersParams = {}): Promise<UsersResponse> {
-  const response = await apiClient.get<User[]>(
-    "/users",
-    {
-      params: {
-        page,
-        page_size: pageSize,
-        search: search || undefined,
+export async function getUsers(
+  params: GetUsersParams,
+): Promise<UsersResponse> {
+  const response =
+    await apiClient.get<UsersResponse>(
+      "/users",
+      {
+        params: {
+          page: params.page,
+          page_size: params.pageSize,
+          search:
+            params.search?.trim() || undefined,
+        },
       },
-    },
+    );
+
+  return response.data;
+}
+
+export async function updateUser(
+  userId: number,
+  data: UpdateUserRequest,
+): Promise<User> {
+  const response =
+    await apiClient.put<User>(
+      `/users/${userId}`,
+      data,
+    );
+
+  return response.data;
+}
+
+export async function deleteUser(
+  userId: number,
+): Promise<void> {
+  await apiClient.delete(
+    `/users/${userId}`,
+  );
+}
+
+export async function createUser(
+  data: CreateUserRequest,
+): Promise<User> {
+  const response = await apiClient.post<User>(
+    "/users",
+    data,
   );
 
-  return {
-    items: response.data,
-    total: response.data.length,
-  };
+  return response.data;
 }

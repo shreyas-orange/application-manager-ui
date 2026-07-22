@@ -1,22 +1,31 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { uploadApplicationFiles } from "../api/upload.api";
+import {
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 
-export function useUploadFile() {
+import {
+  deleteUploadedFile,
+} from "../api/upload.api";
+
+export function useDeleteUploadedFile() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: uploadApplicationFiles,
+    mutationFn: (
+      uploadId: number,
+    ) =>
+      deleteUploadedFile(uploadId),
 
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: ["dashboard"],
+          queryKey: ["uploads"],
         }),
         queryClient.invalidateQueries({
           queryKey: ["applications"],
         }),
         queryClient.invalidateQueries({
-          queryKey: ["uploads"],
+          queryKey: ["dashboard"],
         }),
       ]);
     },

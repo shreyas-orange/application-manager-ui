@@ -1,0 +1,78 @@
+// ─── App Shell Layout ─────────────────────────────────────────────────────────
+
+// Prevents content from going under fixed navbar
+html, body, #root {
+  height: 100%;
+}
+
+// Main content area — shifts based on sidebar state
+.ods-main-content {
+  margin-left:  var(--ods-sidebar-width);
+  margin-top:   var(--ods-navbar-height);
+  padding:      2rem;
+  min-height:   calc(100vh - var(--ods-navbar-height));
+  transition:   margin-left var(--ods-transition-slow);
+
+  &.sidebar-collapsed {
+    margin-left: var(--ods-sidebar-collapsed);
+  }
+
+  // Full width on mobile
+  @media (max-width: 991.98px) {
+    margin-left: 0;
+    padding:     1rem;
+  }
+}
+
+// Auth pages — full screen centered
+.ods-auth-wrapper {
+  min-height:      100vh;
+  background:      var(--ods-black);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  padding:         1rem;
+
+  // Orange diagonal accent strip
+  &::before {
+    content:    '';
+    position:   fixed;
+    top:        0;
+    right:      0;
+    width:      40%;
+    height:     4px;
+    background: var(--ods-orange);
+    z-index:    1;
+  }
+}
+
+.ods-auth-card {
+  width:      100%;
+  max-width:  440px;
+  background: var(--ods-white);
+  border-top: 4px solid var(--ods-orange);
+  padding:    2.5rem;
+
+  .ods-auth-logo {
+    font-size:   1.75rem;
+    font-weight: var(--ods-font-weight-bold);
+    color:       var(--ods-orange);
+    letter-spacing: -0.02em;
+  }
+
+  .ods-auth-tagline {
+    font-size: var(--ods-font-size-sm);
+    color:     var(--ods-gray-600);
+    margin-top: 0.25rem;
+  }
+}
+
+// Page header row — title + action button
+.ods-page-header {
+  display:         flex;
+  justify-content: space-between;
+  align-items:     flex-start;
+  margin-bottom:   1.5rem;
+  padding-bottom:  1rem;
+  border-bottom:   2px solid var(--ods-gray-200);
+}

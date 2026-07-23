@@ -14,7 +14,6 @@ import {
 
 import { useUploadFile } from "../hooks/useUploadFile";
 
-import "../styles/upload-file.css";
 import UploadedFilesList from "../components/UploadedFilesList";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -208,58 +207,49 @@ export default function UploadFilePage() {
   };
 
   return (
-    <section className="upload-page">
-      <div className="upload-page-header">
-        <h1>Upload Files</h1>
+    <div>
 
-        <p>
-          Upload application data using CSV
-          or Excel files.
-        </p>
+      {/* ── Page header ─────────────────────────────────────── */}
+      <div className="ods-page-header">
+        <div>
+          <h1 className="page-title">Upload Files</h1>
+          <p className="page-subtitle">
+            Upload application data using CSV or Excel files.
+          </p>
+        </div>
       </div>
 
-      <div className="upload-card">
-        <div className="upload-card-header">
-          <div className="upload-card-icon">
+      {/* ── Upload Card ─────────────────────────────────────── */}
+      <div className="ods-upload-card">
+
+        {/* ── Card header ───────────────────────────────────── */}
+        <div className="ods-upload-card-header">
+          <div className="ods-upload-card-icon">
             <UploadCloud size={22} />
           </div>
-
           <div>
             <h2>Application data files</h2>
-
             <p>
-              Select one or more CSV, XLS or
-              XLSX files up to 10 MB each.
+              Select one or more CSV, XLS or XLSX files up to 10 MB each.
             </p>
           </div>
         </div>
 
+        {/* ── Drop zone ─────────────────────────────────────── */}
         <div
-          className={
-            isDragging
-              ? "upload-drop-zone upload-drop-zone--active"
-              : "upload-drop-zone"
-          }
+          className={`ods-upload-dropzone ${isDragging ? "drag-over" : ""}`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
           <UploadCloud size={42} />
-
-          <h3>
-            Drag and drop your files here
-          </h3>
-
-          <p>
-            or select files from your computer
-          </p>
+          <h3>Drag and drop your files here</h3>
+          <p>or select files from your computer</p>
 
           <button
             type="button"
-            className="upload-browse-button"
-            disabled={
-              uploadMutation.isPending
-            }
+            className="ods-upload-browse-btn"
+            disabled={uploadMutation.isPending}
             onClick={() => {
               inputRef.current?.click();
             }}
@@ -271,48 +261,36 @@ export default function UploadFilePage() {
             ref={inputRef}
             type="file"
             multiple
-            className="upload-hidden-input"
+            className="ods-upload-hidden-input"
             accept=".csv,.xls,.xlsx"
             onChange={handleFileChange}
           />
         </div>
 
+        {/* ── Selected files ────────────────────────────────── */}
         {selectedFiles.length > 0 && (
-          <div className="upload-selected-files">
+          <div className="ods-upload-selected-files">
             {selectedFiles.map(
               (file, index) => (
                 <div
-                  className="upload-selected-file"
+                  className="ods-upload-file-item"
                   key={`${file.name}-${file.size}-${file.lastModified}`}
                 >
-                  <div className="upload-file-icon">
-                    <FileSpreadsheet
-                      size={22}
-                    />
+                  <div className="ods-upload-file-icon">
+                    <FileSpreadsheet size={22} />
                   </div>
 
-                  <div className="upload-file-details">
-                    <strong>
-                      {file.name}
-                    </strong>
-
-                    <span>
-                      {formatFileSize(
-                        file.size,
-                      )}
-                    </span>
+                  <div className="ods-upload-file-info">
+                    <strong>{file.name}</strong>
+                    <span>{formatFileSize(file.size)}</span>
                   </div>
 
                   <button
                     type="button"
-                    className="upload-remove-button"
-                    disabled={
-                      uploadMutation.isPending
-                    }
+                    className="ods-upload-remove-btn"
+                    disabled={uploadMutation.isPending}
                     onClick={() => {
-                      removeSelectedFile(
-                        index,
-                      );
+                      removeSelectedFile(index);
                     }}
                     aria-label={`Remove ${file.name}`}
                   >
@@ -324,42 +302,40 @@ export default function UploadFilePage() {
           </div>
         )}
 
+        {/* ── Validation error ──────────────────────────────── */}
         {validationError && (
-          <div className="upload-message upload-message--error">
+          <div className="ods-upload-message error">
             {validationError}
           </div>
         )}
 
+        {/* ── Upload error ──────────────────────────────────── */}
         {uploadMutation.isError && (
-          <div className="upload-message upload-message--error">
-            {uploadMutation.error instanceof
-            Error
+          <div className="ods-upload-message error">
+            {uploadMutation.error instanceof Error
               ? uploadMutation.error.message
               : "Unable to upload the files."}
           </div>
         )}
 
+        {/* ── Upload success ────────────────────────────────── */}
         {uploadMutation.isSuccess && (
-          <div className="upload-result">
-            <div className="upload-message upload-message--success">
+          <div className="ods-upload-result">
+            <div className="ods-upload-result-message">
               <CheckCircle2 size={18} />
-
               <span>
                 {uploadMutation.data.length}{" "}
                 file
-                {uploadMutation.data.length ===
-                1
-                  ? ""
-                  : "s"}{" "}
+                {uploadMutation.data.length === 1 ? "" : "s"}{" "}
                 uploaded successfully.
               </span>
             </div>
 
-            <div className="upload-results-list">
+            <div className="ods-upload-result-list">
               {uploadMutation.data.map(
                 (uploadedFile) => (
                   <div
-                    className="upload-result-item"
+                    className="ods-upload-result-item"
                     key={uploadedFile.id}
                   >
                     <div>
@@ -369,41 +345,22 @@ export default function UploadFilePage() {
                       </strong>
                     </div>
 
-                    <div className="upload-result-grid">
+                    <div className="ods-upload-result-grid">
                       <div>
                         <span>Status</span>
-                        <strong>
-                          {uploadedFile.status}
-                        </strong>
+                        <strong>{uploadedFile.status}</strong>
                       </div>
-
                       <div>
-                        <span>
-                          Total rows
-                        </span>
-                        <strong>
-                          {uploadedFile.total_rows}
-                        </strong>
+                        <span>Total rows</span>
+                        <strong>{uploadedFile.total_rows}</strong>
                       </div>
-
                       <div>
-                        <span>
-                          Processed rows
-                        </span>
-                        <strong>
-                          {
-                            uploadedFile.processed_rows
-                          }
-                        </strong>
+                        <span>Processed rows</span>
+                        <strong>{uploadedFile.processed_rows}</strong>
                       </div>
-
                       <div>
-                        <span>
-                          Failed rows
-                        </span>
-                        <strong>
-                          {uploadedFile.failed_rows}
-                        </strong>
+                        <span>Failed rows</span>
+                        <strong>{uploadedFile.failed_rows}</strong>
                       </div>
                     </div>
                   </div>
@@ -413,24 +370,23 @@ export default function UploadFilePage() {
           </div>
         )}
 
-        <div className="upload-actions">
+        {/* ── Actions ───────────────────────────────────────── */}
+        <div className="ods-upload-actions">
           <button
             type="button"
-            className="upload-clear-button"
+            className="btn btn-outline-secondary"
             disabled={
               selectedFiles.length === 0 ||
               uploadMutation.isPending
             }
-            onClick={
-              clearSelectedFiles
-            }
+            onClick={clearSelectedFiles}
           >
             Clear
           </button>
 
           <button
             type="button"
-            className="upload-submit-button"
+            className="btn btn-primary"
             disabled={
               selectedFiles.length === 0 ||
               uploadMutation.isPending
@@ -439,22 +395,16 @@ export default function UploadFilePage() {
               void handleUpload();
             }}
           >
-            <UploadCloud size={17} />
-
+            <UploadCloud size={16} style={{ marginRight: "0.35rem" }} />
             {uploadMutation.isPending
               ? "Uploading..."
-              : `Upload ${
-                  selectedFiles.length
-                } File${
-                  selectedFiles.length === 1
-                    ? ""
-                    : "s"
-                }`}
+              : `Upload ${selectedFiles.length} File${selectedFiles.length === 1 ? "" : "s"}`}
           </button>
         </div>
       </div>
-    <UploadedFilesList />
 
-    </section>
+      {/* ── Uploaded files list ─────────────────────────────── */}
+      <UploadedFilesList />
+    </div>
   );
 }

@@ -1,44 +1,43 @@
+// src/features/applications/pages/ApplicationsPage.tsx
 import {
-  FormEvent,
+  type FormEvent,
   useMemo,
   useState,
 } from "react";
+import {
+  useNavigate,
+} from "react-router-dom";
+import {
+  AppWindow,
+  CheckCircle,
+  CircleX,
+  Clock3,
+  Hourglass,
+  RefreshCw,
+  Search,
+  X,
+} from "lucide-react";
 
-import ApplicationDetailsDrawer from "../components/ApplicationDetailsDrawer";
-import ApplicationSummaryCard from "../components/ApplicationSummaryCard";
-import { useApplications } from "../hooks/useApplications";
+import ApplicationSummaryCard    from "../components/ApplicationSummaryCard";
+import { useApplications }       from "../hooks/useApplications";
 import type {
   Application,
   ApplicationOwner,
 } from "../types/application.types";
 
-import "../styles/applications.css";
-
-function normalizeValue(
-  value: string | null | undefined,
-): string {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase();
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function normalizeValue(value: string | null | undefined): string {
+  return String(value ?? "").trim().toLowerCase();
 }
 
-function formatDate(
-  value: string | null | undefined,
-): string {
-  if (!value) {
-    return "—";
-  }
-
+function formatDate(value: string | null | undefined): string {
+  if (!value) return "—";
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
+  if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleDateString("en-IN", {
-    day: "2-digit",
+    day:   "2-digit",
     month: "short",
-    year: "numeric",
+    year:  "numeric",
   });
 }
 
@@ -47,267 +46,108 @@ function getOwnerByType(
   ownerType: string,
 ): ApplicationOwner | undefined {
   return owners?.find(
-    (owner) =>
-      normalizeValue(owner.owner_type) ===
-      normalizeValue(ownerType),
+    (o) => normalizeValue(o.owner_type) === normalizeValue(ownerType),
   );
 }
 
-function getOwnerName(
-  application: Application,
-  ownerType: string,
-): string {
-  return (
-    getOwnerByType(
-      application.owners,
-      ownerType,
-    )?.owner_name || "—"
-  );
+function getOwnerName(app: Application, ownerType: string): string {
+  return getOwnerByType(app.owners, ownerType)?.owner_name || "—";
 }
 
-function getCloudNames(
-  application: Application,
-): string {
-  const cloudNames =
-    application.cloud_mappings
-      ?.map((mapping) => mapping.cloud?.name)
-      .filter(
-        (name): name is string =>
-          Boolean(name),
-      ) ?? [];
-
-  return cloudNames.length > 0
-    ? cloudNames.join(", ")
-    : "—";
+function getCloudNames(app: Application): string {
+  const names =
+    app.cloud_mappings
+      ?.map((m) => m.cloud?.name)
+      .filter((n): n is string => Boolean(n)) ?? [];
+  return names.length > 0 ? names.join(", ") : "—";
 }
 
-function getMigrationStatus(
-  application: Application,
-): string {
-  return (
-    application.migration?.migration_status ||
-    application.application_status ||
-    "Pending"
-  );
+function getMigrationStatus(app: Application): string {
+  return app.migration?.migration_status || app.application_status || "Pending";
 }
 
-function getStatusClass(
-  status: string | null | undefined,
-): string {
-  const normalized = normalizeValue(status);
-
-  if (
-    [
-      "completed",
-      "complete",
-      "done",
-      "production",
-    ].includes(normalized)
-  ) {
-    return "application-status application-status--success";
-  }
-
-  if (
-    [
-      "failed",
-      "failure",
-      "cancelled",
-    ].includes(normalized)
-  ) {
-    return "application-status application-status--failed";
-  }
-
-  if (
-    [
-      "in progress",
-      "in_progress",
-      "ongoing",
-      "started",
-    ].includes(normalized)
-  ) {
-    return "application-status application-status--progress";
-  }
-
-  return "application-status application-status--pending";
+function getStatusBadgeClass(status: string | null | undefined): string {
+  const s = normalizeValue(status);
+  if (["completed", "complete", "done", "production"].includes(s))
+    return "ods-badge ods-badge-success";
+  if (["failed", "failure", "cancelled"].includes(s))
+    return "ods-badge ods-badge-danger";
+  if (["in progress", "in_progress", "ongoing", "started"].includes(s))
+    return "ods-badge ods-badge-warning";
+  return "ods-badge ods-badge-neutral";
 }
 
-function getLatestRemark(
-  application: Application,
-): string {
-  const remarks =
-    application.remarks ?? [];
-
-  if (remarks.length === 0) {
-    return "—";
-  }
-
-  const latestRemark =
-    remarks[remarks.length - 1];
-
-  return (
-    latestRemark.remark ||
-    latestRemark.remarks_imp ||
-    latestRemark.source_comments ||
-    "—"
-  );
+function getLatestRemark(app: Application): string {
+  const remarks = app.remarks ?? [];
+  if (remarks.length === 0) return "—";
+  const last = remarks[remarks.length - 1];
+  return last.remark || last.remarks_imp || last.source_comments || "—";
 }
 
+// ─── Component ────────────────────────────────────────────────────────────────
 export default function ApplicationsPage() {
-  const [searchInput, setSearchInput] =
-    useState("");
-
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-
-  const [statusFilter, setStatusFilter] =
-    useState("all");
-
-  const [domainFilter, setDomainFilter] =
-    useState("all");
-
-  const [
-    selectedApplication,
-    setSelectedApplication,
-  ] = useState<Application | null>(null);
-
-  const [isDrawerOpen, setIsDrawerOpen] =
-    useState(false);
+  const navigate                  = useNavigate();
+  const [searchInput, setSearchInput]   = useState("");
+  const [search, setSearch]             = useState("");
+  const [page, setPage]                 = useState(1);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [domainFilter, setDomainFilter] = useState("all");
+  const [cloudFilter, setCloudFilter]   = useState("all");
 
   const pageSize = 10;
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    isFetching,
-    refetch,
-  } = useApplications({
-    page,
-    pageSize,
-    search,
-  });
+  const { data, isLoading, isError, error, isFetching, refetch } =
+    useApplications({ page, pageSize, search });
 
-  const applications =
-    data?.items ?? [];
+  const applications = data?.items ?? [];
+  const total        = data?.total  ?? applications.length;
+  const totalPages   = Math.max(1, Math.ceil(total / pageSize));
 
-  const total =
-    data?.total ?? applications.length;
-
-  const totalPages = Math.max(
-    1,
-    Math.ceil(total / pageSize),
-  );
-
+  // ── Derived domain list ──────────────────────────────────────────
   const domains = useMemo(() => {
     const values = new Set<string>();
-
-    applications.forEach((application) => {
-      const domain =
-        application.confirmed_domain ||
-        application.domain;
-
-      if (domain) {
-        values.add(domain);
-      }
+    applications.forEach((app) => {
+      const domain = app.confirmed_domain || app.domain;
+      if (domain) values.add(domain);
     });
-
     return Array.from(values).sort();
   }, [applications]);
 
-  const filteredApplications =
-    useMemo(() => {
-      return applications.filter(
-        (application) => {
-          const status =
-            normalizeValue(
-              getMigrationStatus(application),
-            );
-
-          const domain =
-            normalizeValue(
-              application.confirmed_domain ||
-                application.domain,
-            );
-
-          const matchesStatus =
-            statusFilter === "all" ||
-            status ===
-              normalizeValue(statusFilter);
-
-          const matchesDomain =
-            domainFilter === "all" ||
-            domain ===
-              normalizeValue(domainFilter);
-
-          return (
-            matchesStatus &&
-            matchesDomain
-          );
-        },
-      );
-    }, [
-      applications,
-      statusFilter,
-      domainFilter,
-    ]);
-
-  const summary = useMemo(() => {
-    let inProgress = 0;
-    let completed = 0;
-    let failed = 0;
-    let pending = 0;
-
-    applications.forEach((application) => {
-      const status =
-        normalizeValue(
-          application.migration
-            ?.migration_status,
-        );
-
-      if (
-        [
-          "completed",
-          "complete",
-          "done",
-        ].includes(status)
-      ) {
-        completed += 1;
-      } else if (
-        [
-          "in progress",
-          "in_progress",
-          "ongoing",
-        ].includes(status)
-      ) {
-        inProgress += 1;
-      } else if (
-        [
-          "failed",
-          "failure",
-          "cancelled",
-        ].includes(status)
-      ) {
-        failed += 1;
-      } else {
-        pending += 1;
-      }
+  // ── Filtered list ────────────────────────────────────────────────
+  const filteredApplications = useMemo(() => {
+    return applications.filter((app) => {
+      const status = normalizeValue(getMigrationStatus(app));
+      const domain = normalizeValue(app.confirmed_domain || app.domain);
+      const cloudNames = app.cloud_mappings
+        ?.map((m) => m.cloud?.name)
+        .filter((n): n is string => Boolean(n))
+        .map((n) => normalizeValue(n)) ?? [];
+      const matchesStatus =
+        statusFilter === "all" || status === normalizeValue(statusFilter);
+      const matchesDomain =
+        domainFilter === "all" || domain === normalizeValue(domainFilter);
+      const matchesCloud =
+        cloudFilter === "all" || cloudNames.includes(normalizeValue(cloudFilter));
+      return matchesStatus && matchesDomain && matchesCloud;
     });
+  }, [applications, statusFilter, domainFilter, cloudFilter]);
 
-    return {
-      total,
-      inProgress,
-      completed,
-      failed,
-      pending,
-    };
+  // ── Summary counts ───────────────────────────────────────────────
+  const summary = useMemo(() => {
+    let inProgress = 0, completed = 0, failed = 0, pending = 0;
+    applications.forEach((app) => {
+      const s = normalizeValue(app.migration?.migration_status);
+      if (["completed", "complete", "done"].includes(s))          completed  += 1;
+      else if (["in progress", "in_progress", "ongoing"].includes(s)) inProgress += 1;
+      else if (["failed", "failure", "cancelled"].includes(s))    failed     += 1;
+      else                                                         pending    += 1;
+    });
+    return { total, inProgress, completed, failed, pending };
   }, [applications, total]);
 
-  const handleSearch = (
-    event: FormEvent<HTMLFormElement>,
-  ) => {
-    event.preventDefault();
-
+  // ── Handlers ─────────────────────────────────────────────────────
+  const handleSearch = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setPage(1);
     setSearch(searchInput.trim());
   };
@@ -317,480 +157,512 @@ export default function ApplicationsPage() {
     setSearch("");
     setStatusFilter("all");
     setDomainFilter("all");
+    setCloudFilter("all");
     setPage(1);
   };
 
-  const handleOpenApplication = (
-    application: Application,
-  ) => {
-    setSelectedApplication(application);
-    setIsDrawerOpen(true);
+  const handleOpenApp = (app: Application) => {
+    navigate(`/app/applications/${app.id}`, { state: { application: app } });
   };
 
-  const handleCloseDrawer = () => {
-    setSelectedApplication(null);
-    setIsDrawerOpen(false);
-  };
-
-  const handleApplicationUpdated = (
-    updatedApplication: Application,
-  ) => {
-    setSelectedApplication(
-      updatedApplication,
-    );
-
-    void refetch();
-  };
-
+  // ── Loading ──────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="application-state">
-        Loading applications...
+      <div
+        style={{
+          display:        "flex",
+          flexDirection:  "column",
+          alignItems:     "center",
+          justifyContent: "center",
+          minHeight:      "60vh",
+          gap:            "1rem",
+        }}
+      >
+        <div className="ods-spinner" />
+        <p style={{ color: "var(--ods-gray-600)", fontSize: "var(--ods-font-size-sm)" }}>
+          Loading applications...
+        </p>
       </div>
     );
   }
 
+  // ── Error ────────────────────────────────────────────────────────
   if (isError) {
     return (
-      <div className="application-state application-state--error">
-        <h2>
-          Unable to load applications
-        </h2>
-
-        <p>
-          {error instanceof Error
-            ? error.message
-            : "Something went wrong."}
+      <div className="ods-empty-state">
+        <span className="ods-empty-icon">⚠️</span>
+        <div className="ods-empty-title">Unable to load applications</div>
+        <p className="ods-empty-text">
+          {error instanceof Error ? error.message : "Something went wrong."}
         </p>
-
         <button
           type="button"
-          onClick={() => {
-            void refetch();
-          }}
+          className="btn btn-primary mt-3"
+          onClick={() => { void refetch(); }}
         >
-          Try again
+          Try Again
         </button>
       </div>
     );
   }
 
+  // ── Render ───────────────────────────────────────────────────────
   return (
     <>
-      <section className="applications-page">
-        <div className="applications-header">
-          
+      <div>
+
+        {/* ── Page header ─────────────────────────────────────── */}
+        <div className="ods-page-header">
+          <div>
+            <h1 className="page-title">Applications</h1>
+            <p className="page-subtitle">
+              Manage applications, migrations and owners.
+            </p>
+          </div>
 
           <button
             type="button"
-            className="application-refresh"
+            className="btn btn-outline-secondary"
             disabled={isFetching}
-            onClick={() => {
-              void refetch();
-            }}
+            onClick={() => { void refetch(); }}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
           >
-            {isFetching
-              ? "Refreshing..."
-              : "Refresh"}
+            <RefreshCw
+              size={15}
+              style={{
+                animation: isFetching
+                  ? "ods-spin 0.7s linear infinite"
+                  : "none",
+              }}
+            />
+            {isFetching ? "Refreshing..." : "Refresh"}
           </button>
         </div>
 
-        <div className="application-summary-grid">
+        {/* ── Summary stat cards ──────────────────────────────── */}
+        <div
+          style={{
+            display:             "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+            gap:                 "1rem",
+            marginBottom:        "1.5rem",
+          }}
+        >
           <ApplicationSummaryCard
             title="Total Applications"
             value={summary.total}
-            description="All registered applications"
+            description="All registered"
+            icon={<AppWindow size={18} />}
           />
-
           <ApplicationSummaryCard
             title="In Progress"
             value={summary.inProgress}
             description="Active migrations"
+            icon={<Clock3 size={18} />}
+            variant="warning"
           />
-
           <ApplicationSummaryCard
             title="Completed"
             value={summary.completed}
             description="Completed migrations"
+            icon={<CheckCircle size={18} />}
+            variant="success"
           />
-
           <ApplicationSummaryCard
             title="Pending"
             value={summary.pending}
             description="Pending migrations"
+            icon={<Hourglass size={18} />}
+            variant="info"
           />
-
           <ApplicationSummaryCard
             title="Failed"
             value={summary.failed}
             description="Failed migrations"
+            icon={<CircleX size={18} />}
+            variant="danger"
           />
         </div>
 
-        <div className="applications-panel">
-          <div className="applications-toolbar">
-            <form
-              className="application-search"
-              onSubmit={handleSearch}
-            >
-              <input
-                type="search"
-                value={searchInput}
-                placeholder="Search application, domain or Carto ID"
-                onChange={(event) => {
-                  setSearchInput(
-                    event.target.value,
-                  );
-                }}
-              />
+        {/* ── Main panel ──────────────────────────────────────── */}
+        <div className="ods-card">
 
-              <button type="submit">
+          {/* ── Toolbar ───────────────────────────────────────── */}
+          <div
+            className="ods-card-header"
+            style={{ flexWrap: "wrap", gap: "0.75rem" }}
+          >
+
+            {/* Search form */}
+            <form
+              onSubmit={handleSearch}
+              style={{ display: "flex", gap: "0.5rem", flex: 1, minWidth: 260 }}
+            >
+              <div className="ods-search" style={{ flex: 1 }}>
+                <Search className="ods-search-icon" size={15} />
+                <input
+                  type="search"
+                  className="form-control form-control-sm"
+                  value={searchInput}
+                  placeholder="Search application, domain or Carto ID…"
+                  onChange={(e) => setSearchInput(e.target.value)}
+                />
+              </div>
+              <button type="submit" className="btn btn-primary btn-sm">
                 Search
               </button>
             </form>
 
-            <div className="application-filter-group">
+            {/* Filters */}
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
               <select
+                className="form-select form-select-sm"
+                style={{ width: "auto" }}
                 value={statusFilter}
-                onChange={(event) => {
-                  setStatusFilter(
-                    event.target.value,
-                  );
-                  setPage(1);
-                }}
+                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
               >
-                <option value="all">
-                  All statuses
-                </option>
-
-                <option value="In progress">
-                  In progress
-                </option>
-
-                <option value="Completed">
-                  Completed
-                </option>
-
-                <option value="Pending">
-                  Pending
-                </option>
-
-                <option value="Failed">
-                  Failed
-                </option>
+                <option value="all">All statuses</option>
+                <option value="In progress">In progress</option>
+                <option value="Completed">Completed</option>
+                <option value="Pending">Pending</option>
+                <option value="Failed">Failed</option>
               </select>
 
               <select
+                className="form-select form-select-sm"
+                style={{ width: "auto" }}
                 value={domainFilter}
-                onChange={(event) => {
-                  setDomainFilter(
-                    event.target.value,
-                  );
-                  setPage(1);
-                }}
+                onChange={(e) => { setDomainFilter(e.target.value); setPage(1); }}
               >
-                <option value="all">
-                  All domains
-                </option>
-
-                {domains.map((domain) => (
-                  <option
-                    key={domain}
-                    value={domain}
-                  >
-                    {domain}
-                  </option>
+                <option value="all">All domains</option>
+                {domains.map((d) => (
+                  <option key={d} value={d}>{d}</option>
                 ))}
+              </select>
+
+              <select
+                className="form-select form-select-sm"
+                style={{ width: "auto" }}
+                value={cloudFilter}
+                onChange={(e) => { setCloudFilter(e.target.value); setPage(1); }}
+              >
+                <option value="">All clouds</option>
+                <option value="Azure">Azure</option>
+                <option value="Blue">Blue</option>
               </select>
 
               <button
                 type="button"
-                className="application-clear"
+                className="btn btn-outline-secondary btn-sm"
                 onClick={handleClearFilters}
+                style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
               >
-                Clear filters
+                <X size={13} />
+                Clear
               </button>
             </div>
           </div>
 
-          <div className="applications-result-header">
+          {/* ── Result count ──────────────────────────────────── */}
+          <div
+            style={{
+              display:        "flex",
+              justifyContent: "space-between",
+              alignItems:     "center",
+              padding:        "0.5rem 1.25rem",
+              background:     "var(--ods-gray-100)",
+              borderBottom:   "1px solid var(--ods-gray-200)",
+              fontSize:       "var(--ods-font-size-xs)",
+              color:          "var(--ods-gray-600)",
+            }}
+          >
             <span>
-              {filteredApplications.length}{" "}
+              <strong style={{ color: "var(--ods-gray-900)" }}>
+                {filteredApplications.length}
+              </strong>{" "}
               applications shown
             </span>
-
-            <span>
-              Total records: {total}
-            </span>
+            <span>Total records: <strong>{total}</strong></span>
           </div>
 
-          <div className="applications-table-wrapper">
-            <table className="applications-table">
-              <thead>
-                <tr>
-                  <th>Application</th>
-                  <th>Domain</th>
-                  <th>QA Owner</th>
-                  <th>DevOps Owner</th>
-                  <th>PM Owner</th>
-                  <th>Application Manager</th>
-                  <th>Cloud</th>
-                  <th>Migration</th>
-                  <th>Progress</th>
-                  <th>Assessment</th>
-                  <th>Security</th>
-                  <th>Latest Remark</th>
-                  <th>Created</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filteredApplications.length ===
-                0 ? (
+          {/* ── Table ─────────────────────────────────────────── */}
+          <div className="ods-card-body" style={{ padding: 0 }}>
+            <div className="ods-table-wrapper">
+              <table className="ods-table">
+                <thead>
                   <tr>
-                    <td
-                      colSpan={14}
-                      className="applications-empty"
-                    >
-                      No applications found.
-                    </td>
+                    <th>Application</th>
+                    <th>Domain</th>
+                    <th>QA Owner</th>
+                    <th>DevOps Owner</th>
+                    <th>PM Owner</th>
+                    <th>App Manager</th>
+                    <th>Cloud</th>
+                    <th>Migration</th>
+                    <th>Progress</th>
+                    <th>Assessment</th>
+                    <th>Security</th>
+                    <th>Latest Remark</th>
+                    <th>Created</th>
+                    <th>Action</th>
                   </tr>
-                ) : (
-                  filteredApplications.map(
-                    (application) => {
-                      const migrationStatus =
-                        getMigrationStatus(
-                          application,
-                        );
+                </thead>
 
-                      const progress =
-                        application.migration
-                          ?.migration_progress ??
-                        0;
+                <tbody>
+                  {filteredApplications.length === 0 ? (
+                    <tr>
+                      <td colSpan={14}>
+                        <div
+                          className="ods-empty-state"
+                          style={{ padding: "2rem" }}
+                        >
+                          <span className="ods-empty-icon">📋</span>
+                          <p className="ods-empty-text">
+                            No applications found.
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredApplications.map((app) => {
+                      const migStatus = getMigrationStatus(app);
+                      const progress  =
+                        app.migration?.migration_progress ?? 0;
 
                       return (
-                        <tr key={application.id}>
+                        <tr key={app.id}>
+
+                          {/* Application name */}
                           <td>
-                            <div className="application-name-cell">
-                              <strong>
-                                {
-                                  application.application_name
-                                }
+                            <div
+                              style={{
+                                display:       "flex",
+                                flexDirection: "column",
+                                gap:           "0.15rem",
+                              }}
+                            >
+                              <strong
+                                style={{
+                                  color:    "var(--ods-gray-900)",
+                                  fontSize: "var(--ods-font-size-sm)",
+                                }}
+                              >
+                                {app.application_name}
                               </strong>
-
-                              <span>
-                                Carto ID:{" "}
-                                {application.carto_id ||
-                                  "—"}
+                              <span
+                                style={{
+                                  fontSize: "var(--ods-font-size-xs)",
+                                  color:    "var(--ods-gray-500)",
+                                }}
+                              >
+                                Carto: {app.carto_id || "—"}
                               </span>
-
-                              <small>
-                                Basicat:{" "}
-                                {application.basicat ||
-                                  "—"}
-                              </small>
+                              <span
+                                style={{
+                                  fontSize: "var(--ods-font-size-xs)",
+                                  color:    "var(--ods-gray-400)",
+                                }}
+                              >
+                                Basicat: {app.basicat || "—"}
+                              </span>
                             </div>
                           </td>
 
-                          <td>
-                            {application.confirmed_domain ||
-                              application.domain ||
-                              "—"}
+                          {/* Domain */}
+                          <td style={{ color: "var(--ods-gray-700)" }}>
+                            {app.confirmed_domain || app.domain || "—"}
                           </td>
 
-                          <td>
-                            {getOwnerName(
-                              application,
-                              "QA",
-                            )}
+                          {/* Owners */}
+                          <td style={{ color: "var(--ods-gray-600)" }}>
+                            {getOwnerName(app, "QA")}
+                          </td>
+                          <td style={{ color: "var(--ods-gray-600)" }}>
+                            {getOwnerName(app, "DevOps")}
+                          </td>
+                          <td style={{ color: "var(--ods-gray-600)" }}>
+                            {getOwnerName(app, "PM")}
+                          </td>
+                          <td style={{ color: "var(--ods-gray-600)" }}>
+                            {getOwnerName(app, "Application Manager")}
                           </td>
 
-                          <td>
-                            {getOwnerName(
-                              application,
-                              "DevOps",
-                            )}
-                          </td>
-
-                          <td>
-                            {getOwnerName(
-                              application,
-                              "PM",
-                            )}
-                          </td>
-
-                          <td>
-                            {getOwnerName(
-                              application,
-                              "Application Manager",
-                            )}
-                          </td>
-
-                          <td>
-                            <span className="cloud-badge">
-                              {getCloudNames(
-                                application,
-                              )}
-                            </span>
-                          </td>
-
+                          {/* Cloud */}
                           <td>
                             <span
-                              className={getStatusClass(
-                                migrationStatus,
-                              )}
+                              style={{
+                                fontSize:      "var(--ods-font-size-xs)",
+                                background:    "var(--ods-gray-100)",
+                                color:         "var(--ods-gray-700)",
+                                padding:       "0.2rem 0.5rem",
+                                border:        "1px solid var(--ods-gray-300)",
+                                whiteSpace:    "nowrap",
+                              }}
                             >
-                              {migrationStatus}
+                              {getCloudNames(app)}
                             </span>
                           </td>
 
+                          {/* Migration status badge */}
                           <td>
-                            <div className="migration-progress-cell">
-                              <span>
+                            <span className={getStatusBadgeClass(migStatus)}>
+                              {migStatus}
+                            </span>
+                          </td>
+
+                          {/* Progress bar */}
+                          <td style={{ minWidth: 100 }}>
+                            <div
+                              style={{
+                                display:       "flex",
+                                flexDirection: "column",
+                                gap:           "0.25rem",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize:  "var(--ods-font-size-xs)",
+                                  color:     "var(--ods-gray-600)",
+                                  textAlign: "right",
+                                }}
+                              >
                                 {progress}%
                               </span>
-
-                              <div className="migration-progress-track">
+                              <div
+                                style={{
+                                  height:     6,
+                                  background: "var(--ods-gray-200)",
+                                  overflow:   "hidden",
+                                }}
+                              >
                                 <div
-                                  className="migration-progress-fill"
                                   style={{
-                                    width: `${Math.min(
-                                      100,
-                                      Math.max(
-                                        0,
-                                        progress,
-                                      ),
-                                    )}%`,
+                                    height:     "100%",
+                                    width:      `${Math.min(100, Math.max(0, progress))}%`,
+                                    background: progress >= 100
+                                      ? "var(--ods-success)"
+                                      : "var(--ods-orange)",
+                                    transition: "width 0.3s ease",
                                   }}
                                 />
                               </div>
                             </div>
                           </td>
 
-                          <td>
-                            {application.meta_data
-                              ?.assessment_status ||
-                              "—"}
+                          {/* Assessment */}
+                          <td style={{ color: "var(--ods-gray-600)" }}>
+                            {app.meta_data?.assessment_status || "—"}
                           </td>
 
-                          <td>
-                            <div className="security-summary">
-                              <span>
-                                Nexus:{" "}
-                                {application.security
-                                  ?.nexus_status ||
-                                  "—"}
-                              </span>
-
-                              <span>
-                                Rooted:{" "}
-                                {application.security
-                                  ?.rooted_status ||
-                                  "—"}
-                              </span>
-
-                              <span>
-                                Network:{" "}
-                                {application.security
-                                  ?.network_policy_status ||
-                                  "—"}
-                              </span>
-                            </div>
-                          </td>
-
+                          {/* Security */}
                           <td>
                             <div
-                              className="application-remark-cell"
-                              title={getLatestRemark(
-                                application,
-                              )}
+                              style={{
+                                display:       "flex",
+                                flexDirection: "column",
+                                gap:           "0.15rem",
+                                fontSize:      "var(--ods-font-size-xs)",
+                                color:         "var(--ods-gray-600)",
+                              }}
                             >
-                              {getLatestRemark(
-                                application,
-                              )}
+                              <span>Nexus: {app.security?.nexus_status || "—"}</span>
+                              <span>Rooted: {app.security?.rooted_status || "—"}</span>
+                              <span>Network: {app.security?.network_policy_status || "—"}</span>
                             </div>
                           </td>
 
-                          <td>
-                            {formatDate(
-                              application.created_at,
-                            )}
+                          {/* Latest remark */}
+                          <td
+                            style={{ maxWidth: 180 }}
+                            title={getLatestRemark(app)}
+                          >
+                            <span
+                              style={{
+                                display:      "block",
+                                overflow:     "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace:   "nowrap",
+                                fontSize:     "var(--ods-font-size-xs)",
+                                color:        "var(--ods-gray-600)",
+                              }}
+                            >
+                              {getLatestRemark(app)}
+                            </span>
                           </td>
 
+                          {/* Created at */}
+                          <td
+                            style={{
+                              fontSize:  "var(--ods-font-size-xs)",
+                              color:     "var(--ods-gray-500)",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {formatDate(app.created_at)}
+                          </td>
+
+                          {/* Action */}
                           <td>
                             <button
                               type="button"
-                              className="application-view-button"
-                              onClick={() =>
-                                handleOpenApplication(
-                                  application,
-                                )
-                              }
+                              className="btn btn-outline-secondary btn-sm"
+                              onClick={() => handleOpenApp(app)}
                             >
                               View / Edit
                             </button>
                           </td>
+
                         </tr>
                       );
-                    },
-                  )
-                )}
-              </tbody>
-            </table>
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div className="applications-pagination">
-            <span>
-              Page {page} of {totalPages}
+          {/* ── Pagination ────────────────────────────────────── */}
+          <div
+            style={{
+              display:        "flex",
+              justifyContent: "space-between",
+              alignItems:     "center",
+              padding:        "0.75rem 1.25rem",
+              borderTop:      "1px solid var(--ods-gray-200)",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "var(--ods-font-size-sm)",
+                color:    "var(--ods-gray-600)",
+              }}
+            >
+              Page <strong>{page}</strong> of <strong>{totalPages}</strong>
             </span>
 
-            <div className="applications-pagination-actions">
+            <div style={{ display: "flex", gap: "0.5rem" }}>
               <button
                 type="button"
+                className="btn btn-outline-secondary btn-sm"
                 disabled={page <= 1}
-                onClick={() => {
-                  setPage((current) =>
-                    Math.max(
-                      1,
-                      current - 1,
-                    ),
-                  );
-                }}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
                 Previous
               </button>
-
               <button
                 type="button"
-                disabled={
-                  page >= totalPages ||
-                  applications.length === 0
-                }
-                onClick={() => {
-                  setPage((current) =>
-                    Math.min(
-                      totalPages,
-                      current + 1,
-                    ),
-                  );
-                }}
+                className="btn btn-outline-secondary btn-sm"
+                disabled={page >= totalPages || applications.length === 0}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
                 Next
               </button>
             </div>
           </div>
-        </div>
-      </section>
 
-      <ApplicationDetailsDrawer
-        application={selectedApplication}
-        isOpen={isDrawerOpen}
-        onClose={handleCloseDrawer}
-        onUpdated={
-          handleApplicationUpdated
-        }
-      />
+        </div>
+      </div>
+
     </>
   );
 }

@@ -27,8 +27,14 @@ if (!apiBaseUrl) {
 
 export const apiClient = axios.create({
   baseURL: apiBaseUrl,
+  headers: {
+    "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
+  },
   timeout: 15_000,
 });
+ 
+ 
 
 apiClient.interceptors.request.use(
   (config) => {

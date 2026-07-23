@@ -1,232 +1,352 @@
-import {
-  NavLink,
-  Outlet,
-  useNavigate,
-} from "react-router-dom";
-
-import "./AppLayout.css";
-
-
+// src/components/layout/AppLayout.tsx
+import { useState } from "react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Cloud,
   ScrollText,
+  LayoutDashboard,
+  AppWindow,
+  Upload,
+  Users,
+  Menu,
+  X,
+  Bell,
+  Search,
+  LogOut,
+  ChevronRight,
+  BarChart3,
 } from "lucide-react";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface NavItem {
+  to:       string;
+  label:    string;
+  icon:     React.ReactNode;
+  adminOnly?: boolean;
+}
+
+// ─── Nav Items Config ─────────────────────────────────────────────────────────
+const NAV_ITEMS: NavItem[] = [
+  {
+    to:        "/app/dashboard",
+    label:     "Dashboard",
+    icon:      <LayoutDashboard size={18} />,
+    adminOnly: true,
+  },
+  {
+    to:    "/app/applications",
+    label: "Applications",
+    icon:  <AppWindow size={18} />,
+  },
+  {
+    to:    "/app/analytics",
+    label: "Analytics",
+    icon:  <BarChart3 size={18} />,
+  },
+  {
+    to:    "/app/uploads",
+    label: "Upload Files",
+    icon:  <Upload size={18} />,
+  },
+  {
+    to:        "/app/users",
+    label:     "Users",
+    icon:      <Users size={18} />,
+    adminOnly: true,
+  },
+  {
+    to:    "/app/audit-logs",
+    label: "Audit Logs",
+    icon:  <ScrollText size={18} />,
+  },
+  {
+    to:    "/app/cloud",
+    label: "Cloud",
+    icon:  <Cloud size={18} />,
+  },
+];
+
+// ─── Component ────────────────────────────────────────────────────────────────
 export function AppLayout() {
-  const navigate = useNavigate();
+  const navigate                        = useNavigate();
+  const [sidebarCollapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen]     = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const storedUser =
-    localStorage.getItem("auth_user");
+  // ── User from localStorage ───────────────────────────────────────
+  const storedUser  = localStorage.getItem("auth_user");
+  const currentUser = storedUser ? JSON.parse(storedUser) : null;
+  const role        = String(currentUser?.role ?? "").trim().toLowerCase();
+  const userInitial = String(currentUser?.email ?? "U").charAt(0).toUpperCase();
 
-  const currentUser = storedUser
-    ? JSON.parse(storedUser)
-    : null;
-
-  const role = String(
-    currentUser?.role ?? "",
-  )
-    .trim()
-    .toLowerCase();
-
+  // ── Logout ───────────────────────────────────────────────────────
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("auth_user");
-
-    navigate("/login", {
-      replace: true,
-    });
+    navigate("/login", { replace: true });
   };
 
+  // ── Nav link class helper ────────────────────────────────────────
+  const navClass = ({ isActive }: { isActive: boolean }) =>
+    `ods-nav-link${isActive ? " active" : ""}`;
+
   return (
-    <div className="app-shell">
-      <aside className="app-sidebar">
-        <div className="app-sidebar__brand">
-          <div className="app-sidebar__logo">
-            AM
-          </div>
+    <div style={{ minHeight: "100vh", background: "var(--ods-gray-100)" }}>
 
-          <div>
-            <h2>Application Manager</h2>
-            <p>Admin Portal</p>
-          </div>
-        </div>
+      {/* ── TOP NAVBAR ──────────────────────────────────────────── */}
+      <header className="ods-navbar">
 
-        <nav className="app-sidebar__nav">
-          {role === "admin" && (
-            <NavLink
-              to="/dashboard"
-              className={({ isActive }) =>
-                isActive
-                  ? "sidebar-link sidebar-link--active"
-                  : "sidebar-link"
-              }
-            >
-              <span className="sidebar-link__icon">
-                ▦
-              </span>
-
-              Dashboard
-            </NavLink>
-          )}
-
-          <NavLink
-            to="/applications"
-            className={({ isActive }) =>
-              isActive
-                ? "sidebar-link sidebar-link--active"
-                : "sidebar-link"
-            }
-          >
-            <span className="sidebar-link__icon">
-              ◫
-            </span>
-
-            Applications
-          </NavLink>
-
-            <NavLink
-            to="/uploads"
-            className={({ isActive }) =>
-              isActive
-                ? "sidebar-link sidebar-link--active"
-                : "sidebar-link"
-            }
-          >
-            <span className="sidebar-link__icon">
-              ◫
-            </span>
-
-            Upload Files
-          </NavLink>
-
-          {role === "admin" && (
-            <NavLink
-              to="/users"
-              className={({ isActive }) =>
-                isActive
-                  ? "sidebar-link sidebar-link--active"
-                  : "sidebar-link"
-              }
-            >
-              <span className="sidebar-link__icon">
-                ◉
-              </span>
-
-              Users
-            </NavLink>
-          )}
-          <NavLink
-            to="/audit-logs"
-            className={({ isActive }) =>
-              isActive
-                ? "sidebar-link sidebar-link--active"
-                : "sidebar-link"
-            }
-          >
-            <ScrollText size={19} />
-            <span>Audit Logs</span>
-        </NavLink>
-        <NavLink
-          to="/cloud"
-          className={({ isActive }) =>
-            isActive
-              ? "sidebar-link sidebar-link--active"
-              : "sidebar-link"
-          }
+        {/* Sidebar toggle */}
+        <button
+          className="ods-navbar-toggle"
+          onClick={() => {
+            setCollapsed((prev) => !prev);
+            setMobileOpen((prev) => !prev);
+          }}
+          aria-label="Toggle sidebar"
         >
-          <Cloud size={19} />
-          <span>Cloud</span>
+          {sidebarCollapsed ? <ChevronRight size={22} /> : <Menu size={22} />}
+        </button>
+
+        {/* Brand */}
+        <NavLink to="/app/applications" className="ods-navbar-brand">
+          <div className="ods-brand-icon">AM</div>
+          {!sidebarCollapsed && (
+            <span>Application Manager</span>
+          )}
         </NavLink>
-        </nav>
 
-        <div className="app-sidebar__footer">
-          <div className="sidebar-user">
-            <div className="sidebar-user__avatar">
-              {String(
-                currentUser?.email ?? "U",
-              )
-                .charAt(0)
-                .toUpperCase()}
-            </div>
+        <div className="ods-navbar-spacer" />
 
-            <div className="sidebar-user__details">
-              <strong>
-                {currentUser?.email ??
-                  "Current User"}
-              </strong>
+        {/* Right section */}
+        <div className="ods-navbar-right">
 
-              <span>
-                {currentUser?.role ?? "User"}
-              </span>
-            </div>
+          {/* Search */}
+          <div className="ods-search" style={{ width: 220 }}>
+            <Search className="ods-search-icon" size={15} />
+            <input
+              type="search"
+              className="form-control form-control-sm"
+              placeholder="Search..."
+            />
           </div>
 
+          {/* Notifications */}
           <button
-            type="button"
-            className="sidebar-logout"
-            onClick={handleLogout}
+            className="ods-navbar-toggle"
+            aria-label="Notifications"
+            style={{ position: "relative" }}
           >
-            Logout
+            <Bell size={20} />
+            {/* Notification dot */}
+            <span
+              style={{
+                position:   "absolute",
+                top:        6,
+                right:      6,
+                width:      7,
+                height:     7,
+                background: "var(--ods-orange)",
+                borderRadius: "50%",
+                border:     "1px solid var(--ods-black)",
+              }}
+            />
           </button>
-        </div>
-      </aside>
 
-      <div className="app-content">
-        <header className="app-header">
-          <div>
-            <h1>Application Manager</h1>
-
-            <p>
-              Manage applications, migrations,
-              uploads and users.
-            </p>
-          </div>
-
-          <div className="app-header__actions">
-            <div className="app-header__search">
-              <span>⌕</span>
-
-              <input
-                type="search"
-                placeholder="Search..."
-              />
+          {/* User dropdown */}
+          <div className="ods-navbar-dropdown">
+            <div
+              className="ods-user-avatar"
+              onClick={() => setDropdownOpen((prev) => !prev)}
+              role="button"
+              aria-label="User menu"
+            >
+              {userInitial}
             </div>
 
-            <button
-              type="button"
-              className="header-notification"
-              aria-label="Notifications"
-            >
-              ♢
-            </button>
-
-            <div className="header-profile">
-              <div className="header-profile__avatar">
-                {String(
-                  currentUser?.email ?? "U",
-                )
-                  .charAt(0)
-                  .toUpperCase()}
-              </div>
-
-              <div>
-                <strong>
-                  {currentUser?.email ??
-                    "Current User"}
+            <div className={`ods-dropdown-menu${dropdownOpen ? " open" : ""}`}>
+              {/* User info header */}
+              <div className="ods-dropdown-header">
+                <strong style={{ display: "block", color: "var(--ods-gray-800)" }}>
+                  {currentUser?.email ?? "Current User"}
                 </strong>
-
-                <span>
+                <span style={{ textTransform: "capitalize" }}>
                   {currentUser?.role ?? "User"}
                 </span>
               </div>
+
+              <div className="ods-dropdown-divider" />
+
+              <button
+                className="ods-dropdown-item danger"
+                onClick={handleLogout}
+              >
+                <LogOut size={14} style={{ marginRight: "0.5rem" }} />
+                Logout
+              </button>
             </div>
           </div>
-        </header>
 
-        <main className="app-main">
+        </div>
+      </header>
+
+      {/* ── MOBILE OVERLAY ──────────────────────────────────────── */}
+      <div
+        className={`ods-sidebar-overlay${mobileOpen ? " active" : ""}`}
+        onClick={() => setMobileOpen(false)}
+      />
+
+      {/* ── SIDEBAR ─────────────────────────────────────────────── */}
+      <aside
+        className={[
+          "ods-sidebar",
+          sidebarCollapsed ? "collapsed"   : "",
+          mobileOpen       ? "mobile-open" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        {/* Section label */}
+        <div className="ods-sidebar-section">Navigation</div>
+
+        {/* Nav links */}
+        <nav>
+          {NAV_ITEMS.filter(
+            (item) => !item.adminOnly || role === "admin"
+          ).map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={navClass}
+              title={sidebarCollapsed ? item.label : undefined}
+            >
+              <span className="ods-nav-icon">{item.icon}</span>
+              <span className="ods-nav-label">{item.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* ── Sidebar footer — user info + logout ─────────────── */}
+        {!sidebarCollapsed && (
+          <div
+            style={{
+              position:   "absolute",
+              bottom:     0,
+              left:       0,
+              right:      0,
+              padding:    "1rem",
+              borderTop:  "1px solid var(--ods-gray-800)",
+              background: "var(--ods-black)",
+            }}
+          >
+            {/* User info */}
+            <div
+              style={{
+                display:     "flex",
+                alignItems:  "center",
+                gap:         "0.75rem",
+                marginBottom: "0.75rem",
+              }}
+            >
+              <div
+                style={{
+                  width:           32,
+                  height:          32,
+                  background:      "var(--ods-orange)",
+                  color:           "var(--ods-black)",
+                  display:         "flex",
+                  alignItems:      "center",
+                  justifyContent:  "center",
+                  fontWeight:      "var(--ods-font-weight-bold)" as never,
+                  fontSize:        "0.8rem",
+                  flexShrink:      0,
+                }}
+              >
+                {userInitial}
+              </div>
+
+              <div style={{ overflow: "hidden" }}>
+                <div
+                  style={{
+                    fontSize:     "0.8rem",
+                    fontWeight:   700,
+                    color:        "var(--ods-white)",
+                    whiteSpace:   "nowrap",
+                    overflow:     "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {currentUser?.email ?? "Current User"}
+                </div>
+                <div
+                  style={{
+                    fontSize:      "0.7rem",
+                    color:         "var(--ods-gray-500)",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {currentUser?.role ?? "User"}
+                </div>
+              </div>
+            </div>
+
+            {/* Logout button */}
+            <button
+              type="button"
+              className="btn btn-outline-secondary w-100"
+              style={{
+                fontSize:    "0.8rem",
+                padding:     "0.4rem 0.75rem",
+                color:       "var(--ods-gray-400)",
+                borderColor: "var(--ods-gray-700)",
+                display:     "flex",
+                alignItems:  "center",
+                gap:         "0.5rem",
+                justifyContent: "center",
+              }}
+              onClick={handleLogout}
+            >
+              <LogOut size={14} />
+              Logout
+            </button>
+          </div>
+        )}
+
+        {/* Collapsed state — just logout icon */}
+        {sidebarCollapsed && (
+          <div
+            style={{
+              position:  "absolute",
+              bottom:    0,
+              left:      0,
+              right:     0,
+              padding:   "0.75rem",
+              borderTop: "1px solid var(--ods-gray-800)",
+              display:   "flex",
+              justifyContent: "center",
+            }}
+          >
+            <button
+              type="button"
+              className="ods-navbar-toggle"
+              onClick={handleLogout}
+              title="Logout"
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
+        )}
+      </aside>
+
+      {/* ── MAIN CONTENT ────────────────────────────────────────── */}
+      <div
+        className={`ods-main-content${sidebarCollapsed ? " sidebar-collapsed" : ""}`}
+      >
+        <main>
           <Outlet />
         </main>
       </div>
+
     </div>
   );
 }

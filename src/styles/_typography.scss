@@ -1,0 +1,59 @@
+// ─── Orange Typography ────────────────────────────────────────────────────────
+
+// Helvetica Neue fallback stack (Orange uses licensed HelvNeue)
+body {
+  font-family:  var(--ods-font-family);
+  font-size:    var(--ods-font-size-base);
+  line-height:  var(--ods-line-height);
+  color:        var(--ods-gray-800);
+  background:   var(--ods-gray-100);
+  -webkit-font-smoothing:  antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--ods-font-weight-bold);
+  color:       var(--ods-gray-900);
+  line-height: 1.2;
+}
+
+// Orange heading accent — optional left border style
+.ods-heading-accent {
+  border-left: 4px solid var(--ods-orange);
+  padding-left: 0.75rem;
+}
+
+// Page title pattern used across all pages
+.page-title {
+  font-size:   1.5rem;
+  font-weight: var(--ods-font-weight-bold);
+  color:       var(--ods-gray-900);
+  margin-bottom: 0.25rem;
+}
+
+.page-subtitle {
+  font-size: var(--ods-font-size-sm);
+  color:     var(--ods-gray-600);
+  margin-bottom: 0;
+}
+
+// Links
+a {
+  color:           var(--ods-orange);
+  text-decoration: none;
+  transition:      color var(--ods-transition);
+
+  &:hover {
+    color:           var(--ods-orange-dark);
+    text-decoration: underline;
+  }
+}
+
+// Code
+code {
+  font-size:        0.85em;
+  color:            var(--ods-orange-dark);
+  background-color: var(--ods-gray-100);
+  padding:          0.1em 0.4em;
+  border-radius:    2px;
+}

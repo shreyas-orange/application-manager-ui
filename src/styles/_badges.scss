@@ -1,0 +1,69 @@
+// ─── Orange Status Badges ─────────────────────────────────────────────────────
+
+.ods-badge {
+  display:        inline-flex;
+  align-items:    center;
+  gap:            0.25rem;
+  padding:        0.2rem 0.6rem;
+  font-size:      0.65rem;
+  font-weight:    var(--ods-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius:  0;
+  white-space:    nowrap;
+
+  // ── Variants ──────────────────────────────────────────────────
+  &.ods-badge-success {
+    background: var(--ods-success-light);
+    color:      var(--ods-success);
+  }
+
+  &.ods-badge-danger {
+    background: var(--ods-danger-light);
+    color:      var(--ods-danger);
+  }
+
+  &.ods-badge-warning {
+    background: var(--ods-warning-light);
+    color:      #664d03;
+  }
+
+  &.ods-badge-info {
+    background: var(--ods-info-light);
+    color:      var(--ods-info);
+  }
+
+  &.ods-badge-orange {
+    background: rgba(255, 121, 0, 0.12);
+    color:      var(--ods-orange-dark);
+  }
+
+  &.ods-badge-neutral {
+    background: var(--ods-gray-200);
+    color:      var(--ods-gray-700);
+  }
+
+  &.ods-badge-dark {
+    background: var(--ods-gray-800);
+    color:      var(--ods-white);
+  }
+
+  // ── Dot indicator ─────────────────────────────────────────────
+  &::before {
+    content:       '';
+    width:         6px;
+    height:        6px;
+    border-radius: 50%;
+    background:    currentColor;
+    flex-shrink:   0;
+  }
+
+  &.no-dot::before { display: none; }
+}
+
+// Migration status specific
+.ods-status-migrated    { @extend .ods-badge; @extend .ods-badge-success; }
+.ods-status-in-progress { @extend .ods-badge; @extend .ods-badge-warning; }
+.ods-status-in-queue    { @extend .ods-badge; @extend .ods-badge-info;    }
+.ods-status-on-hold     { @extend .ods-badge; @extend .ods-badge-danger;  }
+.ods-status-pending     { @extend .ods-badge; @extend .ods-badge-neutral; }

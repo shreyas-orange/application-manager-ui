@@ -7,6 +7,7 @@ import {
 import {
   Pencil,
   Plus,
+  Search,
   Trash2,
   X,
 } from "lucide-react";
@@ -18,7 +19,6 @@ import { useDeleteUser } from "../hooks/useDeleteUser";
 
 import type { User } from "../types/user.types";
 
-import "../styles/users.css";
 
 const PAGE_SIZE = 10;
 
@@ -417,25 +417,37 @@ export default function UsersPage() {
 
   if (isLoading) {
     return (
-      <div className="list-state">
-        Loading users...
+      <div
+        style={{
+          display:        "flex",
+          flexDirection:  "column",
+          alignItems:     "center",
+          justifyContent: "center",
+          minHeight:      "60vh",
+          gap:            "1rem",
+        }}
+      >
+        <div className="ods-spinner" />
+        <p style={{ color: "var(--ods-gray-600)", fontSize: "var(--ods-font-size-sm)" }}>
+          Loading users...
+        </p>
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="list-state list-state--error">
-        <h2>Unable to load users</h2>
-
-        <p>
+      <div className="ods-empty-state">
+        <span className="ods-empty-icon">⚠️</span>
+        <div className="ods-empty-title">Unable to load users</div>
+        <p className="ods-empty-text">
           {error instanceof Error
             ? error.message
             : "Something went wrong while loading users."}
         </p>
-
         <button
           type="button"
+          className="btn btn-primary mt-3"
           onClick={() => {
             void refetch();
           }}
@@ -448,25 +460,30 @@ export default function UsersPage() {
 
   return (
     <>
-      <section className="users-page">
-        <div className="list-page-header">
+      <div>
+
+        {/* ── Page header ─────────────────────────────────────── */}
+        <div className="ods-page-header">
           <div>
-            <h1>Users</h1>
+            <h1 className="page-title">Users</h1>
+            <p className="page-subtitle">
+              Manage user accounts and roles.
+            </p>
           </div>
 
-          <div className="list-page-actions">
+          <div style={{ display: "flex", gap: "0.5rem" }}>
             <button
               type="button"
-              className="primary-button"
+              className="btn btn-primary"
               onClick={openInviteModal}
             >
-              <Plus size={17} />
+              <Plus size={16} style={{ marginRight: "0.35rem" }} />
               Invite User
             </button>
 
             <button
               type="button"
-              className="secondary-button"
+              className="btn btn-outline-secondary"
               disabled={isFetching}
               onClick={() => {
                 void refetch();
@@ -479,272 +496,249 @@ export default function UsersPage() {
           </div>
         </div>
 
-        <div className="list-toolbar">
-          <form
-            className="list-search-form"
-            onSubmit={handleSearch}
-          >
-            <input
-              type="search"
-              value={searchInput}
-              placeholder="Search by name or email"
-              aria-label="Search users"
-              onChange={(event) => {
-                setSearchInput(
-                  event.target.value,
-                );
-              }}
-            />
+        {/* ── Main panel ──────────────────────────────────────── */}
+        <div className="ods-card">
 
-            <button
-              type="submit"
-              disabled={isFetching}
+          {/* ── Toolbar ───────────────────────────────────────── */}
+          <div className="ods-card-header" style={{ flexWrap: "wrap", gap: "0.75rem" }}>
+            <form
+              onSubmit={handleSearch}
+              style={{ display: "flex", gap: "0.5rem", flex: 1, minWidth: 260 }}
             >
-              Search
-            </button>
+              <div className="ods-search" style={{ flex: 1 }}>
+                <Search className="ods-search-icon" size={15} />
+                <input
+                  type="search"
+                  className="form-control form-control-sm"
+                  value={searchInput}
+                  placeholder="Search by name or email"
+                  aria-label="Search users"
+                  onChange={(event) => {
+                    setSearchInput(event.target.value);
+                  }}
+                />
+              </div>
+              <button type="submit" className="btn btn-primary btn-sm" disabled={isFetching}>
+                Search
+              </button>
+            </form>
 
             {(search || searchInput) && (
               <button
                 type="button"
-                className="clear-button"
+                className="btn btn-outline-secondary btn-sm"
                 onClick={handleClearSearch}
+                style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
               >
+                <X size={13} />
                 Clear
               </button>
             )}
-          </form>
-
-          <span className="list-count">
-            {total} user
-            {total === 1 ? "" : "s"}
-          </span>
-        </div>
-
-        {(deleteUserMutation.isError ||
-          updateUserMutation.isError) && (
-          <div className="form-message form-message--error">
-            {deleteUserMutation.error instanceof
-            Error
-              ? deleteUserMutation.error.message
-              : updateUserMutation.error instanceof
-                  Error
-                ? updateUserMutation.error.message
-                : "Unable to complete the operation."}
           </div>
-        )}
 
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>User</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
+          {/* ── Result count ──────────────────────────────────── */}
+          <div className="ods-list-toolbar">
+            <span className="ods-list-count">
+              <strong style={{ color: "var(--ods-gray-900)" }}>{total}</strong> user{total === 1 ? "" : "s"}
+            </span>
+          </div>
 
-            <tbody>
-              {users.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="empty-table-cell"
-                  >
-                    {search
-                      ? "No users match your search."
-                      : "No users found."}
-                  </td>
-                </tr>
-              ) : (
-                users.map((user) => {
-                  const fullName =
-                    [
-                      user.first_name,
-                      user.last_name,
-                    ]
-                      .filter(Boolean)
-                      .join(" ")
-                      .trim() || "Unnamed user";
+          {/* ── Error message ─────────────────────────────────── */}
+          {(deleteUserMutation.isError || updateUserMutation.isError) && (
+            <div className="ods-form-message error" style={{ margin: "1rem 1.25rem" }}>
+              {deleteUserMutation.error instanceof Error
+                ? deleteUserMutation.error.message
+                : updateUserMutation.error instanceof Error
+                  ? updateUserMutation.error.message
+                  : "Unable to complete the operation."}
+            </div>
+          )}
 
-                  const isDeleting =
-                    deleteUserMutation.isPending &&
-                    deleteUserMutation.variables ===
-                      user.id;
+          {/* ── Table ─────────────────────────────────────────── */}
+          <div className="ods-card-body" style={{ padding: 0 }}>
+            <div className="ods-table-wrapper">
+              <table className="ods-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
 
-                  return (
-                    <tr key={user.id}>
-                      <td>{user.id}</td>
-
-                      <td>
-                        <div className="user-cell">
-                          <div className="user-avatar">
-                            {getInitials(
-                              user.first_name,
-                              user.last_name,
-                            )}
-                          </div>
-
-                          <span>{fullName}</span>
-                        </div>
-                      </td>
-
-                      <td>{user.email}</td>
-
-                      <td>
-                        <span className="role-badge">
-                          {user.role?.name ??
-                            "No role"}
-                        </span>
-                      </td>
-
-                      <td>
-                        <span
-                          className={
-                            user.is_active
-                              ? "status-badge status-badge--active"
-                              : "status-badge status-badge--inactive"
-                          }
-                        >
-                          {user.is_active
-                            ? "Active"
-                            : "Inactive"}
-                        </span>
-                      </td>
-
-                      <td>
-                        {formatDate(
-                          user.created_at,
-                        )}
-                      </td>
-
-                      <td>
-                        <div className="table-actions">
-                          <button
-                            type="button"
-                            className="action-button action-button--edit"
-                            disabled={
-                              deleteUserMutation.isPending
-                            }
-                            onClick={() => {
-                              openEditModal(user);
-                            }}
-                          >
-                            <Pencil size={15} />
-                            Edit
-                          </button>
-
-                          <button
-                            type="button"
-                            className="action-button action-button--delete"
-                            disabled={
-                              deleteUserMutation.isPending ||
-                              updateUserMutation.isPending
-                            }
-                            onClick={() => {
-                              void handleDeleteUser(
-                                user,
-                              );
-                            }}
-                          >
-                            <Trash2 size={15} />
-                            {isDeleting
-                              ? "Deleting..."
-                              : "Delete"}
-                          </button>
+                <tbody>
+                  {users.length === 0 ? (
+                    <tr>
+                      <td colSpan={7}>
+                        <div className="ods-empty-state" style={{ padding: "2rem" }}>
+                          <span className="ods-empty-icon">👤</span>
+                          <p className="ods-empty-text">
+                            {search
+                              ? "No users match your search."
+                              : "No users found."}
+                          </p>
                         </div>
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                  ) : (
+                    users.map((user) => {
+                      const fullName =
+                        [
+                          user.first_name,
+                          user.last_name,
+                        ]
+                          .filter(Boolean)
+                          .join(" ")
+                          .trim() || "Unnamed user";
+
+                      const isDeleting =
+                        deleteUserMutation.isPending &&
+                        deleteUserMutation.variables ===
+                          user.id;
+
+                      return (
+                        <tr key={user.id}>
+                          <td style={{ color: "var(--ods-gray-500)" }}>{user.id}</td>
+
+                          <td>
+                            <div className="ods-user-cell">
+                              <div className="ods-user-avatar-sm">
+                                {getInitials(
+                                  user.first_name,
+                                  user.last_name,
+                                )}
+                              </div>
+                              <span style={{ fontWeight: 600, color: "var(--ods-gray-900)" }}>{fullName}</span>
+                            </div>
+                          </td>
+
+                          <td style={{ color: "var(--ods-gray-600)" }}>{user.email}</td>
+
+                          <td>
+                            <span className="ods-role-badge">
+                              {user.role?.name ?? "No role"}
+                            </span>
+                          </td>
+
+                          <td>
+                            <span
+                              className={`ods-status-badge ${user.is_active ? "active" : "inactive"}`}
+                            >
+                              {user.is_active ? "Active" : "Inactive"}
+                            </span>
+                          </td>
+
+                          <td style={{ color: "var(--ods-gray-500)", whiteSpace: "nowrap" }}>
+                            {formatDate(user.created_at)}
+                          </td>
+
+                          <td>
+                            <div style={{ display: "flex", gap: "0.375rem" }}>
+                              <button
+                                type="button"
+                                className="ods-action-btn"
+                                disabled={deleteUserMutation.isPending}
+                                onClick={() => {
+                                  openEditModal(user);
+                                }}
+                              >
+                                <Pencil size={14} />
+                                Edit
+                              </button>
+
+                              <button
+                                type="button"
+                                className="ods-action-btn danger"
+                                disabled={
+                                  deleteUserMutation.isPending ||
+                                  updateUserMutation.isPending
+                                }
+                                onClick={() => {
+                                  void handleDeleteUser(user);
+                                }}
+                              >
+                                <Trash2 size={14} />
+                                {isDeleting ? "Deleting..." : "Delete"}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* ── Pagination ────────────────────────────────────── */}
+          <div className="ods-pagination">
+            <span className="ods-pagination-info">
+              Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
+            </span>
+
+            <div className="ods-pagination-actions">
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm"
+                disabled={currentPage <= 1 || isFetching}
+                onClick={() => {
+                  setPage((current) => Math.max(1, current - 1));
+                }}
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm"
+                disabled={currentPage >= totalPages || users.length === 0 || isFetching}
+                onClick={() => {
+                  setPage((current) => Math.min(totalPages, current + 1));
+                }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+
         </div>
+      </div>
 
-        <div className="pagination">
-          <button
-            type="button"
-            disabled={
-              currentPage <= 1 ||
-              isFetching
-            }
-            onClick={() => {
-              setPage((current) =>
-                Math.max(1, current - 1),
-              );
-            }}
-          >
-            Previous
-          </button>
-
-          <span>
-            Page {currentPage} of{" "}
-            {totalPages}
-          </span>
-
-          <button
-            type="button"
-            disabled={
-              currentPage >= totalPages ||
-              users.length === 0 ||
-              isFetching
-            }
-            onClick={() => {
-              setPage((current) =>
-                Math.min(
-                  totalPages,
-                  current + 1,
-                ),
-              );
-            }}
-          >
-            Next
-          </button>
-        </div>
-      </section>
-
+      {/* ── Invite User Modal ──────────────────────────────────── */}
       {isInviteModalOpen && (
         <div
-          className="modal-backdrop"
+          className="ods-modal-overlay"
           role="presentation"
           onMouseDown={(event) => {
-            if (
-              event.target ===
-              event.currentTarget
-            ) {
+            if (event.target === event.currentTarget) {
               closeInviteModal();
             }
           }}
         >
           <div
-            className="user-modal"
+            className="ods-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="invite-user-title"
           >
-            <div className="user-modal__header">
+            <div className="ods-modal-header">
               <div>
-                <h2 id="invite-user-title">
+                <h2 className="ods-modal-title" id="invite-user-title">
                   Invite user
                 </h2>
-
-                <p>
-                  Create a new user account and
-                  assign a role.
+                <p style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-400)", margin: "0.25rem 0 0" }}>
+                  Create a new user account and assign a role.
                 </p>
               </div>
-
               <button
                 type="button"
-                className="modal-close-button"
+                className="ods-modal-close"
                 aria-label="Close invite user modal"
-                disabled={
-                  createUserMutation.isPending
-                }
+                disabled={createUserMutation.isPending}
                 onClick={closeInviteModal}
               >
                 <X size={20} />
@@ -752,132 +746,116 @@ export default function UsersPage() {
             </div>
 
             <form
-              className="user-edit-form"
               onSubmit={handleInviteUser}
+              style={{ padding: "1.5rem", flex: 1, overflowY: "auto" }}
             >
-              <div className="form-grid">
-                <label>
-                  <span>First name</span>
-
+              <div className="ods-form-grid" style={{ marginBottom: "1rem" }}>
+                <div className="ods-form-group">
+                  <label htmlFor="invite-first-name">First name</label>
                   <input
+                    id="invite-first-name"
                     type="text"
-                    value={
-                      inviteForm.first_name
-                    }
+                    value={inviteForm.first_name}
                     minLength={2}
                     maxLength={50}
                     required
                     placeholder="Enter first name"
                     onChange={(event) => {
-                      setInviteForm(
-                        (current) => ({
-                          ...current,
-                          first_name:
-                            event.target.value,
-                        }),
-                      );
+                      setInviteForm((current) => ({
+                        ...current,
+                        first_name: event.target.value,
+                      }));
                     }}
                   />
-                </label>
+                </div>
 
-                <label>
-                  <span>Last name</span>
-
+                <div className="ods-form-group">
+                  <label htmlFor="invite-last-name">Last name</label>
                   <input
+                    id="invite-last-name"
                     type="text"
-                    value={
-                      inviteForm.last_name
-                    }
+                    value={inviteForm.last_name}
                     minLength={2}
                     maxLength={50}
                     required
                     placeholder="Enter last name"
                     onChange={(event) => {
-                      setInviteForm(
-                        (current) => ({
-                          ...current,
-                          last_name:
-                            event.target.value,
-                        }),
-                      );
+                      setInviteForm((current) => ({
+                        ...current,
+                        last_name: event.target.value,
+                      }));
                     }}
                   />
-                </label>
+                </div>
               </div>
 
-              <label>
-                <span>Email address</span>
-
+              <div className="ods-form-group" style={{ marginBottom: "1rem" }}>
+                <label htmlFor="invite-email">Email address</label>
                 <input
+                  id="invite-email"
                   type="email"
                   value={inviteForm.email}
                   required
                   placeholder="user@example.com"
                   onChange={(event) => {
-                    setInviteForm(
-                      (current) => ({
-                        ...current,
-                        email:
-                          event.target.value,
-                      }),
-                    );
+                    setInviteForm((current) => ({
+                      ...current,
+                      email: event.target.value,
+                    }));
                   }}
                 />
-              </label>
+              </div>
 
-              <label>
-                <span>Role</span>
-
+              <div className="ods-form-group" style={{ marginBottom: "1rem" }}>
+                <label htmlFor="invite-role">Role</label>
                 <select
+                  id="invite-role"
                   value={inviteForm.role_id}
                   required
                   onChange={(event) => {
-                    setInviteForm(
-                      (current) => ({
-                        ...current,
-                        role_id:
-                          event.target.value,
-                      }),
-                    );
+                    setInviteForm((current) => ({
+                      ...current,
+                      role_id: event.target.value,
+                    }));
                   }}
                 >
-                  <option value="">
-                    Select a role
-                  </option>
-
+                  <option value="">Select a role</option>
                   {ROLE_OPTIONS.map((role) => (
-                    <option
-                      key={role.id}
-                      value={role.id}
-                    >
+                    <option key={role.id} value={role.id}>
                       {role.name}
                     </option>
                   ))}
                 </select>
-              </label>
+              </div>
 
               {inviteValidationError && (
-                <div className="form-message form-message--error">
+                <div className="ods-form-message error">
                   {inviteValidationError}
                 </div>
               )}
 
               {createUserMutation.isError && (
-                <div className="form-message form-message--error">
-                  {createUserMutation.error instanceof
-                  Error
+                <div className="ods-form-message error">
+                  {createUserMutation.error instanceof Error
                     ? createUserMutation.error.message
                     : "Unable to invite user."}
                 </div>
               )}
 
-              <div className="modal-actions">
+              <div
+                style={{
+                  display:        "flex",
+                  justifyContent: "flex-end",
+                  gap:            "0.75rem",
+                  paddingTop:     "1rem",
+                  borderTop:      "1px solid var(--ods-gray-200)",
+                  marginTop:      "1rem",
+                }}
+              >
                 <button
                   type="button"
-                  className="secondary-button"
-                  disabled={
-                    createUserMutation.isPending
-                  }
+                  className="btn btn-outline-secondary"
+                  disabled={createUserMutation.isPending}
                   onClick={closeInviteModal}
                 >
                   Cancel
@@ -885,14 +863,10 @@ export default function UsersPage() {
 
                 <button
                   type="submit"
-                  className="primary-button"
-                  disabled={
-                    createUserMutation.isPending
-                  }
+                  className="btn btn-primary"
+                  disabled={createUserMutation.isPending}
                 >
-                  {createUserMutation.isPending
-                    ? "Inviting..."
-                    : "Invite User"}
+                  {createUserMutation.isPending ? "Inviting..." : "Invite User"}
                 </button>
               </div>
             </form>
@@ -900,44 +874,37 @@ export default function UsersPage() {
         </div>
       )}
 
+      {/* ── Edit User Modal ────────────────────────────────────── */}
       {editingUser && (
         <div
-          className="modal-backdrop"
+          className="ods-modal-overlay"
           role="presentation"
           onMouseDown={(event) => {
-            if (
-              event.target ===
-              event.currentTarget
-            ) {
+            if (event.target === event.currentTarget) {
               closeEditModal();
             }
           }}
         >
           <div
-            className="user-modal"
+            className="ods-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="edit-user-title"
           >
-            <div className="user-modal__header">
+            <div className="ods-modal-header">
               <div>
-                <h2 id="edit-user-title">
+                <h2 className="ods-modal-title" id="edit-user-title">
                   Edit user
                 </h2>
-
-                <p>
-                  Update the user's account
-                  information.
+                <p style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-400)", margin: "0.25rem 0 0" }}>
+                  Update the user's account information.
                 </p>
               </div>
-
               <button
                 type="button"
-                className="modal-close-button"
+                className="ods-modal-close"
                 aria-label="Close edit user modal"
-                disabled={
-                  updateUserMutation.isPending
-                }
+                disabled={updateUserMutation.isPending}
                 onClick={closeEditModal}
               >
                 <X size={20} />
@@ -945,106 +912,103 @@ export default function UsersPage() {
             </div>
 
             <form
-              className="user-edit-form"
               onSubmit={handleUpdateUser}
+              style={{ padding: "1.5rem", flex: 1, overflowY: "auto" }}
             >
-              <div className="form-grid">
-                <label>
-                  <span>First name</span>
-
+              <div className="ods-form-grid" style={{ marginBottom: "1rem" }}>
+                <div className="ods-form-group">
+                  <label htmlFor="edit-first-name">First name</label>
                   <input
+                    id="edit-first-name"
                     type="text"
                     value={editForm.first_name}
                     minLength={2}
                     maxLength={50}
                     required
                     onChange={(event) => {
-                      setEditForm(
-                        (current) => ({
-                          ...current,
-                          first_name:
-                            event.target.value,
-                        }),
-                      );
+                      setEditForm((current) => ({
+                        ...current,
+                        first_name: event.target.value,
+                      }));
                     }}
                   />
-                </label>
+                </div>
 
-                <label>
-                  <span>Last name</span>
-
+                <div className="ods-form-group">
+                  <label htmlFor="edit-last-name">Last name</label>
                   <input
+                    id="edit-last-name"
                     type="text"
                     value={editForm.last_name}
                     minLength={2}
                     maxLength={50}
                     required
                     onChange={(event) => {
-                      setEditForm(
-                        (current) => ({
-                          ...current,
-                          last_name:
-                            event.target.value,
-                        }),
-                      );
+                      setEditForm((current) => ({
+                        ...current,
+                        last_name: event.target.value,
+                      }));
                     }}
                   />
-                </label>
+                </div>
               </div>
 
-              <label>
-                <span>Email</span>
-
+              <div className="ods-form-group" style={{ marginBottom: "1rem" }}>
+                <label htmlFor="edit-email">Email</label>
                 <input
-                    type="email"
-                    value={editForm.email}
-                    readOnly
-                    className="readonly-input"
-                  />
-              </label>
+                  id="edit-email"
+                  type="email"
+                  value={editForm.email}
+                  readOnly
+                  style={{ background: "var(--ods-gray-100)", color: "var(--ods-gray-500)" }}
+                />
+              </div>
 
-              <label className="status-toggle">
+              <div className="ods-status-toggle" style={{ marginBottom: "1rem" }}>
                 <input
+                  id="edit-active"
                   type="checkbox"
                   checked={editForm.is_active}
                   onChange={(event) => {
-                    setEditForm(
-                      (current) => ({
-                        ...current,
-                        is_active:
-                          event.target.checked,
-                      }),
-                    );
+                    setEditForm((current) => ({
+                      ...current,
+                      is_active: event.target.checked,
+                    }));
                   }}
                 />
-
-                <span>
+                <label htmlFor="edit-active">
                   User account is active
-                </span>
-              </label>
+                </label>
+              </div>
 
               {editValidationError && (
-                <div className="form-message form-message--error">
+                <div className="ods-form-message error">
                   {editValidationError}
                 </div>
               )}
 
               {updateUserMutation.isError && (
-                <div className="form-message form-message--error">
-                  {updateUserMutation.error instanceof
-                  Error
+                <div className="ods-form-message error">
+                  {updateUserMutation.error instanceof Error
                     ? updateUserMutation.error.message
                     : "Unable to update user."}
                 </div>
               )}
 
-              <div className="modal-actions">
+              <div
+                style={{
+                  display:        "flex",
+                  justifyContent: "flex-end",
+                  gap:            "0.75rem",
+                  paddingTop:     "1rem",
+                  borderTop:      "1px solid var(--ods-gray-200)",
+                  marginTop:      "1rem",
+                }}
+              >
                 <button
                   type="button"
-                  className="secondary-button"
-                  disabled={
-                    updateUserMutation.isPending
-                  }
+                  className="btn btn-outline-secondary"
+                  disabled={updateUserMutation.isPending}
                   onClick={closeEditModal}
                 >
                   Cancel
@@ -1052,14 +1016,10 @@ export default function UsersPage() {
 
                 <button
                   type="submit"
-                  className="primary-button"
-                  disabled={
-                    updateUserMutation.isPending
-                  }
+                  className="btn btn-primary"
+                  disabled={updateUserMutation.isPending}
                 >
-                  {updateUserMutation.isPending
-                    ? "Saving..."
-                    : "Save changes"}
+                  {updateUserMutation.isPending ? "Saving..." : "Save changes"}
                 </button>
               </div>
             </form>

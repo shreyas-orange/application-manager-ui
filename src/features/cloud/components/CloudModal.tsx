@@ -30,7 +30,7 @@ export default function CloudModal({
 
   return (
     <div
-      className="cloud-modal-overlay"
+      className="ods-modal-overlay"
       role="presentation"
       onMouseDown={(event) => {
         if (
@@ -42,28 +42,26 @@ export default function CloudModal({
       }}
     >
       <div
-        className="cloud-modal"
+        className="ods-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="cloud-modal-title"
       >
-        <div className="cloud-modal-header">
+        <div className="ods-modal-header">
           <div>
-            <h2 id="cloud-modal-title">
+            <h2 className="ods-modal-title" id="cloud-modal-title">
               {cloud
                 ? "Edit Cloud"
                 : "Add Cloud"}
             </h2>
-
-            <p>
-              Configure a cloud provider
-              connection.
+            <p style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-400)", margin: "0.25rem 0 0" }}>
+              Configure a cloud provider connection.
             </p>
           </div>
 
           <button
             type="button"
-            className="cloud-modal-close"
+            className="ods-modal-close"
             aria-label="Close modal"
             onClick={onClose}
           >

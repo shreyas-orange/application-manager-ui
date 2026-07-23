@@ -1,0 +1,351 @@
+// ─── Orange Upload Components ──────────────────────────────────────────────────
+
+.ods-upload-card {
+  background:   var(--ods-white);
+  border:       1px solid var(--ods-gray-200);
+  margin-bottom: 1.5rem;
+
+  .ods-upload-card-header {
+    display:     flex;
+    align-items: center;
+    gap:         1rem;
+    padding:     1.25rem;
+    border-bottom: 1px solid var(--ods-gray-200);
+
+    .ods-upload-card-icon {
+      width:           44px;
+      height:          44px;
+      background:      rgba(255, 121, 0, 0.08);
+      color:           var(--ods-orange);
+      display:         flex;
+      align-items:     center;
+      justify-content: center;
+      flex-shrink:     0;
+    }
+
+    h2 {
+      font-size:   1rem;
+      font-weight: var(--ods-font-weight-bold);
+      color:       var(--ods-gray-900);
+      margin:      0;
+    }
+
+    p {
+      font-size: var(--ods-font-size-sm);
+      color:     var(--ods-gray-600);
+      margin:    0.25rem 0 0;
+    }
+  }
+}
+
+// ─── Upload Drop Zone ─────────────────────────────────────────────────────────
+
+.ods-upload-dropzone {
+  border:          2px dashed var(--ods-gray-300);
+  background:      var(--ods-gray-100);
+  padding:         3rem 2rem;
+  text-align:      center;
+  cursor:          pointer;
+  transition:      all var(--ods-transition);
+  margin:          1.25rem;
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  gap:             0.5rem;
+
+  &:hover,
+  &.drag-over {
+    border-color: var(--ods-orange);
+    background:   rgba(255, 121, 0, 0.04);
+  }
+
+  svg {
+    color: var(--ods-gray-400);
+    margin-bottom: 0.5rem;
+  }
+
+  h3 {
+    font-size:   var(--ods-font-size-sm);
+    font-weight: var(--ods-font-weight-bold);
+    color:       var(--ods-gray-700);
+    margin:      0;
+  }
+
+  p {
+    font-size: var(--ods-font-size-xs);
+    color:     var(--ods-gray-500);
+    margin:    0;
+  }
+}
+
+.ods-upload-browse-btn {
+  margin-top:    0.75rem;
+  padding:       0.5rem 1.25rem;
+  background:    var(--ods-orange);
+    color:         var(--ods-black);
+  border:        none;
+  font-weight:   var(--ods-font-weight-bold);
+  font-size:     var(--ods-font-size-sm);
+  cursor:        pointer;
+  transition:    background var(--ods-transition);
+
+  &:hover {
+    background: var(--ods-orange-dark);
+  }
+
+  &:disabled {
+    background: var(--ods-gray-400);
+    color:      var(--ods-gray-600);
+    cursor:     not-allowed;
+  }
+}
+
+.ods-upload-hidden-input {
+  display: none;
+}
+
+// ─── Upload Selected Files ────────────────────────────────────────────────────
+
+.ods-upload-selected-files {
+  padding: 0 1.25rem;
+  display:  flex;
+  flex-direction: column;
+  gap:     0.5rem;
+}
+
+.ods-upload-file-item {
+  display:     flex;
+  align-items: center;
+  gap:         0.75rem;
+  padding:     0.75rem;
+  background:  var(--ods-gray-100);
+  border:      1px solid var(--ods-gray-200);
+
+  .ods-upload-file-icon {
+    width:           36px;
+    height:          36px;
+    background:      rgba(25, 135, 84, 0.08);
+    color:           var(--ods-success);
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    flex-shrink:     0;
+  }
+
+  .ods-upload-file-info {
+    flex:       1;
+    overflow:   hidden;
+
+    strong {
+      display:      block;
+      font-size:    var(--ods-font-size-sm);
+      color:        var(--ods-gray-900);
+      white-space:  nowrap;
+      overflow:     hidden;
+      textOverflow: ellipsis;
+    }
+
+    span {
+      font-size: var(--ods-font-size-xs);
+      color:     var(--ods-gray-500);
+    }
+  }
+
+  .ods-upload-remove-btn {
+    background:  none;
+    border:      none;
+    color:       var(--ods-gray-500);
+    cursor:      pointer;
+    padding:     0.25rem;
+    display:     flex;
+    align-items: center;
+    transition:  color var(--ods-transition);
+    flex-shrink: 0;
+
+    &:hover {
+      color: var(--ods-danger);
+    }
+  }
+}
+
+// ─── Upload Actions ───────────────────────────────────────────────────────────
+
+.ods-upload-actions {
+  display:        flex;
+  justify-content: flex-end;
+  gap:            0.75rem;
+  padding:        1.25rem;
+  border-top:     1px solid var(--ods-gray-200);
+}
+
+// ─── Upload Result ────────────────────────────────────────────────────────────
+
+.ods-upload-result {
+  padding: 1.25rem;
+
+  .ods-upload-result-message {
+    display:     flex;
+    align-items: center;
+    gap:         0.5rem;
+    padding:     0.75rem 1rem;
+    font-size:   var(--ods-font-size-sm);
+    border-left: 4px solid var(--ods-success);
+    background:  var(--ods-success-light);
+    color:       var(--ods-success);
+    margin-bottom: 1rem;
+  }
+
+  .ods-upload-result-list {
+    display:        flex;
+    flex-direction: column;
+    gap:            0.75rem;
+  }
+
+  .ods-upload-result-item {
+    padding:       1rem;
+    background:    var(--ods-gray-100);
+    border:        1px solid var(--ods-gray-200);
+    border-left:   3px solid var(--ods-success);
+
+    > div:first-child {
+      margin-bottom: 0.75rem;
+
+      strong {
+        font-size: var(--ods-font-size-sm);
+        color:     var(--ods-gray-900);
+      }
+    }
+  }
+
+  .ods-upload-result-grid {
+    display:             grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:                 0.5rem;
+
+    > div {
+      display:        flex;
+      flex-direction: column;
+      gap:            0.15rem;
+
+      span {
+        font-size: var(--ods-font-size-xs);
+        color:     var(--ods-gray-500);
+      }
+
+      strong {
+        font-size: var(--ods-font-size-sm);
+        color:     var(--ods-gray-800);
+      }
+    }
+  }
+}
+
+// ─── Upload Message ───────────────────────────────────────────────────────────
+
+.ods-upload-message {
+  padding:     0.75rem 1rem;
+  font-size:   var(--ods-font-size-sm);
+  border-left: 4px solid;
+  margin:      1.25rem;
+
+  &.error {
+    border-left-color: var(--ods-danger);
+    background:        var(--ods-danger-light);
+    color:             var(--ods-danger);
+  }
+
+  &.success {
+    border-left-color: var(--ods-success);
+    background:        var(--ods-success-light);
+    color:             var(--ods-success);
+  }
+}
+
+// ─── Uploaded Files List Section ──────────────────────────────────────────────
+
+.ods-uploads-section {
+  margin-top: 2rem;
+
+  .ods-uploads-header {
+    display:        flex;
+    justify-content: space-between;
+    align-items:    flex-start;
+    margin-bottom:  1rem;
+    padding-bottom: 1rem;
+    border-bottom:  2px solid var(--ods-gray-200);
+
+    h2 {
+      font-size:   1.25rem;
+      font-weight: var(--ods-font-weight-bold);
+      color:       var(--ods-gray-900);
+      margin:      0;
+    }
+
+    p {
+      font-size: var(--ods-font-size-sm);
+      color:     var(--ods-gray-600);
+      margin:    0.25rem 0 0;
+    }
+  }
+}
+
+// ─── Uploaded Files Table ─────────────────────────────────────────────────────
+
+.ods-uploads-table {
+  width:           100%;
+  border-collapse: collapse;
+  font-size:       var(--ods-font-size-sm);
+
+  thead {
+    tr {
+      border-bottom: 2px solid var(--ods-orange);
+    }
+
+    th {
+      padding:        0.75rem 1rem;
+      font-size:      0.7rem;
+      font-weight:    var(--ods-font-weight-bold);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color:          var(--ods-gray-600);
+      background:     var(--ods-gray-100);
+      white-space:    nowrap;
+      text-align:     left;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid var(--ods-gray-200);
+      transition:    background var(--ods-transition);
+
+      &:hover {
+        background: rgba(255, 121, 0, 0.04);
+      }
+
+      &:last-child { border-bottom: none; }
+    }
+
+    td {
+      padding:        0.75rem 1rem;
+      color:          var(--ods-gray-800);
+      vertical-align: middle;
+    }
+  }
+}
+
+.ods-uploads-file-name {
+  display:     flex;
+  align-items: center;
+  gap:         0.5rem;
+  color:       var(--ods-gray-900);
+
+  svg {
+    color: var(--ods-success);
+  }
+}
+
+.ods-uploads-actions {
+  display: flex;
+  gap:     0.375rem;
+}

@@ -1,11 +1,12 @@
-import type {
-  RecentUpload,
-} from "../types/dashboard.types";
+// src/features/dashboard/components/RecentUploadsTable.tsx
+import type { RecentUpload } from "../types/dashboard.types";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 interface RecentUploadsTableProps {
   uploads: RecentUpload[];
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatDate(date: string): string {
   return new Intl.DateTimeFormat("en-IN", {
     dateStyle: "medium",
@@ -13,55 +14,103 @@ function formatDate(date: string): string {
   }).format(new Date(date));
 }
 
-export function RecentUploadsTable({
-  uploads,
-}: RecentUploadsTableProps) {
+function uploadStatusClass(status: string): string {
+  const s = status.trim().toLowerCase();
+
+  if (s === "completed" || s === "success")
+    return "ods-badge ods-badge-success";
+
+  if (s === "failed" || s === "failure")
+    return "ods-badge ods-badge-danger";
+
+  if (s === "in progress" || s === "in_progress" || s === "processing")
+    return "ods-badge ods-badge-warning";
+
+  return "ods-badge ods-badge-neutral";
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+export function RecentUploadsTable({ uploads }: RecentUploadsTableProps) {
   return (
-    <section className="dashboard-panel">
-      <h2>Recent Uploads</h2>
+    <div className="ods-card">
 
-      {uploads.length === 0 ? (
-        <p className="dashboard-empty">
-          No recent uploads.
-        </p>
-      ) : (
-        <div className="table-wrapper">
-          <table className="dashboard-table">
-            <thead>
-              <tr>
-                <th>File name</th>
-                <th>Status</th>
-                <th>Uploaded by</th>
-                <th>Created at</th>
-              </tr>
-            </thead>
+      {/* ── Card header ───────────────────────────────────────── */}
+      <div className="ods-card-header">
+        <h2 className="ods-card-title">Recent Uploads</h2>
 
-            <tbody>
-              {uploads.map((upload) => (
-                <tr key={upload.id}>
-                  <td>{upload.file_name}</td>
+        {/* Upload count badge */}
+        {uploads.length > 0 && (
+          <span className="ods-badge ods-badge-neutral no-dot">
+            {uploads.length} file{uploads.length !== 1 ? "s" : ""}
+          </span>
+        )}
+      </div>
 
-                  <td>
-                    <span
-                      className={`status-badge status-badge--${upload.status
-                        .toLowerCase()
-                        .replaceAll(" ", "-")}`}
-                    >
-                      {upload.status}
-                    </span>
-                  </td>
+      {/* ── Card body ─────────────────────────────────────────── */}
+      <div className="ods-card-body" style={{ padding: 0 }}>
 
-                  <td>{upload.uploaded_by}</td>
+        {/* Empty state */}
+        {uploads.length === 0 ? (
+          <div className="ods-empty-state" style={{ padding: "2rem" }}>
+            <span className="ods-empty-icon">📂</span>
+            <p className="ods-empty-text">No recent uploads found.</p>
+          </div>
+        ) : (
 
-                  <td>
-                    {formatDate(upload.created_at)}
-                  </td>
+          /* Table */
+          <div className="ods-table-wrapper">
+            <table className="ods-table">
+              <thead>
+                <tr>
+                  <th>File Name</th>
+                  <th>Status</th>
+                  <th>Uploaded By</th>
+                  <th>Created At</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </section>
+              </thead>
+
+              <tbody>
+                {uploads.map((upload) => (
+                  <tr key={upload.id}>
+
+                    {/* File name */}
+                    <td>
+                      <span
+                        style={{
+                          fontWeight: 600,
+                          color:      "var(--ods-gray-900)",
+                          fontSize:   "var(--ods-font-size-sm)",
+                        }}
+                      >
+                        {upload.file_name}
+                      </span>
+                    </td>
+
+                    {/* Status badge */}
+                    <td>
+                      <span className={uploadStatusClass(upload.status)}>
+                        {upload.status}
+                      </span>
+                    </td>
+
+                    {/* Uploaded by */}
+                    <td style={{ color: "var(--ods-gray-600)" }}>
+                      {upload.uploaded_by || "—"}
+                    </td>
+
+                    {/* Date */}
+                    <td style={{ color: "var(--ods-gray-600)" }}>
+                      {formatDate(upload.created_at)}
+                    </td>
+
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+        )}
+      </div>
+    </div>
   );
 }

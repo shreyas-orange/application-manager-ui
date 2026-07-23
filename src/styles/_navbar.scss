@@ -1,0 +1,150 @@
+// ─── Orange Top Navbar ────────────────────────────────────────────────────────
+
+.ods-navbar {
+  position:         fixed;
+  top:              0;
+  left:             0;
+  right:            0;
+  height:           var(--ods-navbar-height);
+  background-color: var(--ods-black);
+  border-bottom:    3px solid var(--ods-orange);
+  z-index:          var(--ods-z-navbar);
+  display:          flex;
+  align-items:      center;
+  padding:          0 1.25rem;
+  gap:              1rem;
+
+  // ── Brand ──────────────────────────────────────────────────────
+  .ods-navbar-brand {
+    display:     flex;
+    align-items: center;
+    gap:         0.5rem;
+    color:       var(--ods-orange) !important;
+    font-weight: var(--ods-font-weight-bold);
+    font-size:   1.1rem;
+    text-decoration: none;
+    white-space: nowrap;
+
+    .ods-brand-icon {
+      width:  28px;
+      height: 28px;
+      background: var(--ods-orange);
+      display:    flex;
+      align-items:     center;
+      justify-content: center;
+      color:       var(--ods-black);
+      font-weight: var(--ods-font-weight-bold);
+      font-size:   0.8rem;
+      flex-shrink: 0;
+    }
+
+    &:hover {
+      color: var(--ods-orange-light) !important;
+    }
+  }
+
+  // ── Toggle button ──────────────────────────────────────────────
+  .ods-navbar-toggle {
+    background:  none;
+    border:      none;
+    color:       var(--ods-white);
+    cursor:      pointer;
+    padding:     0.5rem;
+    display:     flex;
+    align-items: center;
+    transition:  color var(--ods-transition);
+
+    &:hover { color: var(--ods-orange); }
+
+    svg {
+      width:  22px;
+      height: 22px;
+    }
+  }
+
+  // ── Spacer ─────────────────────────────────────────────────────
+  .ods-navbar-spacer { flex: 1; }
+
+  // ── Right section ──────────────────────────────────────────────
+  .ods-navbar-right {
+    display:     flex;
+    align-items: center;
+    gap:         0.75rem;
+  }
+
+  // ── User avatar ────────────────────────────────────────────────
+  .ods-user-avatar {
+    width:           36px;
+    height:          36px;
+    background:      var(--ods-orange);
+    color:           var(--ods-black);
+    font-weight:     var(--ods-font-weight-bold);
+    font-size:       0.8rem;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    cursor:          pointer;
+    border:          2px solid transparent;
+    transition:      border-color var(--ods-transition);
+    flex-shrink:     0;
+
+    &:hover {
+      border-color: var(--ods-orange-light);
+    }
+  }
+
+  // ── Dropdown ───────────────────────────────────────────────────
+  .ods-navbar-dropdown {
+    position: relative;
+
+    .ods-dropdown-menu {
+      position:   absolute;
+      top:        calc(100% + 0.5rem);
+      right:      0;
+      min-width:  200px;
+      background: var(--ods-white);
+      border:     1px solid var(--ods-gray-300);
+      border-top: 3px solid var(--ods-orange);
+      box-shadow: var(--ods-shadow-lg);
+      z-index:    var(--ods-z-modal);
+      display:    none;
+
+      &.open { display: block; }
+
+      .ods-dropdown-item {
+        display:     block;
+        width:       100%;
+        padding:     0.6rem 1rem;
+        background:  none;
+        border:      none;
+        text-align:  left;
+        font-size:   var(--ods-font-size-sm);
+        color:       var(--ods-gray-800);
+        cursor:      pointer;
+        transition:  background var(--ods-transition);
+
+        &:hover {
+          background: var(--ods-gray-100);
+          color:      var(--ods-orange);
+        }
+
+        &.danger {
+          color: var(--ods-danger);
+          &:hover { background: var(--ods-danger-light); }
+        }
+      }
+
+      .ods-dropdown-divider {
+        height:     1px;
+        background: var(--ods-gray-200);
+        margin:     0.25rem 0;
+      }
+
+      .ods-dropdown-header {
+        padding:   0.5rem 1rem;
+        font-size: var(--ods-font-size-xs);
+        color:     var(--ods-gray-500);
+      }
+    }
+  }
+}

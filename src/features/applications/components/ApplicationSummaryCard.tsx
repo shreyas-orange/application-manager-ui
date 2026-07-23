@@ -1,35 +1,98 @@
+// src/features/applications/components/ApplicationSummaryCard.tsx
+import type { ReactNode } from "react";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 interface ApplicationSummaryCardProps {
-  title: string;
-  value: number;
+  title:       string;
+  value:       number;
   description: string;
-  icon: string;
+  icon?:       ReactNode;
+  variant?:    "default" | "success" | "warning" | "danger" | "info";
 }
 
+// ─── Variant token map ────────────────────────────────────────────────────────
+const VARIANT_COLOR: Record<string, string> = {
+  default: "var(--ods-orange)",
+  success: "var(--ods-success)",
+  warning: "#f59e0b",
+  danger:  "var(--ods-danger)",
+  info:    "var(--ods-info)",
+};
+
+const VARIANT_BG: Record<string, string> = {
+  default: "rgba(255, 121, 0, 0.08)",
+  success: "rgba(25, 135, 84, 0.08)",
+  warning: "rgba(245, 158, 11, 0.08)",
+  danger:  "rgba(205, 60, 20, 0.08)",
+  info:    "rgba(82, 126, 219, 0.08)",
+};
+
+const VARIANT_BORDER: Record<string, string> = {
+  default: "var(--ods-orange)",
+  success: "var(--ods-success)",
+  warning: "#f59e0b",
+  danger:  "var(--ods-danger)",
+  info:    "var(--ods-info)",
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
 export default function ApplicationSummaryCard({
   title,
   value,
   description,
   icon,
+  variant = "default",
 }: ApplicationSummaryCardProps) {
+  const accentColor = VARIANT_COLOR[variant]  ?? VARIANT_COLOR.default;
+  const iconBg      = VARIANT_BG[variant]     ?? VARIANT_BG.default;
+  const borderColor = VARIANT_BORDER[variant] ?? VARIANT_BORDER.default;
+
   return (
-    <article className="application-summary-card">
-      <div className="application-summary-card__header">
-        <span className="application-summary-card__icon">
-          {icon}
-        </span>
+    <div className="ods-stat-card" style={{ borderTopColor: borderColor }}>
+      <div
+        style={{
+          display:        "flex",
+          justifyContent: "space-between",
+          alignItems:     "flex-start",
+        }}
+      >
+        {/* ── Value + labels ────────────────────────────────── */}
+        <div>
+          <div
+            style={{
+              fontSize:     "2rem",
+              fontWeight:   700,
+              color:        accentColor,
+              lineHeight:   1,
+              marginBottom: "0.25rem",
+            }}
+          >
+            {value}
+          </div>
 
-        <span className="application-summary-card__title">
-          {title}
-        </span>
+          <div className="ods-stat-label">{title}</div>
+
+          <div className="ods-stat-sub">{description}</div>
+        </div>
+
+        {/* ── Icon ──────────────────────────────────────────── */}
+        {icon && (
+          <div
+            style={{
+              width:          40,
+              height:         40,
+              background:     iconBg,
+              display:        "flex",
+              alignItems:     "center",
+              justifyContent: "center",
+              color:          accentColor,
+              flexShrink:     0,
+            }}
+          >
+            {icon}
+          </div>
+        )}
       </div>
-
-      <strong className="application-summary-card__value">
-        {value}
-      </strong>
-
-      <p className="application-summary-card__description">
-        {description}
-      </p>
-    </article>
+    </div>
   );
 }

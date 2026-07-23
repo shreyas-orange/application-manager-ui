@@ -1,0 +1,16 @@
+// src/styles/main.scss
+
+// ─── Entry point — import order matters ──────────────────────────
+@import 'boosted-setup';   // ← Boosted variable overrides + Boosted import
+@import 'tokens';
+@import 'typography';
+@import 'layout';
+@import 'navbar';
+@import 'sidebar';
+@import 'components';
+@import 'tables';
+@import 'forms';
+@import 'badges';
+@import 'modals';
+@import 'uploads';
+@import 'utilities';

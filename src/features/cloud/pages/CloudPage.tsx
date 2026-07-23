@@ -26,7 +26,6 @@ import type {
   CreateCloudRequest,
 } from "../types/cloud";
 
-import "../styles/cloud.css";
 
 const PAGE_SIZE = 10;
 
@@ -239,10 +238,8 @@ export default function CloudPage() {
     setMessage("");
 
     try {
-
       setMessage(
-        response.message ||
-          "Connection successful.",
+        "Connection test completed.",
       );
     } catch (error) {
       setPageError(
@@ -253,28 +250,35 @@ export default function CloudPage() {
 
   if (cloudQuery.isLoading) {
     return (
-      <div className="list-state">
-        Loading cloud configurations...
+      <div
+        style={{
+          display:        "flex",
+          flexDirection:  "column",
+          alignItems:     "center",
+          justifyContent: "center",
+          minHeight:      "60vh",
+          gap:            "1rem",
+        }}
+      >
+        <div className="ods-spinner" />
+        <p style={{ color: "var(--ods-gray-600)", fontSize: "var(--ods-font-size-sm)" }}>
+          Loading cloud configurations...
+        </p>
       </div>
     );
   }
 
   if (cloudQuery.isError) {
     return (
-      <div className="list-state list-state--error">
-        <h2>
-          Unable to load cloud
-          configurations
-        </h2>
-
-        <p>
-          {getErrorMessage(
-            cloudQuery.error,
-          )}
+      <div className="ods-empty-state">
+        <span className="ods-empty-icon">⚠️</span>
+        <div className="ods-empty-title">Unable to load cloud configurations</div>
+        <p className="ods-empty-text">
+          {getErrorMessage(cloudQuery.error)}
         </p>
-
         <button
           type="button"
+          className="btn btn-primary mt-3"
           onClick={() => {
             void cloudQuery.refetch();
           }}
@@ -286,162 +290,161 @@ export default function CloudPage() {
   }
 
   return (
-    <section className="cloud-page">
-      <div className="list-page-header">
+    <div>
+
+      {/* ── Page header ─────────────────────────────────────── */}
+      <div className="ods-page-header">
         <div>
-          <div className="cloud-page-title">
-            <Cloud size={26} />
-
-            <h1>
-              Cloud Configurations
-            </h1>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <Cloud size={24} style={{ color: "var(--ods-orange)" }} />
+            <h1 className="page-title">Cloud Configurations</h1>
           </div>
-
-          <p>
-            Manage cloud provider
-            connections and regions.
+          <p className="page-subtitle">
+            Manage cloud provider connections and regions.
           </p>
         </div>
 
-        <div className="cloud-header-actions">
+        <div style={{ display: "flex", gap: "0.5rem" }}>
           <button
             type="button"
-            className="secondary-button"
-            disabled={
-              cloudQuery.isFetching
-            }
+            className="btn btn-outline-secondary"
+            disabled={cloudQuery.isFetching}
             onClick={() => {
               void cloudQuery.refetch();
             }}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
           >
             <RefreshCw
-              size={17}
-              className={
-                cloudQuery.isFetching
-                  ? "spin-icon"
-                  : undefined
-              }
+              size={15}
+              style={{
+                animation: cloudQuery.isFetching ? "ods-spin 0.7s linear infinite" : "none",
+              }}
             />
-
             Refresh
           </button>
 
           <button
             type="button"
-            className="primary-button"
+            className="btn btn-primary"
             onClick={openCreateModal}
           >
-            <Plus size={17} />
+            <Plus size={16} style={{ marginRight: "0.35rem" }} />
             Add Cloud
           </button>
         </div>
       </div>
 
+      {/* ── Alerts ──────────────────────────────────────────── */}
       {message && (
-        <div className="cloud-alert cloud-alert--success">
+        <div className="ods-form-message success" style={{ margin: "0 0 1rem" }}>
           {message}
         </div>
       )}
 
       {pageError && (
-        <div className="cloud-alert cloud-alert--error">
+        <div className="ods-form-message error" style={{ margin: "0 0 1rem" }}>
           {pageError}
         </div>
       )}
 
-      <div className="list-toolbar">
-        <div className="cloud-search">
-          <Search
-            size={18}
-            className="cloud-search__icon"
-          />
+      {/* ── Main panel ──────────────────────────────────────── */}
+      <div className="ods-card">
 
-          <input
-            type="search"
-            value={searchInput}
-            placeholder="Search cloud configurations..."
-            onChange={(event) => {
-              setSearchInput(
-                event.target.value,
-              );
-            }}
-          />
-
-          {searchInput && (
-            <button
-              type="button"
-              className="cloud-search__clear"
-              aria-label="Clear search"
-              onClick={() => {
-                setSearchInput("");
-                setSearch("");
-                setPage(1);
+        {/* ── Toolbar ───────────────────────────────────────── */}
+        <div className="ods-card-header" style={{ flexWrap: "wrap", gap: "0.75rem" }}>
+          <div className="ods-search" style={{ flex: 1, minWidth: 260 }}>
+            <Search className="ods-search-icon" size={15} />
+            <input
+              type="search"
+              className="form-control form-control-sm"
+              value={searchInput}
+              placeholder="Search cloud configurations..."
+              onChange={(event) => {
+                setSearchInput(event.target.value);
               }}
-            >
-              <X size={16} />
-            </button>
-          )}
+            />
+            {searchInput && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchInput("");
+                  setSearch("");
+                  setPage(1);
+                }}
+                aria-label="Clear search"
+                style={{
+                  position:  "absolute",
+                  right:     "0.5rem",
+                  top:       "50%",
+                  transform: "translateY(-50%)",
+                  background:"none",
+                  border:    "none",
+                  color:     "var(--ods-gray-500)",
+                  cursor:    "pointer",
+                  padding:   "0.25rem",
+                  display:   "flex",
+                  alignItems:"center",
+                }}
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
         </div>
 
-        <span className="list-count">
-          {total} configuration
-          {total === 1 ? "" : "s"}
-        </span>
+        {/* ── Result count ──────────────────────────────────── */}
+        <div className="ods-list-toolbar">
+          <span className="ods-list-count">
+            <strong style={{ color: "var(--ods-gray-900)" }}>{total}</strong> configuration{total === 1 ? "" : "s"}
+          </span>
+        </div>
+
+        {/* ── Table ─────────────────────────────────────────── */}
+        <div className="ods-card-body" style={{ padding: 0 }}>
+          <CloudTable
+            items={items}
+            page={currentPage}
+            pageSize={PAGE_SIZE}
+            deletingId={deleteMutation.variables}
+            onEdit={openEditModal}
+            onDelete={handleDelete}
+            onTest={handleTest}
+          />
+        </div>
+
+        {/* ── Pagination ────────────────────────────────────── */}
+        <div className="ods-pagination">
+          <span className="ods-pagination-info">
+            Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
+          </span>
+
+          <div className="ods-pagination-actions">
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm"
+              disabled={currentPage <= 1 || cloudQuery.isFetching}
+              onClick={() => {
+                setPage((current) => Math.max(1, current - 1));
+              }}
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm"
+              disabled={currentPage >= totalPages || items.length === 0 || cloudQuery.isFetching}
+              onClick={() => {
+                setPage((current) => Math.min(totalPages, current + 1));
+              }}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+
       </div>
 
-      <CloudTable
-        items={items}
-        page={currentPage}
-        pageSize={PAGE_SIZE}
-        deletingId={
-          deleteMutation.variables
-        }
-        onEdit={openEditModal}
-        onDelete={handleDelete}
-        onTest={handleTest}
-      />
-
-      <div className="pagination">
-        <button
-          type="button"
-          disabled={
-            currentPage <= 1 ||
-            cloudQuery.isFetching
-          }
-          onClick={() => {
-            setPage((current) =>
-              Math.max(1, current - 1),
-            );
-          }}
-        >
-          Previous
-        </button>
-
-        <span>
-          Page {currentPage} of{" "}
-          {totalPages}
-        </span>
-
-        <button
-          type="button"
-          disabled={
-            currentPage >= totalPages ||
-            items.length === 0 ||
-            cloudQuery.isFetching
-          }
-          onClick={() => {
-            setPage((current) =>
-              Math.min(
-                totalPages,
-                current + 1,
-              ),
-            );
-          }}
-        >
-          Next
-        </button>
-      </div>
-
+      {/* ── Modal ───────────────────────────────────────────── */}
       <CloudModal
         open={modalOpen}
         cloud={selectedCloud}
@@ -452,6 +455,6 @@ export default function CloudPage() {
         onClose={closeModal}
         onSubmit={handleSubmit}
       />
-    </section>
+    </div>
   );
 }

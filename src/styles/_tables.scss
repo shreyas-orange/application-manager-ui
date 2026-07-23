@@ -1,0 +1,74 @@
+// ─── Orange Data Tables ───────────────────────────────────────────────────────
+
+.ods-table-wrapper {
+  overflow-x: auto;
+  border:     1px solid var(--ods-gray-200);
+}
+
+.ods-table {
+  width:           100%;
+  border-collapse: collapse;
+  font-size:       var(--ods-font-size-sm);
+  background:      var(--ods-white);
+
+  thead {
+    tr {
+      border-bottom: 2px solid var(--ods-orange);
+    }
+
+    th {
+      padding:        0.75rem 1rem;
+      font-size:      0.7rem;
+      font-weight:    var(--ods-font-weight-bold);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color:          var(--ods-gray-600);
+      background:     var(--ods-gray-100);
+      white-space:    nowrap;
+      text-align:     left;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid var(--ods-gray-200);
+      transition:    background var(--ods-transition);
+
+      &:hover {
+        background: rgba(255, 121, 0, 0.04);
+      }
+
+      &:last-child { border-bottom: none; }
+    }
+
+    td {
+      padding:     0.75rem 1rem;
+      color:       var(--ods-gray-800);
+      vertical-align: middle;
+    }
+  }
+
+  // Sortable column header
+  .ods-th-sortable {
+    cursor:      pointer;
+    user-select: none;
+
+    &:hover { color: var(--ods-orange); }
+
+    &.asc::after  { content: ' ↑'; color: var(--ods-orange); }
+    &.desc::after { content: ' ↓'; color: var(--ods-orange); }
+  }
+}
+
+// Empty state inside table
+.ods-table-empty {
+  text-align:  center;
+  padding:     3rem 1rem;
+  color:       var(--ods-gray-500);
+
+  .ods-table-empty-icon {
+    font-size:     2.5rem;
+    margin-bottom: 0.75rem;
+    display:       block;
+  }
+}

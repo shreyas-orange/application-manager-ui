@@ -7,6 +7,7 @@ import {
 import {
   FileSpreadsheet,
   Pencil,
+  Search,
   Trash2,
 } from "lucide-react";
 
@@ -25,7 +26,6 @@ import {
 import type {
   UploadFileResponse,
 } from "../types/upload.types";
-import "../styles/UploadedFilesList.css";
 
 
 const PAGE_SIZE = 10;
@@ -88,6 +88,9 @@ export default function UploadedFilesList() {
   const uploads =
     data?.items ?? [];
 
+  const total = data?.total ?? uploads.length;
+  const currentPage = data?.page ?? page;
+
   const totalPages =
     Math.max(
       1,
@@ -144,15 +147,27 @@ export default function UploadedFilesList() {
 
   if (isLoading) {
     return (
-      <div>
-        Loading uploaded files...
+      <div
+        style={{
+          display:        "flex",
+          flexDirection:  "column",
+          alignItems:     "center",
+          justifyContent: "center",
+          padding:        "3rem",
+          gap:            "1rem",
+        }}
+      >
+        <div className="ods-spinner" />
+        <p style={{ color: "var(--ods-gray-600)", fontSize: "var(--ods-font-size-sm)" }}>
+          Loading uploaded files...
+        </p>
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div>
+      <div className="ods-form-message error" style={{ marginTop: "1.5rem" }}>
         {error instanceof Error
           ? error.message
           : "Unable to load uploads."}
@@ -161,14 +176,14 @@ export default function UploadedFilesList() {
   }
 
   return (
-    <section className="uploads-list-section">
-      <div className="uploads-list-header">
+    <section className="ods-uploads-section">
+
+      {/* ── Header ──────────────────────────────────────────── */}
+      <div className="ods-uploads-header">
         <div>
           <h2>Uploaded Files</h2>
-
           <p>
-            View, replace, or delete
-            uploaded files.
+            View, replace, or delete uploaded files.
           </p>
         </div>
 
@@ -176,43 +191,42 @@ export default function UploadedFilesList() {
           onSubmit={(event) => {
             event.preventDefault();
             setPage(1);
-            setSearch(
-              searchInput.trim(),
-            );
+            setSearch(searchInput.trim());
           }}
+          style={{ display: "flex", gap: "0.5rem" }}
         >
-          <input
-            type="search"
-            value={searchInput}
-            placeholder="Search files"
-            onChange={(event) => {
-              setSearchInput(
-                event.target.value,
-              );
-            }}
-          />
-
-          <button type="submit">
+          <div className="ods-search">
+            <Search className="ods-search-icon" size={15} />
+            <input
+              type="search"
+              className="form-control form-control-sm"
+              value={searchInput}
+              placeholder="Search files"
+              onChange={(event) => {
+                setSearchInput(event.target.value);
+              }}
+            />
+          </div>
+          <button type="submit" className="btn btn-primary btn-sm">
             Search
           </button>
         </form>
       </div>
 
-      {(updateMutation.isError ||
-        deleteMutation.isError) && (
-        <div className="upload-message upload-message--error">
-          {updateMutation.error instanceof
-          Error
+      {/* ── Error messages ──────────────────────────────────── */}
+      {(updateMutation.isError || deleteMutation.isError) && (
+        <div className="ods-upload-message error">
+          {updateMutation.error instanceof Error
             ? updateMutation.error.message
-            : deleteMutation.error instanceof
-                Error
+            : deleteMutation.error instanceof Error
               ? deleteMutation.error.message
               : "Operation failed."}
         </div>
       )}
 
-      <div className="uploads-table-wrapper">
-        <table className="uploads-table">
+      {/* ── Table ───────────────────────────────────────────── */}
+      <div className="ods-table-wrapper">
+        <table className="ods-uploads-table">
           <thead>
             <tr>
               <th>File</th>
@@ -226,73 +240,65 @@ export default function UploadedFilesList() {
           <tbody>
             {uploads.length === 0 ? (
               <tr>
-                <td colSpan={7}>
-                  No uploaded files found.
+                <td colSpan={5}>
+                  <div className="ods-empty-state" style={{ padding: "2rem" }}>
+                    <span className="ods-empty-icon">📂</span>
+                    <p className="ods-empty-text">
+                      No uploaded files found.
+                    </p>
+                  </div>
                 </td>
               </tr>
             ) : (
               uploads.map((upload) => (
                 <tr key={upload.id}>
                   <td>
-                    <div className="uploaded-file-name">
-                      <FileSpreadsheet
-                        size={18}
-                      />
-
+                    <div className="ods-uploads-file-name">
+                      <FileSpreadsheet size={18} />
                       <span>
-                        {upload.original_file_name ??
-                          upload.file_name}
+                        {upload.original_file_name ?? upload.file_name}
                       </span>
                     </div>
                   </td>
 
                   <td>
-                    {upload.status}
+                    <span className="ods-status-badge active">
+                      {upload.status}
+                    </span>
                   </td>
 
-                  <td>
+                  <td style={{ color: "var(--ods-gray-600)" }}>
                     {upload.total_rows}
                   </td>
 
-                  <td>
-                    {formatDate(
-                      upload.uploaded_at,
-                    )}
+                  <td style={{ color: "var(--ods-gray-500)", whiteSpace: "nowrap" }}>
+                    {formatDate(upload.created_at)}
                   </td>
 
                   <td>
-                    <div className="upload-row-actions">
+                    <div className="ods-uploads-actions">
                       <button
                         type="button"
-                        disabled={
-                          updateMutation.isPending
-                        }
+                        className="ods-action-btn"
+                        disabled={updateMutation.isPending}
                         onClick={() => {
-                          setSelectedUpload(
-                            upload,
-                          );
-
-                          replacementInputRef
-                            .current
-                            ?.click();
+                          setSelectedUpload(upload);
+                          replacementInputRef.current?.click();
                         }}
                       >
-                        <Pencil size={16} />
+                        <Pencil size={14} />
                         Replace
                       </button>
 
                       <button
                         type="button"
-                        disabled={
-                          deleteMutation.isPending
-                        }
+                        className="ods-action-btn danger"
+                        disabled={deleteMutation.isPending}
                         onClick={() => {
-                          void handleDelete(
-                            upload,
-                          );
+                          void handleDelete(upload);
                         }}
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} />
                         Delete
                       </button>
                     </div>
@@ -302,64 +308,60 @@ export default function UploadedFilesList() {
             )}
           </tbody>
         </table>
-
-        {isFetching && (
-          <div>
-            Updating list...
-          </div>
-        )}
       </div>
 
+      {/* ── Updating indicator ──────────────────────────────── */}
+      {isFetching && (
+        <div
+          style={{
+            textAlign:  "center",
+            padding:    "0.75rem",
+            fontSize:   "var(--ods-font-size-xs)",
+            color:      "var(--ods-gray-500)",
+            background: "var(--ods-gray-100)",
+          }}
+        >
+          Updating list...
+        </div>
+      )}
+
+      {/* ── Hidden file input ───────────────────────────────── */}
       <input
         ref={replacementInputRef}
         type="file"
         hidden
         accept=".csv,.xls,.xlsx"
-        onChange={
-          handleReplacementChange
-        }
+        onChange={handleReplacementChange}
       />
 
-      <div className="uploads-pagination">
-        <button
-          type="button"
-          disabled={
-            page <= 1 ||
-            isFetching
-          }
-          onClick={() => {
-            setPage((current) =>
-              Math.max(
-                1,
-                current - 1,
-              ),
-            );
-          }}
-        >
-          Previous
-        </button>
-
-        <span>
-          Page {page} of {totalPages}
+      {/* ── Pagination ──────────────────────────────────────── */}
+      <div className="ods-pagination" style={{ borderTop: "1px solid var(--ods-gray-200)" }}>
+        <span className="ods-pagination-info">
+          Page <strong>{page}</strong> of <strong>{totalPages}</strong>
         </span>
 
-        <button
-          type="button"
-          disabled={
-            page >= totalPages ||
-            isFetching
-          }
-          onClick={() => {
-            setPage((current) =>
-              Math.min(
-                totalPages,
-                current + 1,
-              ),
-            );
-          }}
-        >
-          Next
-        </button>
+        <div className="ods-pagination-actions">
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-sm"
+            disabled={page <= 1 || isFetching}
+            onClick={() => {
+              setPage((current) => Math.max(1, current - 1));
+            }}
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-sm"
+            disabled={page >= totalPages || isFetching}
+            onClick={() => {
+              setPage((current) => Math.min(totalPages, current + 1));
+            }}
+          >
+            Next
+          </button>
+        </div>
       </div>
     </section>
   );

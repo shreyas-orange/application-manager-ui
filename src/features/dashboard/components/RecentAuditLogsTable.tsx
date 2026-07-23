@@ -1,372 +1,174 @@
-import DashboardCard from "../components/DashboardCard";
-import { useDashboard } from "../hooks/useDashboard";
+// src/features/dashboard/components/RecentAuditLogsTable.tsx
+import type { RecentAuditLog } from "../types/dashboard.types";
 
-import "../styles/dashboard.css";
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface RecentAuditLogsTableProps {
+  logs: RecentAuditLog[];
+}
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatDate(value: string | null | undefined): string {
-  if (!value) {
-    return "—";
-  }
+  if (!value) return "—";
 
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
+  if (Number.isNaN(date.getTime())) return value;
 
   return date.toLocaleString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
+    day:    "2-digit",
+    month:  "short",
+    year:   "numeric",
+    hour:   "2-digit",
     minute: "2-digit",
   });
 }
 
-function formatMigrationStatus(
-  status: string | null | undefined,
-): string {
-  const normalizedStatus = status?.trim();
-
-  return normalizedStatus || "Not Started";
+function auditActionClass(action: string): string {
+  const a = action.trim().toLowerCase();
+  if (a === "create") return "ods-badge ods-badge-success";
+  if (a === "delete") return "ods-badge ods-badge-danger";
+  return "ods-badge ods-badge-info";
 }
 
-function getAuditActionClass(action: string): string {
-  const normalizedAction = action.trim().toLowerCase();
-
-  if (normalizedAction === "create") {
-    return "audit-log-action audit-log-action--create";
-  }
-
-  if (normalizedAction === "delete") {
-    return "audit-log-action audit-log-action--delete";
-  }
-
-  return "audit-log-action audit-log-action--update";
-}
-
-function getUploadStatusClass(status: string): string {
-  const normalizedStatus = status.trim().toLowerCase();
-
-  if (
-    normalizedStatus === "completed" ||
-    normalizedStatus === "success"
-  ) {
-    return "dashboard-status dashboard-status--success";
-  }
-
-  if (
-    normalizedStatus === "failed" ||
-    normalizedStatus === "failure"
-  ) {
-    return "dashboard-status dashboard-status--failed";
-  }
-
-  if (
-    normalizedStatus === "in progress" ||
-    normalizedStatus === "in_progress" ||
-    normalizedStatus === "processing"
-  ) {
-    return "dashboard-status dashboard-status--progress";
-  }
-
-  return "dashboard-status dashboard-status--pending";
-}
-
-export default function DashboardPage() {
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    isFetching,
-    refetch,
-  } = useDashboard();
-
-  if (isLoading) {
-    return (
-      <div className="dashboard-state">
-        Loading dashboard...
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="dashboard-state dashboard-state--error">
-        <h2>Unable to load dashboard</h2>
-
-        <p>
-          {error instanceof Error
-            ? error.message
-            : "Something went wrong while loading the dashboard."}
-        </p>
-
-        <button
-          type="button"
-          onClick={() => {
-            void refetch();
-          }}
-        >
-          Try again
-        </button>
-      </div>
-    );
-  }
-
-  const summary = data?.summary;
-
-  const migrationStatus =
-    data?.migration_status ?? [];
-
-  const cloudDistribution =
-    data?.cloud_distribution ?? [];
-
-  const applicationsByDomain =
-    data?.applications_by_domain ?? [];
-
-  const recentUploads =
-    data?.recent_uploads ?? [];
-
-  const recentAuditLogs =
-    data?.recent_audit_logs ?? [];
-
+// ─── Component ────────────────────────────────────────────────────────────────
+export function RecentAuditLogsTable({ logs }: RecentAuditLogsTableProps) {
   return (
-    <section className="dashboard-page">
-      <div className="dashboard-header">
+    <div className="ods-card">
 
-        <button
-          type="button"
-          className="dashboard-refresh"
-          disabled={isFetching}
-          onClick={() => {
-            void refetch();
-          }}
-        >
-          {isFetching ? "Refreshing..." : "Refresh"}
-        </button>
+      {/* ── Card header ───────────────────────────────────────── */}
+      <div className="ods-card-header">
+        <h2 className="ods-card-title">Recent Audit Logs</h2>
+
+        {logs.length > 0 && (
+          <span className="ods-badge ods-badge-neutral no-dot">
+            {logs.length} {logs.length !== 1 ? "entries" : "entry"}
+          </span>
+        )}
       </div>
 
-      <div className="dashboard-grid">
-        <DashboardCard
-          title="Total Users"
-          value={summary?.total_users ?? 0}
-          description="Registered users"
-        />
+      {/* ── Card body ─────────────────────────────────────────── */}
+      <div className="ods-card-body" style={{ padding: 0 }}>
 
-        <DashboardCard
-          title="Total Applications"
-          value={summary?.total_applications ?? 0}
-          description="Registered applications"
-        />
-
-        <DashboardCard
-          title="Total Uploads"
-          value={summary?.total_uploads ?? 0}
-          description="Uploaded files"
-        />
-
-        <DashboardCard
-          title="Completed Migrations"
-          value={summary?.completed_migrations ?? 0}
-          description="Successfully completed"
-        />
-
-        <DashboardCard
-          title="In Progress"
-          value={summary?.in_progress_migrations ?? 0}
-          description="Active migrations"
-        />
-
-        <DashboardCard
-          title="Pending"
-          value={summary?.pending_migrations ?? 0}
-          description="Pending migrations"
-        />
-
-        <DashboardCard
-          title="Failed Uploads"
-          value={summary?.failed_uploads ?? 0}
-          description="Failed file uploads"
-        />
-      </div>
-
-      <div className="dashboard-content-grid">
-        <section className="dashboard-panel">
-          <div className="dashboard-panel-header">
-            <h2>Migration Status</h2>
+        {/* Empty state */}
+        {logs.length === 0 ? (
+          <div className="ods-empty-state" style={{ padding: "2rem" }}>
+            <span className="ods-empty-icon">📋</span>
+            <p className="ods-empty-text">No recent audit logs found.</p>
           </div>
+        ) : (
 
-          <div className="dashboard-stat-list">
-            {migrationStatus.length === 0 ? (
-              <p className="dashboard-empty">
-                No migration status data found.
-              </p>
-            ) : (
-              migrationStatus.map((item, index) => {
-                const status =
-                  formatMigrationStatus(item.status);
+          /* Log list */
+          <div>
+            {logs.map((log, index) => (
+              <article
+                key={`${log.created_at}-${index}`}
+                style={{
+                  padding:      "0.875rem 1.25rem",
+                  borderBottom: "1px solid var(--ods-gray-200)",
+                  display:      "flex",
+                  flexDirection: "column",
+                  gap:          "0.375rem",
+                }}
+              >
 
-                return (
+                {/* ── Top row — user + module + action badge ── */}
+                <div
+                  style={{
+                    display:         "flex",
+                    justifyContent:  "space-between",
+                    alignItems:      "center",
+                    gap:             "0.5rem",
+                  }}
+                >
                   <div
-                    className="dashboard-stat-row"
-                    key={`${status}-${index}`}
+                    style={{
+                      display:    "flex",
+                      alignItems: "center",
+                      gap:        "0.5rem",
+                    }}
                   >
-                    <span>{status}</span>
-                    <strong>{item.count}</strong>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </section>
-
-        <section className="dashboard-panel">
-          <div className="dashboard-panel-header">
-            <h2>Cloud Distribution</h2>
-          </div>
-
-          <div className="dashboard-stat-list">
-            {cloudDistribution.length === 0 ? (
-              <p className="dashboard-empty">
-                No cloud distribution data found.
-              </p>
-            ) : (
-              cloudDistribution.map((item, index) => (
-                <div
-                  className="dashboard-stat-row"
-                  key={`${item.cloud}-${index}`}
-                >
-                  <span>{item.cloud || "Unknown"}</span>
-                  <strong>{item.count}</strong>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
-
-        <section className="dashboard-panel">
-          <div className="dashboard-panel-header">
-            <h2>Applications by Domain</h2>
-          </div>
-
-          <div className="dashboard-stat-list">
-            {applicationsByDomain.length === 0 ? (
-              <p className="dashboard-empty">
-                No domain data found.
-              </p>
-            ) : (
-              applicationsByDomain.map((item, index) => (
-                <div
-                  className="dashboard-stat-row"
-                  key={`${item.domain}-${index}`}
-                >
-                  <span>{item.domain || "Unknown"}</span>
-                  <strong>{item.count}</strong>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
-      </div>
-
-      <div className="dashboard-bottom-grid">
-        <section className="dashboard-panel">
-          <div className="dashboard-panel-header">
-            <h2>Recent Uploads</h2>
-          </div>
-
-          {recentUploads.length === 0 ? (
-            <p className="dashboard-empty">
-              No recent uploads found.
-            </p>
-          ) : (
-            <div className="dashboard-table-wrapper">
-              <table className="dashboard-table">
-                <thead>
-                  <tr>
-                    <th>File Name</th>
-                    <th>Status</th>
-                    <th>Uploaded By</th>
-                    <th>Created At</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {recentUploads.map((upload) => (
-                    <tr key={upload.id}>
-                      <td>
-                        <strong>{upload.file_name}</strong>
-                      </td>
-
-                      <td>
-                        <span
-                          className={getUploadStatusClass(
-                            upload.status,
-                          )}
-                        >
-                          {upload.status}
-                        </span>
-                      </td>
-
-                      <td>{upload.uploaded_by || "—"}</td>
-
-                      <td>
-                        {formatDate(upload.created_at)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-
-        <section className="dashboard-panel">
-          <div className="dashboard-panel-header">
-            <h2>Recent Audit Logs</h2>
-          </div>
-
-          {recentAuditLogs.length === 0 ? (
-            <p className="dashboard-empty">
-              No recent audit logs found.
-            </p>
-          ) : (
-            <div className="audit-log-list">
-              {recentAuditLogs.map((log, index) => (
-                <article
-                  className="audit-log-item"
-                  key={`${log.created_at}-${index}`}
-                >
-                  <div className="audit-log-header">
-                    <div>
-                      <strong>{log.user || "System"}</strong>
-
-                      <span className="audit-log-module">
-                        {log.module}
-                      </span>
+                    {/* User initial avatar */}
+                    <div
+                      style={{
+                        width:           28,
+                        height:          28,
+                        background:      "var(--ods-orange)",
+                        color:           "var(--ods-black)",
+                        display:         "flex",
+                        alignItems:      "center",
+                        justifyContent:  "center",
+                        fontSize:        "0.7rem",
+                        fontWeight:      700,
+                        flexShrink:      0,
+                      }}
+                    >
+                      {String(log.user ?? "S").charAt(0).toUpperCase()}
                     </div>
 
-                    <span
-                      className={getAuditActionClass(
-                        log.action,
-                      )}
+                    {/* User name */}
+                    <strong
+                      style={{
+                        fontSize: "var(--ods-font-size-sm)",
+                        color:    "var(--ods-gray-900)",
+                      }}
                     >
-                      {log.action}
-                    </span>
+                      {log.user || "System"}
+                    </strong>
+
+                    {/* Module tag */}
+                    {log.module && (
+                      <span
+                        style={{
+                          fontSize:       "0.65rem",
+                          color:          "var(--ods-gray-500)",
+                          background:     "var(--ods-gray-100)",
+                          padding:        "0.1rem 0.4rem",
+                          border:         "1px solid var(--ods-gray-300)",
+                          textTransform:  "uppercase",
+                          letterSpacing:  "0.05em",
+                        }}
+                      >
+                        {log.module}
+                      </span>
+                    )}
                   </div>
 
-                  <p>{log.description || "—"}</p>
+                  {/* Action badge */}
+                  <span className={auditActionClass(log.action)}>
+                    {log.action}
+                  </span>
+                </div>
 
-                  <time>
-                    {formatDate(log.created_at)}
-                  </time>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
+                {/* ── Description ─────────────────────────────── */}
+                {log.description && (
+                  <p
+                    style={{
+                      fontSize:   "var(--ods-font-size-sm)",
+                      color:      "var(--ods-gray-600)",
+                      margin:     0,
+                      paddingLeft: "2.25rem",
+                    }}
+                  >
+                    {log.description}
+                  </p>
+                )}
+
+                {/* ── Timestamp ───────────────────────────────── */}
+                <time
+                  style={{
+                    fontSize:    "var(--ods-font-size-xs)",
+                    color:       "var(--ods-gray-400)",
+                    paddingLeft: "2.25rem",
+                  }}
+                >
+                  {formatDate(log.created_at)}
+                </time>
+
+              </article>
+            ))}
+          </div>
+
+        )}
       </div>
-    </section>
+    </div>
   );
 }

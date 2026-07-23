@@ -90,20 +90,17 @@ export default function CloudForm({
 
   return (
     <form
-      className="cloud-form"
       onSubmit={handleSubmit}
+      style={{ padding: "1.5rem", flex: 1, overflowY: "auto" }}
     >
       {error && (
-        <div className="cloud-form-error">
+        <div className="ods-form-message error">
           {error}
         </div>
       )}
 
-      <div className="cloud-form-group">
-        <label htmlFor="cloud-name">
-          Name
-        </label>
-
+      <div className="ods-form-group" style={{ marginBottom: "1rem" }}>
+        <label htmlFor="cloud-name">Name</label>
         <input
           id="cloud-name"
           type="text"
@@ -118,41 +115,26 @@ export default function CloudForm({
         />
       </div>
 
-      <div className="cloud-form-group">
-        <label htmlFor="cloud-provider">
-          Provider
-        </label>
-
+      <div className="ods-form-group" style={{ marginBottom: "1rem" }}>
+        <label htmlFor="cloud-provider">Provider</label>
         <select
           id="cloud-provider"
           value={form.provider}
           onChange={(event) => {
             setForm((current) => ({
               ...current,
-              provider:
-                event.target.value,
+              provider: event.target.value,
             }));
           }}
         >
-          <option value="AWS">
-            AWS
-          </option>
-
-          <option value="AZURE">
-            Azure
-          </option>
-
-          <option value="GCP">
-            Google Cloud
-          </option>
+          <option value="AWS">AWS</option>
+          <option value="AZURE">Azure</option>
+          <option value="GCP">Google Cloud</option>
         </select>
       </div>
 
-      <div className="cloud-form-group">
-        <label htmlFor="cloud-region">
-          Region
-        </label>
-
+      <div className="ods-form-group" style={{ marginBottom: "1rem" }}>
+        <label htmlFor="cloud-region">Region</label>
         <input
           id="cloud-region"
           type="text"
@@ -161,18 +143,14 @@ export default function CloudForm({
           onChange={(event) => {
             setForm((current) => ({
               ...current,
-              region:
-                event.target.value,
+              region: event.target.value,
             }));
           }}
         />
       </div>
 
-      <div className="cloud-form-group">
-        <label htmlFor="cloud-description">
-          Description
-        </label>
-
+      <div className="ods-form-group" style={{ marginBottom: "1rem" }}>
+        <label htmlFor="cloud-description">Description</label>
         <textarea
           id="cloud-description"
           value={form.description}
@@ -181,35 +159,41 @@ export default function CloudForm({
           onChange={(event) => {
             setForm((current) => ({
               ...current,
-              description:
-                event.target.value,
+              description: event.target.value,
             }));
           }}
         />
       </div>
 
-      <label className="cloud-checkbox">
+      <div className="ods-status-toggle" style={{ marginBottom: "1.5rem" }}>
         <input
+          id="cloud-active"
           type="checkbox"
           checked={form.is_active}
           onChange={(event) => {
             setForm((current) => ({
               ...current,
-              is_active:
-                event.target.checked,
+              is_active: event.target.checked,
             }));
           }}
         />
-
-        <span>
+        <label htmlFor="cloud-active">
           Active configuration
-        </span>
-      </label>
+        </label>
+      </div>
 
-      <div className="cloud-form-actions">
+      <div
+        style={{
+          display:        "flex",
+          justifyContent: "flex-end",
+          gap:            "0.75rem",
+          paddingTop:     "1rem",
+          borderTop:      "1px solid var(--ods-gray-200)",
+        }}
+      >
         <button
           type="button"
-          className="secondary-button"
+          className="btn btn-outline-secondary"
           disabled={isSubmitting}
           onClick={onCancel}
         >
@@ -218,7 +202,7 @@ export default function CloudForm({
 
         <button
           type="submit"
-          className="primary-button"
+          className="btn btn-primary"
           disabled={isSubmitting}
         >
           {isSubmitting

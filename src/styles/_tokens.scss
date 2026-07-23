@@ -1,0 +1,64 @@
+// ─── Orange Design System — Design Tokens ────────────────────────────────────
+
+:root {
+  // ── Brand Colors ────────────────────────────────────────────────
+  --ods-orange:           #ff7900;
+  --ods-orange-dark:      #f16e00;
+  --ods-orange-light:     #ff9e3d;
+  --ods-black:            #000000;
+  --ods-white:            #ffffff;
+
+  // ── Functional Colors ───────────────────────────────────────────
+  --ods-success:          #198754;
+  --ods-success-light:    #d1e7dd;
+  --ods-warning:          #fc0;
+  --ods-warning-light:    #fff3cd;
+  --ods-danger:           #cd3c14;
+  --ods-danger-light:     #f8d7da;
+  --ods-info:             #527edb;
+  --ods-info-light:       #cfe2ff;
+
+  // ── Neutral Grays ───────────────────────────────────────────────
+  --ods-gray-100:         #f8f9fa;
+  --ods-gray-200:         #eeeeee;
+  --ods-gray-300:         #dddddd;
+  --ods-gray-400:         #cccccc;
+  --ods-gray-500:         #999999;
+  --ods-gray-600:         #666666;
+  --ods-gray-700:         #444444;
+  --ods-gray-800:         #333333;
+  --ods-gray-900:         #1a1a1a;
+
+  // ── Layout ──────────────────────────────────────────────────────
+  --ods-navbar-height:    3.75rem;   // 60px — Orange standard
+  --ods-sidebar-width:    16.25rem;  // 260px
+  --ods-sidebar-collapsed:4rem;      // 64px
+  --ods-border-radius:    0px;       // Orange DS uses sharp corners
+  --ods-border-radius-sm: 0px;
+  --ods-border-radius-lg: 0px;
+
+  // ── Typography ──────────────────────────────────────────────────
+  --ods-font-family:      'HelvNeue', 'Helvetica Neue', Helvetica,
+                          Arial, Liberation Sans, sans-serif;
+  --ods-font-size-base:   1rem;
+  --ods-font-size-sm:     0.875rem;
+  --ods-font-size-xs:     0.75rem;
+  --ods-line-height:      1.5;
+  --ods-font-weight-normal: 400;
+  --ods-font-weight-bold:   700;
+
+  // ── Shadows ─────────────────────────────────────────────────────
+  --ods-shadow-sm:        0 1px 4px rgba(0, 0, 0, 0.12);
+  --ods-shadow:           0 2px 8px rgba(0, 0, 0, 0.15);
+  --ods-shadow-lg:        0 4px 16px rgba(0, 0, 0, 0.18);
+
+  // ── Transitions ─────────────────────────────────────────────────
+  --ods-transition:       0.2s ease;
+  --ods-transition-slow:  0.35s ease;
+
+  // ── Z-index ─────────────────────────────────────────────────────
+  --ods-z-sidebar:        1020;
+  --ods-z-navbar:         1030;
+  --ods-z-modal:          1050;
+  --ods-z-toast:          1080;
+}

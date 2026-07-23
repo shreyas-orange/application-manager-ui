@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/api-client";
 
 import type {
+  Application,
   ApplicationsApiResponse,
   ApplicationsResponse,
   UpdateApplicationPayload,
@@ -55,6 +56,17 @@ export async function updateApplication(
     await apiClient.patch<Application>(
       `/application/${applicationId}`,
       payload,
+    );
+
+  return response.data;
+}
+
+export async function getApplication(
+  applicationId: number,
+): Promise<Application> {
+  const response =
+    await apiClient.get<Application>(
+      `/application/${applicationId}`,
     );
 
   return response.data;

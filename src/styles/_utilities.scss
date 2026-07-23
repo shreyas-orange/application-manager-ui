@@ -1,0 +1,108 @@
+// ─── Orange Utility Classes ───────────────────────────────────────────────────
+
+// Text colors
+.text-orange  { color: var(--ods-orange)  !important; }
+.text-success { color: var(--ods-success) !important; }
+.text-danger  { color: var(--ods-danger)  !important; }
+.text-muted   { color: var(--ods-gray-500) !important; }
+
+// Background colors
+.bg-orange-subtle { background: rgba(255, 121, 0, 0.08) !important; }
+.bg-black         { background: var(--ods-black) !important; }
+
+// Borders
+.border-orange { border-color: var(--ods-orange) !important; }
+.border-left-orange {
+  border-left: 4px solid var(--ods-orange) !important;
+}
+
+// Orange divider
+.ods-divider {
+  height:     2px;
+  background: var(--ods-orange);
+  border:     none;
+  margin:     1.5rem 0;
+}
+
+// Loading spinner
+.ods-spinner {
+  width:         2rem;
+  height:        2rem;
+  border:        3px solid var(--ods-gray-200);
+  border-top:    3px solid var(--ods-orange);
+  border-radius: 50%;
+  animation:     ods-spin 0.7s linear infinite;
+}
+
+@keyframes ods-spin {
+  to { transform: rotate(360deg); }
+}
+
+// Full page loading
+.ods-loading-screen {
+  position:        fixed;
+  inset:           0;
+  background:      var(--ods-white);
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  gap:             1rem;
+  z-index:         9999;
+
+  .ods-loading-text {
+    color:     var(--ods-gray-600);
+    font-size: var(--ods-font-size-sm);
+  }
+}
+
+// Empty state
+.ods-empty-state {
+  text-align:  center;
+  padding:     4rem 2rem;
+  color:       var(--ods-gray-500);
+
+  .ods-empty-icon {
+    font-size:     3rem;
+    margin-bottom: 1rem;
+    display:       block;
+    opacity:       0.5;
+  }
+
+  .ods-empty-title {
+    font-weight:   var(--ods-font-weight-bold);
+    color:         var(--ods-gray-700);
+    margin-bottom: 0.5rem;
+  }
+
+  .ods-empty-text {
+    font-size: var(--ods-font-size-sm);
+  }
+}
+
+// Alert / notification
+.ods-alert {
+  padding:     0.875rem 1rem;
+  border-left: 4px solid var(--ods-orange);
+  background:  rgba(255, 121, 0, 0.06);
+  font-size:   var(--ods-font-size-sm);
+  margin-bottom: 1rem;
+
+  &.ods-alert-danger {
+    border-left-color: var(--ods-danger);
+    background:        var(--ods-danger-light);
+    color:             var(--ods-danger);
+  }
+
+  &.ods-alert-success {
+    border-left-color: var(--ods-success);
+    background:        var(--ods-success-light);
+    color:             var(--ods-success);
+  }
+
+  &.ods-alert-warning {
+    border-left-color: var(--ods-warning);
+    background:        var(--ods-warning-light);
+    color:             #664d03;
+  }
+}

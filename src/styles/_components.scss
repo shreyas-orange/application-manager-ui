@@ -1,0 +1,524 @@
+// ─── Orange Buttons ───────────────────────────────────────────────────────────
+
+.btn {
+  font-weight:    var(--ods-font-weight-bold);
+  border-radius:  0 !important;
+  letter-spacing: 0.02em;
+  transition:     all var(--ods-transition);
+  font-size:      var(--ods-font-size-sm);
+}
+
+.btn-primary {
+  background-color: var(--ods-orange);
+  border-color:     var(--ods-orange);
+  color:            var(--ods-black);
+
+  &:hover, &:focus {
+    background-color: var(--ods-orange-dark);
+    border-color:     var(--ods-orange-dark);
+    color:            var(--ods-black);
+  }
+
+  &:disabled {
+    background-color: var(--ods-gray-400);
+    border-color:     var(--ods-gray-400);
+    color:            var(--ods-gray-600);
+  }
+}
+
+.btn-secondary {
+  background-color: var(--ods-black);
+  border-color:     var(--ods-black);
+  color:            var(--ods-white);
+
+  &:hover, &:focus {
+    background-color: var(--ods-gray-800);
+    border-color:     var(--ods-gray-800);
+    color:            var(--ods-white);
+  }
+}
+
+.btn-outline-primary {
+  border-color: var(--ods-orange);
+  color:        var(--ods-orange);
+
+  &:hover {
+    background-color: var(--ods-orange);
+    color:            var(--ods-black);
+  }
+}
+
+.btn-outline-secondary {
+  border-color: var(--ods-gray-400);
+  color:        var(--ods-gray-700);
+
+  &:hover {
+    background-color: var(--ods-gray-200);
+    border-color:     var(--ods-gray-500);
+    color:            var(--ods-gray-900);
+  }
+}
+
+.btn-danger {
+  background-color: var(--ods-danger);
+  border-color:     var(--ods-danger);
+  color:            var(--ods-white);
+}
+
+// ─── Stat / KPI Cards ─────────────────────────────────────────────────────────
+
+.ods-stat-card {
+  background:   var(--ods-white);
+  border:       1px solid var(--ods-gray-200);
+  border-top:   4px solid var(--ods-orange);
+  padding:      1.25rem;
+  transition:   box-shadow var(--ods-transition);
+
+  &:hover {
+    box-shadow: var(--ods-shadow);
+  }
+
+  .ods-stat-value {
+    font-size:   2rem;
+    font-weight: var(--ods-font-weight-bold);
+    color:       var(--ods-orange);
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+
+  .ods-stat-label {
+    font-size:   var(--ods-font-size-sm);
+    font-weight: var(--ods-font-weight-bold);
+    color:       var(--ods-gray-800);
+  }
+
+  .ods-stat-sub {
+    font-size: var(--ods-font-size-xs);
+    color:     var(--ods-gray-500);
+    margin-top: 0.25rem;
+  }
+
+  .ods-stat-icon {
+    font-size: 1.75rem;
+    opacity:   0.8;
+  }
+
+  // Variant colors
+  &.success { border-top-color: var(--ods-success); .ods-stat-value { color: var(--ods-success); } }
+  &.danger  { border-top-color: var(--ods-danger);  .ods-stat-value { color: var(--ods-danger);  } }
+  &.info    { border-top-color: var(--ods-info);    .ods-stat-value { color: var(--ods-info);    } }
+  &.warning { border-top-color: var(--ods-warning); .ods-stat-value { color: var(--ods-gray-800); } }
+}
+
+// ─── Dashboard Card ───────────────────────────────────────────────────────────
+
+.ods-card {
+  background:   var(--ods-white);
+  border:       1px solid var(--ods-gray-200);
+  margin-bottom: 1.5rem;
+
+  .ods-card-header {
+    padding:       1rem 1.25rem;
+    border-bottom: 2px solid var(--ods-gray-200);
+    display:       flex;
+    align-items:   center;
+    justify-content: space-between;
+
+    .ods-card-title {
+      font-size:   1rem;
+      font-weight: var(--ods-font-weight-bold);
+      color:       var(--ods-gray-900);
+      margin:      0;
+    }
+  }
+
+  .ods-card-body {
+    padding: 1.25rem;
+  }
+
+  .ods-card-footer {
+    padding:    0.75rem 1.25rem;
+    border-top: 1px solid var(--ods-gray-200);
+    background: var(--ods-gray-100);
+  }
+}
+
+// ─── Upload Drop Zone ─────────────────────────────────────────────────────────
+
+.ods-dropzone {
+  border:          2px dashed var(--ods-gray-300);
+  background:      var(--ods-gray-100);
+  padding:         3rem 2rem;
+  text-align:      center;
+  cursor:          pointer;
+  transition:      all var(--ods-transition);
+
+  &:hover,
+  &.drag-over {
+    border-color: var(--ods-orange);
+    background:   rgba(255, 121, 0, 0.04);
+  }
+
+  .ods-dropzone-icon {
+    font-size:     3rem;
+    margin-bottom: 1rem;
+    color:         var(--ods-gray-400);
+  }
+
+  .ods-dropzone-text {
+    font-weight: var(--ods-font-weight-bold);
+    color:       var(--ods-gray-700);
+    margin-bottom: 0.25rem;
+  }
+
+  .ods-dropzone-hint {
+    font-size: var(--ods-font-size-xs);
+    color:     var(--ods-gray-500);
+  }
+}
+
+// ─── Progress Bar ─────────────────────────────────────────────────────────────
+
+.ods-progress {
+  height:       8px;
+  background:   var(--ods-gray-200);
+  border-radius: 0;
+  overflow:     hidden;
+
+  .ods-progress-bar {
+    height:     100%;
+    background: var(--ods-orange);
+    transition: width 0.4s ease;
+
+    &.success { background: var(--ods-success); }
+    &.danger  { background: var(--ods-danger);  }
+    &.warning { background: var(--ods-warning); }
+  }
+}
+
+// ─── Pagination ────────────────────────────────────────────────────────────────
+
+.ods-pagination {
+  display:        flex;
+  justify-content: space-between;
+  align-items:    center;
+  padding:        0.75rem 1.25rem;
+  border-top:     1px solid var(--ods-gray-200);
+  font-size:      var(--ods-font-size-sm);
+  color:          var(--ods-gray-600);
+
+  .ods-pagination-info {
+    font-size: var(--ods-font-size-sm);
+    color:     var(--ods-gray-600);
+  }
+
+  .ods-pagination-actions {
+    display: flex;
+    gap:     0.5rem;
+  }
+}
+
+// ─── List Toolbar ─────────────────────────────────────────────────────────────
+
+.ods-list-toolbar {
+  display:        flex;
+  justify-content: space-between;
+  align-items:    center;
+  padding:        0.75rem 1.25rem;
+  background:     var(--ods-gray-100);
+  border-bottom:  1px solid var(--ods-gray-200);
+  gap:            1rem;
+  flex-wrap:      wrap;
+
+  .ods-list-count {
+    font-size:   var(--ods-font-size-xs);
+    color:       var(--ods-gray-600);
+    white-space: nowrap;
+  }
+}
+
+// ─── User Avatar ──────────────────────────────────────────────────────────────
+
+.ods-user-cell {
+  display:     flex;
+  align-items: center;
+  gap:         0.75rem;
+
+  .ods-user-avatar-sm {
+    width:           32px;
+    height:          32px;
+    background:      var(--ods-orange);
+    color:           var(--ods-black);
+    font-weight:     var(--ods-font-weight-bold);
+    font-size:       0.75rem;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    flex-shrink:     0;
+  }
+}
+
+// ─── Role Badge ───────────────────────────────────────────────────────────────
+
+.ods-role-badge {
+  display:        inline-flex;
+  align-items:    center;
+  padding:        0.2rem 0.6rem;
+  font-size:      0.65rem;
+  font-weight:    var(--ods-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius:  0;
+  background:     var(--ods-info-light);
+  color:          var(--ods-info);
+}
+
+// ─── Status Indicator ─────────────────────────────────────────────────────────
+
+.ods-status-badge {
+  display:        inline-flex;
+  align-items:    center;
+  gap:            0.25rem;
+  padding:        0.2rem 0.6rem;
+  font-size:      0.65rem;
+  font-weight:    var(--ods-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius:  0;
+
+  &.active {
+    background: var(--ods-success-light);
+    color:      var(--ods-success);
+  }
+
+  &.inactive {
+    background: var(--ods-gray-200);
+    color:      var(--ods-gray-600);
+  }
+}
+
+// ─── Icon Button (for table actions) ──────────────────────────────────────────
+
+.ods-icon-btn {
+  background:  none;
+  border:      1px solid var(--ods-gray-300);
+  color:       var(--ods-gray-600);
+  cursor:      pointer;
+  padding:     0.375rem;
+  display:     inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:  all var(--ods-transition);
+
+  &:hover {
+    background: var(--ods-gray-100);
+    color:      var(--ods-orange);
+    border-color: var(--ods-orange);
+  }
+
+  &:disabled {
+    opacity:    0.5;
+    cursor:     not-allowed;
+  }
+
+  &.danger:hover {
+    color:           var(--ods-danger);
+    border-color:    var(--ods-danger);
+    background:      var(--ods-danger-light);
+  }
+}
+
+// ─── Action Buttons (table row) ───────────────────────────────────────────────
+
+.ods-action-btn {
+  display:        inline-flex;
+  align-items:    center;
+  gap:            0.35rem;
+  padding:        0.35rem 0.65rem;
+  font-size:      var(--ods-font-size-xs);
+  font-weight:    var(--ods-font-weight-bold);
+  border:         1px solid var(--ods-gray-300);
+  background:     var(--ods-white);
+  color:          var(--ods-gray-700);
+  cursor:         pointer;
+  transition:     all var(--ods-transition);
+  white-space:    nowrap;
+
+  &:hover {
+    background:  var(--ods-gray-100);
+    border-color: var(--ods-gray-500);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor:  not-allowed;
+  }
+
+  &.danger {
+    color: var(--ods-danger);
+    &:hover {
+      background:      var(--ods-danger-light);
+      border-color:    var(--ods-danger);
+    }
+  }
+}
+
+// ─── Form Grid (for modals) ───────────────────────────────────────────────────
+
+.ods-form-grid {
+  display:             grid;
+  grid-template-columns: 1fr 1fr;
+  gap:                 1rem;
+}
+
+.ods-form-group {
+  display:        flex;
+  flex-direction: column;
+  gap:            0.375rem;
+
+  label {
+    font-size:   var(--ods-font-size-sm);
+    font-weight: var(--ods-font-weight-bold);
+    color:       var(--ods-gray-800);
+  }
+
+  input, select, textarea {
+    border-radius: 0;
+    border:        1px solid var(--ods-gray-400);
+    font-size:     var(--ods-font-size-sm);
+    color:         var(--ods-gray-900);
+    background:    var(--ods-white);
+    padding:       0.5rem 0.75rem;
+    transition:    border-color var(--ods-transition),
+                   box-shadow   var(--ods-transition);
+
+    &:focus {
+      border-color: var(--ods-orange);
+      box-shadow:   0 0 0 2px rgba(255, 121, 0, 0.2);
+      outline:      none;
+    }
+
+    &:disabled, &[readonly] {
+      background: var(--ods-gray-100);
+      color:      var(--ods-gray-500);
+      cursor:     not-allowed;
+    }
+  }
+
+  textarea {
+    resize: vertical;
+  }
+}
+
+// ─── Form Message (errors / success) ──────────────────────────────────────────
+
+.ods-form-message {
+  padding:     0.75rem 1rem;
+  font-size:   var(--ods-font-size-sm);
+  border-left: 4px solid;
+  margin-bottom: 1rem;
+
+  &.error {
+    border-left-color: var(--ods-danger);
+    background:        var(--ods-danger-light);
+    color:             var(--ods-danger);
+  }
+
+  &.success {
+    border-left-color: var(--ods-success);
+    background:        var(--ods-success-light);
+    color:             var(--ods-success);
+  }
+}
+
+// ─── Status Toggle ────────────────────────────────────────────────────────────
+
+.ods-status-toggle {
+  display:     flex;
+  align-items: center;
+  gap:         0.5rem;
+  cursor:      pointer;
+
+  input[type="checkbox"] {
+    accent-color: var(--ods-orange);
+    margin:       0;
+  }
+
+  span {
+    font-size: var(--ods-font-size-sm);
+    color:     var(--ods-gray-700);
+  }
+}
+
+// ─── Drawer / Side Panel ──────────────────────────────────────────────────────
+
+.ods-drawer-overlay {
+  position:   fixed;
+  inset:      0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index:    calc(var(--ods-z-modal) - 1);
+}
+
+.ods-drawer {
+  position:   fixed;
+  top:        0;
+  right:      0;
+  width:      480px;
+  max-width:  100vw;
+  height:     100vh;
+  background: var(--ods-white);
+  z-index:    var(--ods-z-modal);
+  display:    flex;
+  flex-direction: column;
+  transform:  translateX(100%);
+  transition: transform var(--ods-transition-slow);
+  box-shadow: var(--ods-shadow-lg);
+
+  &.open {
+    transform: translateX(0);
+  }
+
+  .ods-drawer-header {
+    padding:       1.25rem;
+    border-bottom: 3px solid var(--ods-orange);
+    display:       flex;
+    align-items:   center;
+    justify-content: space-between;
+    background:    var(--ods-black);
+    color:         var(--ods-white);
+
+    .ods-drawer-title {
+      font-weight: var(--ods-font-weight-bold);
+      font-size:   1rem;
+      color:       var(--ods-white);
+      margin:      0;
+    }
+
+    .ods-drawer-close {
+      background:  none;
+      border:      none;
+      color:       var(--ods-white);
+      cursor:      pointer;
+      padding:     0.25rem;
+      display:     flex;
+      align-items: center;
+      transition:  color var(--ods-transition);
+
+      &:hover { color: var(--ods-orange); }
+    }
+  }
+
+  .ods-drawer-body {
+    flex:       1;
+    overflow-y: auto;
+    padding:    1.5rem;
+  }
+
+  .ods-drawer-footer {
+    padding:    1rem 1.5rem;
+    border-top: 1px solid var(--ods-gray-200);
+    display:    flex;
+    gap:        0.75rem;
+    justify-content: flex-end;
+  }
+}

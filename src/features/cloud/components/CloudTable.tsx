@@ -36,8 +36,8 @@ export default function CloudTable({
   onTest,
 }: CloudTableProps) {
   return (
-    <div className="table-container">
-      <table className="data-table">
+    <div className="ods-table-wrapper">
+      <table className="ods-table">
         <thead>
           <tr>
             <th>#</th>
@@ -53,99 +53,77 @@ export default function CloudTable({
         <tbody>
           {items.length === 0 ? (
             <tr>
-              <td
-                colSpan={7}
-                className="empty-table-cell"
-              >
-                No cloud configurations
-                found.
+              <td colSpan={7}>
+                <div className="ods-empty-state" style={{ padding: "2rem" }}>
+                  <span className="ods-empty-icon">☁️</span>
+                  <p className="ods-empty-text">
+                    No cloud configurations found.
+                  </p>
+                </div>
               </td>
             </tr>
           ) : (
             items.map((cloud, index) => (
               <tr key={cloud.id}>
-                <td>
-                  {(page - 1) *
-                    pageSize +
-                    index +
-                    1}
+                <td style={{ color: "var(--ods-gray-500)" }}>
+                  {(page - 1) * pageSize + index + 1}
                 </td>
 
                 <td>
-                  <strong>
+                  <strong style={{ color: "var(--ods-gray-900)" }}>
                     {cloud.name}
                   </strong>
                 </td>
 
                 <td>
-                  <span className="cloud-provider-badge">
+                  <span className="ods-role-badge">
                     {cloud.provider}
                   </span>
                 </td>
 
-                <td>
+                <td style={{ color: "var(--ods-gray-600)" }}>
                   {cloud.region || "—"}
                 </td>
 
                 <td>
                   <span
-                    className={
-                      cloud.is_active
-                        ? "cloud-status cloud-status--active"
-                        : "cloud-status cloud-status--inactive"
-                    }
+                    className={`ods-status-badge ${cloud.is_active ? "active" : "inactive"}`}
                   >
-                    {cloud.is_active
-                      ? "Active"
-                      : "Inactive"}
+                    {cloud.is_active ? "Active" : "Inactive"}
                   </span>
                 </td>
 
-                <td>
-                  {new Date(
-                    cloud.created_at,
-                  ).toLocaleString()}
+                <td style={{ color: "var(--ods-gray-500)", whiteSpace: "nowrap" }}>
+                  {new Date(cloud.created_at).toLocaleString()}
                 </td>
 
                 <td>
-                  <div className="cloud-row-actions">
+                  <div style={{ display: "flex", gap: "0.375rem" }}>
                     <button
                       type="button"
-                      className="icon-button"
+                      className="ods-icon-btn"
                       title="Test connection"
-                      disabled={
-                        testingId ===
-                        cloud.id
-                      }
-                      onClick={() =>
-                        onTest(cloud)
-                      }
+                      disabled={testingId === cloud.id}
+                      onClick={() => onTest(cloud)}
                     >
                       <PlugZap size={16} />
                     </button>
 
                     <button
                       type="button"
-                      className="icon-button"
+                      className="ods-icon-btn"
                       title="Edit"
-                      onClick={() =>
-                        onEdit(cloud)
-                      }
+                      onClick={() => onEdit(cloud)}
                     >
                       <Pencil size={16} />
                     </button>
 
                     <button
                       type="button"
-                      className="icon-button icon-button--danger"
+                      className="ods-icon-btn danger"
                       title="Delete"
-                      disabled={
-                        deletingId ===
-                        cloud.id
-                      }
-                      onClick={() =>
-                        onDelete(cloud)
-                      }
+                      disabled={deletingId === cloud.id}
+                      onClick={() => onDelete(cloud)}
                     >
                       <Trash2 size={16} />
                     </button>

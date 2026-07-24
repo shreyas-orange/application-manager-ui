@@ -22,7 +22,14 @@ export function RoleProtectedRoute({
     return <Navigate to="/login" replace />;
   }
 
-  if (!allowedRoles.includes(user.role)) {
+  const rawRole =
+    typeof user.role === "string"
+      ? user.role
+      : (user.role as unknown as { name?: string })?.name ?? "";
+
+  const userRole = rawRole.trim().toLowerCase();
+
+  if (!allowedRoles.includes(userRole as UserRole)) {
     return <Navigate to="/forbidden" replace />;
   }
 

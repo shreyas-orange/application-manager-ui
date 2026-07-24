@@ -116,7 +116,7 @@ function getOwner(app: Application, type: string) {
   );
 }
 
-function dateInputValue(value: string | null): string {
+function dateInputValue(value: string | null | undefined): string {
   return value ? value.slice(0, 10) : "";
 }
 

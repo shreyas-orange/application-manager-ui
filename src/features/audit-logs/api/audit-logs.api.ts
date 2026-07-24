@@ -1,5 +1,7 @@
 import { apiClient } from "@/lib/api-client";
 
+import type { AuditLogsResponse } from "../types/audit-log.types";
+
 interface GetAuditLogsParams {
   page: number;
   pageSize: number;
@@ -10,8 +12,8 @@ export async function getAuditLogs({
   page,
   pageSize,
   search,
-}: GetAuditLogsParams) {
-  const response = await apiClient.get(
+}: GetAuditLogsParams): Promise<AuditLogsResponse> {
+  const response = await apiClient.get<AuditLogsResponse>(
     "/audit-logs",
     {
       params: {

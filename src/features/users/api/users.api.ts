@@ -5,7 +5,7 @@ import type {
   UpdateUserRequest,
   User,
   CreateUserRequest,
-} from "../types/users.types";
+} from "../types/user.types";
 
 
 export interface GetUsersParams {

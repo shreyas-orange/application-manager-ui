@@ -87,12 +87,7 @@ export default function LoginPage() {
       const currentUser = await getCurrentUser();
       localStorage.setItem("auth_user", JSON.stringify(currentUser));
 
-      const roleValue =
-        typeof currentUser?.role === "string"
-          ? currentUser.role
-          : currentUser?.role?.name ?? currentUser?.role_name ?? "";
-
-      const role = String(roleValue).trim().toLowerCase();
+      const role = String(currentUser?.role ?? "").trim().toLowerCase();
 
       navigate(role === "admin" ? "/app/dashboard" : "/app/applications", {
         replace: true,

@@ -392,7 +392,7 @@ export default function HomeOverviewPage() {
                 <ResponsiveContainer width={200} height={200}>
                   <PieChart>
                     <Pie data={statusPieData} cx="50%" cy="50%" outerRadius={80} innerRadius={35} dataKey="value" labelLine={false}
-                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}>
+                      label={({ name, percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}>
                       {statusPieData.map((e) => (
                         <Cell key={e.name} fill={STATUS_COLORS[e.name] ?? "#999"} />
                       ))}

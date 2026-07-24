@@ -7,7 +7,7 @@ import type {
   GetCloudParams,
   TestCloudResponse,
   UpdateCloudRequest,
-} from "../types/cloud";
+} from "../types/clouds.types";
 
 export async function getCloudConfigurations({
   page,

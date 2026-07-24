@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import type {
   CloudConfiguration,
   CreateCloudRequest,
-} from "../types/cloud";
+} from "../types/clouds.types";
 
 import CloudForm from "./CloudForm";
 

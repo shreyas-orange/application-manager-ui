@@ -24,7 +24,7 @@ import {
 import type {
   CloudConfiguration,
   CreateCloudRequest,
-} from "../types/cloud";
+} from "../types/clouds.types";
 
 
 const PAGE_SIZE = 10;

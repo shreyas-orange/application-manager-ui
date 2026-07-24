@@ -6,7 +6,7 @@ import {
 
 import type {
   CloudConfiguration,
-} from "../types/cloud";
+} from "../types/clouds.types";
 
 interface CloudTableProps {
   items: CloudConfiguration[];

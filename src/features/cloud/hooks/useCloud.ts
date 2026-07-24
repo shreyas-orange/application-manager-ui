@@ -15,7 +15,7 @@ import type {
   CreateCloudRequest,
   GetCloudParams,
   UpdateCloudRequest,
-} from "../types/cloud";
+} from "../types/clouds.types";
 
 export const cloudQueryKeys = {
   all: ["cloud"] as const,

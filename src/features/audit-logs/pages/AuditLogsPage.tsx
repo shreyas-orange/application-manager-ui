@@ -10,6 +10,8 @@ import {
 
 import { useAuditLogs } from "../hooks/useAuditLogs";
 
+import type { AuditLog } from "../types/audit-log.types";
+
 
 const PAGE_SIZE = 10;
 
@@ -239,7 +241,7 @@ export default function AuditLogsPage() {
                     </td>
                   </tr>
                 ) : (
-                  auditLogs.map((log, index) => (
+                  auditLogs.map((log: AuditLog, index: number) => (
                     <tr key={log.id}>
                       <td style={{ color: "var(--ods-gray-500)" }}>
                         {(currentPage - 1) * PAGE_SIZE + index + 1}

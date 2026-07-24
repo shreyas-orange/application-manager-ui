@@ -6,7 +6,7 @@ import {
 import type {
   CloudConfiguration,
   CreateCloudRequest,
-} from "../types/cloud";
+} from "../types/clouds.types";
 
 interface CloudFormProps {
   cloud?: CloudConfiguration | null;
@@ -107,7 +107,7 @@ export default function CloudForm({
           value={form.name}
           placeholder="Production AWS"
           onChange={(event) => {
-            setForm((current) => ({
+            setForm((current: CreateCloudRequest) => ({
               ...current,
               name: event.target.value,
             }));
@@ -121,7 +121,7 @@ export default function CloudForm({
           id="cloud-provider"
           value={form.provider}
           onChange={(event) => {
-            setForm((current) => ({
+            setForm((current: CreateCloudRequest) => ({
               ...current,
               provider: event.target.value,
             }));
@@ -141,7 +141,7 @@ export default function CloudForm({
           value={form.region}
           placeholder="ap-south-1"
           onChange={(event) => {
-            setForm((current) => ({
+            setForm((current: CreateCloudRequest) => ({
               ...current,
               region: event.target.value,
             }));
@@ -157,7 +157,7 @@ export default function CloudForm({
           placeholder="Optional description"
           rows={4}
           onChange={(event) => {
-            setForm((current) => ({
+            setForm((current: CreateCloudRequest) => ({
               ...current,
               description: event.target.value,
             }));
@@ -171,7 +171,7 @@ export default function CloudForm({
           type="checkbox"
           checked={form.is_active}
           onChange={(event) => {
-            setForm((current) => ({
+            setForm((current: CreateCloudRequest) => ({
               ...current,
               is_active: event.target.checked,
             }));

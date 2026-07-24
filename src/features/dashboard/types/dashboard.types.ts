@@ -8,6 +8,8 @@ export interface DashboardSummary {
   total_users: number;
 }
 
+export type Summary = DashboardSummary;
+
 export interface MigrationStatusItem {
   status: string | null;
   count: number;
@@ -32,10 +34,13 @@ export interface RecentUpload {
 }
 
 export interface RecentAuditLog {
-  user: string;
+  id?: number;
+  user?: string;
   action: string;
-  module: string;
-  description: string;
+  module?: string;
+  entity?: string;
+  performed_by?: string;
+  description?: string;
   created_at: string;
 }
 

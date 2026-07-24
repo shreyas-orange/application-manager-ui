@@ -3,7 +3,7 @@ import axios from "axios";
 import type {
   ApiErrorResponse,
   ValidationErrorItem,
-} from "@/types/api.types";
+} from "@/features/auth/types/api.types";
 
 function extractValidationMessage(
   error: ValidationErrorItem,

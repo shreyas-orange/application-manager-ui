@@ -11,6 +11,7 @@ import {
 } from "react-router-dom";
 import {
   ArrowLeft,
+  Map,
   Pencil,
   Save,
   X,
@@ -452,6 +453,20 @@ export default function ApplicationDetailsPage() {
         </div>
 
         <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            onClick={() =>
+              navigate(`/app/applications/${application.id}/roadmap`, {
+                state: { application },
+              })
+            }
+            style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+          >
+            <Map size={15} />
+            Roadmap
+          </button>
+
           {!editing ? (
             <button
               type="button"

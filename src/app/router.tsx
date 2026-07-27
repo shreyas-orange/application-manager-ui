@@ -18,6 +18,7 @@ import UsersPage from "@/features/users/pages/UsersPage";
 import DashboardPage from "@/features/dashboard/pages/DashboardPage";
 import ApplicationsPage from "@/features/applications/pages/ApplicationsPage";
 import ApplicationDetailsPage from "@/features/applications/pages/ApplicationDetailsPage";
+import RoadmapPage from "@/features/roadmap/pages/RoadmapPage";
 import AnalyticsPage from "@/features/applications/pages/AnalyticsPage";
 import HomeOverviewPage from "@/features/applications/pages/HomeOverviewPage";
 import UploadFilePage from "@/features/uploads/pages/UploadFilePage";
@@ -165,6 +166,10 @@ export const router = createBrowserRouter([
           {
             path: "applications/:id",
             element: <ApplicationDetailsPage />,
+          },
+          {
+            path: "applications/:id/roadmap",
+            element: <RoadmapPage />,
           },
           {
             path: "analytics",

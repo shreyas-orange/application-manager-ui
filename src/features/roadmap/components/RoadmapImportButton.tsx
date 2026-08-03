@@ -22,7 +22,8 @@ export default function RoadmapImportButton({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const importMutation = useImportRoadmap();
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
     fileInputRef.current?.click();
   };
 

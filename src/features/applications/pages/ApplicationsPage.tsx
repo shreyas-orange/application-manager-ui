@@ -400,7 +400,6 @@ export default function ApplicationsPage() {
                     <th>DX-uid</th>
                     <th>MCP-id</th>
                     <th>Created</th>
-                    <th>Action</th>
                     <th>Roadmap</th>
                   </tr>
                 </thead>
@@ -408,7 +407,7 @@ export default function ApplicationsPage() {
                 <tbody>
                   {filteredApplications.length === 0 ? (
                     <tr>
-                      <td colSpan={17}>
+                      <td colSpan={16}>
                         <div
                           className="ods-empty-state"
                           style={{ padding: "2rem" }}
@@ -427,7 +426,12 @@ export default function ApplicationsPage() {
                         app.migration?.migration_progress ?? 0;
 
                       return (
-                        <tr key={app.id}>
+                        <tr
+                          key={app.id}
+                          onClick={() => handleOpenApp(app)}
+                          style={{ cursor: "pointer" }}
+                          title={`Open ${app.application_name}`}
+                        >
 
                           {/* Application name */}
                           <td>
@@ -584,17 +588,6 @@ export default function ApplicationsPage() {
                             }}
                           >
                             {formatDate(app.created_at)}
-                          </td>
-
-                          {/* Action */}
-                          <td>
-                            <button
-                              type="button"
-                              className="btn btn-outline-secondary btn-sm"
-                              onClick={() => handleOpenApp(app)}
-                            >
-                              View / Edit
-                            </button>
                           </td>
 
                           {/* Roadmap */}

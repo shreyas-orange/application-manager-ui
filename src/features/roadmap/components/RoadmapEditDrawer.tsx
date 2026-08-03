@@ -9,8 +9,13 @@ import type {
 interface RoadmapEditDrawerProps {
   item: RoadmapItem | null;
   isOpen: boolean;
+  mode?: "edit" | "create";
+  nextDisplayOrder?: number;
   onClose: () => void;
-  onSave: (itemId: number, payload: UpdateRoadmapItemPayload) => Promise<void>;
+  onSave: (
+    payload: UpdateRoadmapItemPayload,
+    itemId?: number,
+  ) => Promise<void>;
 }
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
@@ -211,9 +216,12 @@ function DrawerSelect({
 export default function RoadmapEditDrawer({
   item,
   isOpen,
+  mode = "edit",
+  nextDisplayOrder = 1,
   onClose,
   onSave,
 }: RoadmapEditDrawerProps) {
+  const isCreate = mode === "create";
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -242,7 +250,7 @@ export default function RoadmapEditDrawer({
     setError("");
   }, [item]);
 
-  if (!isOpen || !item) return null;
+  if (!isOpen) return null;
 
   const updateField = (field: keyof FormState, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -254,10 +262,11 @@ export default function RoadmapEditDrawer({
 
     try {
       const payload: UpdateRoadmapItemPayload = {
-        phase_id: item.phase_id,
-        environment_id: item.environment_id,
+        phase_id: item?.phase_id ?? 0,
+        environment_id: item?.environment_id ?? 0,
         section_name: form.section_name,
-        activity_number: Number(form.activity_number) || item.display_order,
+        activity_number:
+          Number(form.activity_number) || item?.display_order || nextDisplayOrder,
         activity: form.activity,
         status: form.status,
         planned_start_date: form.planned_start_date || null,
@@ -265,12 +274,12 @@ export default function RoadmapEditDrawer({
         actual_start_date: form.actual_start_date || null,
         actual_end_date: form.actual_end_date || null,
         remarks: form.remarks,
-        display_order: item.display_order,
-        responsible_team_ids: item.responsible_team_ids,
-        support_team_ids: item.support_team_ids,
-        assigned_resource_ids: item.assigned_resource_ids,
+        display_order: item?.display_order ?? nextDisplayOrder,
+        responsible_team_ids: item?.responsible_team_ids ?? [],
+        support_team_ids: item?.support_team_ids ?? [],
+        assigned_resource_ids: item?.assigned_resource_ids ?? [],
       };
-      await onSave(item.id, payload);
+      await onSave(payload, item?.id);
       onClose();
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { detail?: string; message?: string } } };
@@ -293,7 +302,9 @@ export default function RoadmapEditDrawer({
       >
         <div className="ods-drawer-header">
           <div>
-            <div className="ods-drawer-title">Edit Roadmap Item</div>
+            <div className="ods-drawer-title">
+              {isCreate ? "Create Roadmap Item" : "Edit Roadmap Item"}
+            </div>
             <div
               style={{
                 fontSize: "var(--ods-font-size-xs)",
@@ -301,7 +312,9 @@ export default function RoadmapEditDrawer({
                 marginTop: "0.15rem",
               }}
             >
-              Activity #{item.activity_number || item.display_order}
+              {isCreate
+                ? "New activity"
+                : `Activity #${item!.activity_number || item!.display_order}`}
             </div>
           </div>
           <button
@@ -454,7 +467,7 @@ export default function RoadmapEditDrawer({
                 Saving...
               </span>
             ) : (
-              "Save changes"
+              isCreate ? "Create item" : "Save changes"
             )}
           </button>
         </div>

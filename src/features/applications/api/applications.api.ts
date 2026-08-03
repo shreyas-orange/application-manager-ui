@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api-client";
+import { publicApiClient } from "@/lib/public-api-client";
 
 import type {
   Application,
@@ -14,6 +15,17 @@ export interface GetApplicationsParams {
   status?: string;
   domain?: string;
   cloud?: string;
+}
+
+function toApplicationsResponse(
+  raw: ApplicationsApiResponse,
+): ApplicationsResponse {
+  return {
+    page: raw.page,
+    pageSize: raw.size,
+    total: raw.total,
+    items: raw.data,
+  };
 }
 
 export async function getApplications({
@@ -39,12 +51,25 @@ export async function getApplications({
       },
     );
 
-  return {
-    page: response.data.page,
-    pageSize: response.data.size,
-    total: response.data.total,
-    items: response.data.data,
-  };
+  return toApplicationsResponse(response.data);
+}
+
+export async function getPublicApplications({
+  page = 1,
+  pageSize = 50,
+}: GetApplicationsParams = {}): Promise<ApplicationsResponse> {
+  const response =
+    await publicApiClient.get<ApplicationsApiResponse>(
+      "/clouds/all/applications",
+      {
+        params: {
+          page,
+          size: pageSize,
+        },
+      },
+    );
+
+  return toApplicationsResponse(response.data);
 }
 
 

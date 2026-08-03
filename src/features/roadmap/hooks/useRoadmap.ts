@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-query";
 
 import {
+  createRoadmapItem,
   getRoadmapDetails,
   importRoadmap,
   updateRoadmapItem,
@@ -42,6 +43,24 @@ export function useUpdateRoadmapItem(appId: number) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: roadmapKeys.details(appId),
+      });
+    },
+  });
+}
+
+export function useCreateRoadmapItem(appId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ payload }: { payload: UpdateRoadmapItemPayload }) =>
+      createRoadmapItem(appId, payload),
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: roadmapKeys.details(appId),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["applications"],
       });
     },
   });

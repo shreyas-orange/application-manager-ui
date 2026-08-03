@@ -11,11 +11,14 @@ import {
 } from "react-router-dom";
 import {
   ArrowLeft,
-  Map,
   Pencil,
   Save,
   X,
 } from "lucide-react";
+
+import RoadmapAnalytics from "@/features/roadmap/components/RoadmapAnalytics";
+import RoadmapImportButton from "@/features/roadmap/components/RoadmapImportButton";
+import RoadmapSection  from "@/features/roadmap/components/RoadmapSection";
 
 import { useUpdateApplication } from "../hooks/useUpdateApplication";
 import type {
@@ -331,6 +334,16 @@ export default function ApplicationDetailsPage() {
   const updateMutation = useUpdateApplication();
   const [editing, setEditing] = useState(false);
   const [form, setForm]       = useState<FormState>(EMPTY_FORM);
+  const [activeTab, setActiveTab] = useState<"analytics" | "roadmap" | "application">("analytics");
+  const [hasRoadmap, setHasRoadmap] = useState(
+    Boolean(application?.has_roadmap),
+  );
+
+  const TABS: { id: "analytics" | "roadmap" | "application"; label: string }[] = [
+    { id: "analytics",   label: "Analytics (roadmap)" },
+    { id: "roadmap",     label: "Roadmap" },
+    { id: "application", label: "Application" },
+  ];
 
   useEffect(() => {
     if (application) {
@@ -452,21 +465,15 @@ export default function ApplicationDetailsPage() {
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button
-            type="button"
-            className="btn btn-outline-secondary"
-            onClick={() =>
-              navigate(`/app/applications/${application.id}/roadmap`, {
-                state: { application },
-              })
-            }
-            style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
-          >
-            <Map size={15} />
-            Roadmap
-          </button>
-
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          {!hasRoadmap && (
+            <RoadmapImportButton
+              applicationId={application.id}
+              replaceExisting={false}
+              label="Upload Roadmap"
+              onSuccess={() => setHasRoadmap(true)}
+            />
+          )}
           {!editing ? (
             <button
               type="button"
@@ -497,6 +504,55 @@ export default function ApplicationDetailsPage() {
         </div>
       </div>
 
+      {/* ── Tabs ──────────────────────────────────────────────────── */}
+      <div
+        style={{
+          display: "flex",
+          gap: "0.25rem",
+          borderBottom: "2px solid var(--ods-gray-200)",
+          marginBottom: "1.5rem",
+        }}
+      >
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: "0.6rem 1.25rem",
+                fontSize: "var(--ods-font-size-sm)",
+                fontWeight: 600,
+                color: isActive ? "var(--ods-orange)" : "var(--ods-gray-600)",
+                background: "transparent",
+                border: "none",
+                borderBottom: isActive
+                  ? "3px solid var(--ods-orange)"
+                  : "3px solid transparent",
+                cursor: "pointer",
+                marginBottom: "-2px",
+              }}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Tab: Analytics (roadmap) ─────────────────────────────── */}
+      {activeTab === "analytics" && (
+        <RoadmapAnalytics appId={application.id} />
+      )}
+
+      {/* ── Tab: Roadmap ─────────────────────────────────────────── */}
+      {activeTab === "roadmap" && (
+        <RoadmapSection appId={application.id} />
+      )}
+
+      {/* ── Tab: Application ─────────────────────────────────────── */}
+      {activeTab === "application" && (
+        <>
       {/* ── Error ──────────────────────────────────────────────── */}
       {updateMutation.isError && (
         <div className="ods-form-message error">
@@ -639,6 +695,8 @@ export default function ApplicationDetailsPage() {
           )}
         </div>
       </form>
+        </>
+      )}
     </div>
   );
 }

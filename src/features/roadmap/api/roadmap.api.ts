@@ -94,12 +94,14 @@ export async function importRoadmap(
 
 export async function createRoadmapItem(
   applicationId: number,
-  _payload: UpdateRoadmapItemPayload,
+  payload: UpdateRoadmapItemPayload,
 ): Promise<RoadmapItem> {
-  // TODO: Implement when backend endpoint is ready
-  // Expected: POST /api/v1/roadmap/applications/{applicationId}/roadmap-details
-  throw new Error(
-    "Roadmap create endpoint is not implemented yet. " +
-    `Expected: POST =/roadmap/applications/${applicationId}/roadmap-details`,
-  );
+  const response = await apiClient.post<
+    RoadmapApiItem | { roadmap_details: RoadmapApiItem[] }
+  >(`/roadmap/applications/${applicationId}/roadmap-details`, payload);
+  const data = response.data;
+  const item = "roadmap_details" in data
+    ? data.roadmap_details[0]
+    : data;
+  return normalizeItem(item);
 }

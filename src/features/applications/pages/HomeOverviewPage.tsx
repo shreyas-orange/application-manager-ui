@@ -28,7 +28,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-import { useAllApplications } from "../hooks/useAllApplications";
+import { usePublicApplications } from "../hooks/useAllApplications";
 import type { Application } from "../types/application.types";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -109,7 +109,7 @@ const BLUE_COLOR  = "#0052CC";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function HomeOverviewPage() {
-  const { data, isLoading, isError, error, isFetching } = useAllApplications();
+  const { data, isLoading, isError, error, isFetching } = usePublicApplications();
   const applications = data?.items ?? [];
 
   // ── Filters ────────────────────────────────────────────────────

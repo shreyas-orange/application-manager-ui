@@ -18,7 +18,6 @@ import {
   X,
 } from "lucide-react";
 
-import RoadmapImportButton           from "@/features/roadmap/components/RoadmapImportButton";
 import ApplicationSummaryCard        from "../components/ApplicationSummaryCard";
 import { useApplications }           from "../hooks/useApplications";
 import type {
@@ -29,17 +28,6 @@ import type {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function normalizeValue(value: string | null | undefined): string {
   return String(value ?? "").trim().toLowerCase();
-}
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("en-IN", {
-    day:   "2-digit",
-    month: "short",
-    year:  "numeric",
-  });
 }
 
 function getOwnerByType(
@@ -392,22 +380,19 @@ export default function ApplicationsPage() {
                     <th>Cloud</th>
                     <th>Migration</th>
                     <th>Progress</th>
-                    <th>Assessment</th>
                     <th>Nexus</th>
                     <th>Security (RootId) PROD</th>
                     <th>Security (Net Pol) PROD</th>
                     <th>Sov Type</th>
                     <th>DX-uid</th>
                     <th>MCP-id</th>
-                    <th>Created</th>
-                    <th>Roadmap</th>
                   </tr>
                 </thead>
 
                 <tbody>
                   {filteredApplications.length === 0 ? (
                     <tr>
-                      <td colSpan={16}>
+                      <td colSpan={13}>
                         <div
                           className="ods-empty-state"
                           style={{ padding: "2rem" }}
@@ -544,11 +529,6 @@ export default function ApplicationsPage() {
                             </div>
                           </td>
 
-                          {/* Assessment */}
-                          <td style={{ color: "var(--ods-gray-600)" }}>
-                            {app.meta_data?.assessment_status || "—"}
-                          </td>
-
                           {/* Nexus */}
                           <td style={{ color: "var(--ods-gray-600)" }}>
                             {app.security?.nexus_status || "—"}
@@ -577,29 +557,6 @@ export default function ApplicationsPage() {
                           {/* MCP-id */}
                           <td style={{ color: "var(--ods-gray-600)" }}>
                             {app.meta_data?.mcp_id || "—"}
-                          </td>
-
-                          {/* Created at */}
-                          <td
-                            style={{
-                              fontSize:  "var(--ods-font-size-xs)",
-                              color:     "var(--ods-gray-500)",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {formatDate(app.created_at)}
-                          </td>
-
-                          {/* Roadmap */}
-                          <td>
-                            {!app.has_roadmap && (
-                              <RoadmapImportButton
-                                applicationId={app.id}
-                                replaceExisting={false}
-                                label="Upload Roadmap"
-                                onSuccess={() => { void refetch(); }}
-                              />
-                            )}
                           </td>
 
                         </tr>

@@ -6,6 +6,7 @@ import {
 
 import {
   getRoadmapDetails,
+  importRoadmap,
   updateRoadmapItem,
 } from "../api/roadmap.api";
 
@@ -41,6 +42,31 @@ export function useUpdateRoadmapItem(appId: number) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: roadmapKeys.details(appId),
+      });
+    },
+  });
+}
+
+export function useImportRoadmap() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      applicationId,
+      file,
+      replaceExisting,
+    }: {
+      applicationId: number;
+      file: File;
+      replaceExisting: boolean;
+    }) => importRoadmap(applicationId, file, replaceExisting),
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: roadmapKeys.all,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["applications"],
       });
     },
   });

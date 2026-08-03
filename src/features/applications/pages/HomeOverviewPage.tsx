@@ -245,9 +245,7 @@ export default function HomeOverviewPage() {
       "Cloud",
       "Migration Status",
       "Progress",
-      "QA Owner",
       "DevOps Owner",
-      "PM Owner",
       "Created",
     ];
 
@@ -262,9 +260,7 @@ export default function HomeOverviewPage() {
         normalizeCloud(app),
         getMigrationStatus(app),
         String(app.migration?.migration_progress ?? 0),
-        getOwner("QA")?.owner_name || "",
         getOwner("DevOps")?.owner_name || "",
-        getOwner("PM")?.owner_name || "",
         formatDate(app.created_at),
       ];
     });
@@ -482,20 +478,17 @@ export default function HomeOverviewPage() {
                   <th>Application</th>
                   <th>Domain</th>
                   <th>Cloud</th>
-                  <th>QA Owner</th>
                   <th>DevOps Owner</th>
-                  <th>PM Owner</th>
                   <th>Migration</th>
                   <th>Progress</th>
                   <th>Assessment</th>
-                  <th>Latest Remark</th>
                   <th>Created</th>
                 </tr>
               </thead>
               <tbody>
                 {pagedApplications.length === 0 ? (
                   <tr>
-                    <td colSpan={11}>
+                    <td colSpan={8}>
                       <div className="ods-empty-state" style={{ padding: "2rem" }}>
                         <span className="ods-empty-icon">📋</span>
                         <p className="ods-empty-text">
@@ -510,8 +503,6 @@ export default function HomeOverviewPage() {
                     const progress  = app.migration?.migration_progress ?? 0;
                     const owners    = app.owners ?? [];
                     const getOwner  = (type: string) => owners.find((o) => o.owner_type?.toLowerCase() === type.toLowerCase());
-                    const lastRemark = app.remarks?.[app.remarks.length - 1];
-                    const remarkText = lastRemark?.remark || lastRemark?.remarks_imp || lastRemark?.source_comments || "—";
 
                     return (
                       <tr key={app.id}>
@@ -531,9 +522,7 @@ export default function HomeOverviewPage() {
                             {normalizeCloud(app)}
                           </span>
                         </td>
-                        <td style={{ color: "var(--ods-gray-600)" }}>{getOwner("QA")?.owner_name || "—"}</td>
                         <td style={{ color: "var(--ods-gray-600)" }}>{getOwner("DevOps")?.owner_name || "—"}</td>
-                        <td style={{ color: "var(--ods-gray-600)" }}>{getOwner("PM")?.owner_name || "—"}</td>
                         <td><span className={getStatusBadgeClass(migStatus)}>{migStatus}</span></td>
                         <td style={{ minWidth: 90 }}>
                           <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
@@ -544,11 +533,6 @@ export default function HomeOverviewPage() {
                           </div>
                         </td>
                         <td style={{ color: "var(--ods-gray-600)" }}>{app.meta_data?.assessment_status || "—"}</td>
-                        <td style={{ maxWidth: 160 }} title={remarkText}>
-                          <span style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-600)" }}>
-                            {remarkText}
-                          </span>
-                        </td>
                         <td style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-500)", whiteSpace: "nowrap" }}>
                           {formatDate(app.created_at)}
                         </td>

@@ -96,6 +96,7 @@ export interface Application {
   business_importance: string | null;
   sov_type:           string | null;
   out_of_scope:       boolean;
+  has_roadmap:        boolean;
   created_at:         string;
   updated_at:         string;
   owners:             ApplicationOwner[];

@@ -18,8 +18,9 @@ import {
   X,
 } from "lucide-react";
 
-import ApplicationSummaryCard    from "../components/ApplicationSummaryCard";
-import { useApplications }       from "../hooks/useApplications";
+import RoadmapImportButton           from "@/features/roadmap/components/RoadmapImportButton";
+import ApplicationSummaryCard        from "../components/ApplicationSummaryCard";
+import { useApplications }           from "../hooks/useApplications";
 import type {
   Application,
   ApplicationOwner,
@@ -75,13 +76,6 @@ function getStatusBadgeClass(status: string | null | undefined): string {
   if (["in progress", "in_progress", "ongoing", "started"].includes(s))
     return "ods-badge ods-badge-warning";
   return "ods-badge ods-badge-neutral";
-}
-
-function getLatestRemark(app: Application): string {
-  const remarks = app.remarks ?? [];
-  if (remarks.length === 0) return "—";
-  const last = remarks[remarks.length - 1];
-  return last.remark || last.remarks_imp || last.source_comments || "—";
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -393,25 +387,28 @@ export default function ApplicationsPage() {
                   <tr>
                     <th>Application</th>
                     <th>Domain</th>
-                    <th>QA Owner</th>
                     <th>DevOps Owner</th>
-                    <th>PM Owner</th>
                     <th>App Manager</th>
                     <th>Cloud</th>
                     <th>Migration</th>
                     <th>Progress</th>
                     <th>Assessment</th>
-                    <th>Security</th>
-                    <th>Latest Remark</th>
+                    <th>Nexus</th>
+                    <th>Security (RootId) PROD</th>
+                    <th>Security (Net Pol) PROD</th>
+                    <th>Sov Type</th>
+                    <th>DX-uid</th>
+                    <th>MCP-id</th>
                     <th>Created</th>
                     <th>Action</th>
+                    <th>Roadmap</th>
                   </tr>
                 </thead>
 
                 <tbody>
                   {filteredApplications.length === 0 ? (
                     <tr>
-                      <td colSpan={14}>
+                      <td colSpan={17}>
                         <div
                           className="ods-empty-state"
                           style={{ padding: "2rem" }}
@@ -475,13 +472,7 @@ export default function ApplicationsPage() {
 
                           {/* Owners */}
                           <td style={{ color: "var(--ods-gray-600)" }}>
-                            {getOwnerName(app, "QA")}
-                          </td>
-                          <td style={{ color: "var(--ods-gray-600)" }}>
                             {getOwnerName(app, "DevOps")}
-                          </td>
-                          <td style={{ color: "var(--ods-gray-600)" }}>
-                            {getOwnerName(app, "PM")}
                           </td>
                           <td style={{ color: "var(--ods-gray-600)" }}>
                             {getOwnerName(app, "Application Manager")}
@@ -554,40 +545,34 @@ export default function ApplicationsPage() {
                             {app.meta_data?.assessment_status || "—"}
                           </td>
 
-                          {/* Security */}
-                          <td>
-                            <div
-                              style={{
-                                display:       "flex",
-                                flexDirection: "column",
-                                gap:           "0.15rem",
-                                fontSize:      "var(--ods-font-size-xs)",
-                                color:         "var(--ods-gray-600)",
-                              }}
-                            >
-                              <span>Nexus: {app.security?.nexus_status || "—"}</span>
-                              <span>Rooted: {app.security?.rooted_status || "—"}</span>
-                              <span>Network: {app.security?.network_policy_status || "—"}</span>
-                            </div>
+                          {/* Nexus */}
+                          <td style={{ color: "var(--ods-gray-600)" }}>
+                            {app.security?.nexus_status || "—"}
                           </td>
 
-                          {/* Latest remark */}
-                          <td
-                            style={{ maxWidth: 180 }}
-                            title={getLatestRemark(app)}
-                          >
-                            <span
-                              style={{
-                                display:      "block",
-                                overflow:     "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace:   "nowrap",
-                                fontSize:     "var(--ods-font-size-xs)",
-                                color:        "var(--ods-gray-600)",
-                              }}
-                            >
-                              {getLatestRemark(app)}
-                            </span>
+                          {/* Security (RootId) PROD */}
+                          <td style={{ color: "var(--ods-gray-600)" }}>
+                            {app.security?.security_prod_status || "—"}
+                          </td>
+
+                          {/* Security (Net Pol) PROD */}
+                          <td style={{ color: "var(--ods-gray-600)" }}>
+                            {app.security?.network_policy_status || "—"}
+                          </td>
+
+                          {/* Sov Type */}
+                          <td style={{ color: "var(--ods-gray-600)" }}>
+                            {app.sov_type || "—"}
+                          </td>
+
+                          {/* DX-uid */}
+                          <td style={{ color: "var(--ods-gray-600)" }}>
+                            {app.meta_data?.dx_uid || "—"}
+                          </td>
+
+                          {/* MCP-id */}
+                          <td style={{ color: "var(--ods-gray-600)" }}>
+                            {app.meta_data?.mcp_id || "—"}
                           </td>
 
                           {/* Created at */}
@@ -610,6 +595,18 @@ export default function ApplicationsPage() {
                             >
                               View / Edit
                             </button>
+                          </td>
+
+                          {/* Roadmap */}
+                          <td>
+                            {!app.has_roadmap && (
+                              <RoadmapImportButton
+                                applicationId={app.id}
+                                replaceExisting={false}
+                                label="Upload Roadmap"
+                                onSuccess={() => { void refetch(); }}
+                              />
+                            )}
                           </td>
 
                         </tr>

@@ -78,6 +78,20 @@ export async function updateRoadmapItem(
   return normalizeItem(item);
 }
 
+export async function importRoadmap(
+  applicationId: number,
+  file: File,
+  replaceExisting: boolean,
+): Promise<void> {
+  const formData = new FormData();
+  formData.append("file", file);
+  await apiClient.post(
+    `/roadmap/${applicationId}/roadmap/import`,
+    formData,
+    { params: { replace_existing: replaceExisting } },
+  );
+}
+
 export async function createRoadmapItem(
   applicationId: number,
   _payload: UpdateRoadmapItemPayload,

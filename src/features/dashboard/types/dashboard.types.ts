@@ -38,10 +38,15 @@ export interface RecentAuditLog {
   user?: string;
   action: string;
   module?: string;
-  entity?: string;
-  performed_by?: string;
   description?: string;
   created_at: string;
+}
+
+export interface NamespaceMigrationSummary {
+  total_namespaces: number;
+  migrated: number;
+  in_progress: number;
+  decommissioned: number;
 }
 
 export interface DashboardResponse {

@@ -10,16 +10,22 @@ import {
   Users,
 } from "lucide-react";
 import {
+  Bar,
+  BarChart,
+  CartesianGrid,
   Cell,
   Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
   Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 
 import DashboardCard    from "../components/DashboardCard";
 import { useDashboard } from "../hooks/useDashboard";
+import { useNamespaceMigrationSummary } from "../hooks/useNamespaceMigrationSummary";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const MIGRATION_COLORS: Record<string, string> = {
@@ -76,10 +82,22 @@ function auditActionClass(action: string): string {
   return "ods-badge ods-badge-info";
 }
 
+const NS_COLORS: Record<string, string> = {
+  Migrated:      "#198754",
+  "In Progress": "#FFC107",
+  Decommissioned: "#6C757D",
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { data, isLoading, isError, error, isFetching, refetch } =
     useDashboard();
+
+  const {
+    data: nsSummary,
+    isLoading: nsLoading,
+    isError: nsError,
+  } = useNamespaceMigrationSummary();
 
   // ── Loading state ────────────────────────────────────────────────
   if (isLoading) {
@@ -136,6 +154,15 @@ export default function DashboardPage() {
     name:  normalizeMigrationStatus(item.status),
     value: item.count,
   }));
+
+  const nsChartData = [
+    {
+      name: "Namespaces",
+      Migrated: nsSummary?.migrated ?? 0,
+      "In Progress": nsSummary?.in_progress ?? 0,
+      Decommissioned: nsSummary?.decommissioned ?? 0,
+    },
+  ];
 
   // ── Render ───────────────────────────────────────────────────────
   return (
@@ -399,6 +426,94 @@ export default function DashboardPage() {
 
       </div>
 
+      {/* ── Namespace Migration ───────────────────────────────── */}
+      <div className="ods-card" style={{ marginBottom: "1.5rem" }}>
+        <div className="ods-card-header">
+          <h2 className="ods-card-title">Namespace Migration</h2>
+        </div>
+        <div className="ods-card-body">
+          {nsLoading ? (
+            <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
+              <div className="ods-spinner" />
+            </div>
+          ) : nsError || !nsSummary ? (
+            <p style={{ color: "var(--ods-gray-500)", fontSize: "var(--ods-font-size-sm)", margin: 0 }}>
+              Unable to load namespace migration summary.
+            </p>
+          ) : (
+            <>
+              {/* Stat cards */}
+              <div
+                style={{
+                  display:               "grid",
+                  gridTemplateColumns:   "repeat(auto-fit, minmax(170px, 1fr))",
+                  gap:                   "1rem",
+                  marginBottom:          "1.5rem",
+                }}
+              >
+                <div className="ods-stat-card">
+                  <div className="ods-stat-value">
+                    {nsSummary.total_namespaces ?? 0}
+                  </div>
+                  <div className="ods-stat-label">Total Namespaces</div>
+                </div>
+                <div className="ods-stat-card success">
+                  <div className="ods-stat-value">{nsSummary.migrated ?? 0}</div>
+                  <div className="ods-stat-label">Migrated</div>
+                </div>
+                <div className="ods-stat-card warning">
+                  <div className="ods-stat-value">{nsSummary.in_progress ?? 0}</div>
+                  <div className="ods-stat-label">In Progress</div>
+                </div>
+                <div className="ods-stat-card">
+                  <div className="ods-stat-value" style={{ color: NS_COLORS.Decommissioned }}>
+                    {nsSummary.decommissioned ?? 0}
+                  </div>
+                  <div className="ods-stat-label">Decommissioned</div>
+                </div>
+              </div>
+
+              {/* Stacked bar */}
+              <div style={{ width: "100%", height: 280 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={nsChartData}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    barSize={48}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--ods-gray-200)" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "var(--ods-gray-600)" }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "var(--ods-gray-600)" }} />
+                    <Tooltip
+                      contentStyle={{
+                        background: "var(--ods-white)",
+                        border: "1px solid var(--ods-gray-200)",
+                        borderRadius: 0,
+                        fontSize: "var(--ods-font-size-sm)",
+                      }}
+                    />
+                    <Legend />
+                    {Object.entries(NS_COLORS).map(([name, color]) => (
+                      <Bar
+                        key={name}
+                        dataKey={name}
+                        stackId="ns"
+                        fill={color}
+                        radius={
+                          name === "Migrated" ? [4, 0, 0, 4]
+                            : name === "Decommissioned" ? [0, 4, 4, 0]
+                            : [0, 0, 0, 0]
+                        }
+                      />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
       {/* ── Recent Uploads table ──────────────────────────────── */}
       <div className="ods-card" style={{ marginBottom: "1.5rem" }}>
         <div className="ods-card-header">
@@ -475,10 +590,10 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td style={{ color: "var(--ods-gray-700)" }}>
-                        {log.entity ?? "—"}
+                        {log.module ?? "—"}
                       </td>
                       <td style={{ color: "var(--ods-gray-600)" }}>
-                        {log.performed_by ?? "—"}
+                        {log.user || "System"}
                       </td>
                       <td style={{ color: "var(--ods-gray-600)" }}>
                         {formatDate(log.created_at)}

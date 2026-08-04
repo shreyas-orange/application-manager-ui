@@ -63,6 +63,12 @@ const STATUS_COLORS: Record<string, string> = {
   "Pending":    "#6C757D",
 };
 
+const NS_COLORS: Record<string, string> = {
+  Migrated:      "#198754",
+  "In Progress": "#FFC107",
+  Decommissioned: "#6C757D",
+};
+
 type CloudChoice = "Azure" | "Blue";
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -110,6 +116,44 @@ export default function AnalyticsPage() {
   }, [cloudApps]);
 
   const cloudColor = CLOUD_COLORS[activeCloud];
+
+  // ── Namespace migration analytics ──────────────────────────
+  const nsAnalytics = useMemo(() => {
+    let totalNs = 0;
+    let migrated = 0;
+    let inProgress = 0;
+    let decommissioned = 0;
+
+    cloudApps.forEach((app) => {
+      const mig = app.migration;
+      if (!mig) return;
+
+      totalNs += mig.total_ns ?? 0;
+      decommissioned += mig.ns_decommissioned ?? 0;
+
+      if (mig.ns_migrated != null) {
+        migrated += mig.ns_migrated;
+        inProgress += mig.ns_in_progress ?? 0;
+      } else {
+        const doneCount = mig.ns_migration_progress
+          ?.split("\n").map((s) => s.trim()).filter(Boolean).length ?? 0;
+        migrated += doneCount;
+        inProgress += Math.max(0, (mig.total_ns ?? 0) - doneCount);
+      }
+    });
+
+    return { total_namespaces: totalNs, migrated, in_progress: inProgress, decommissioned };
+  }, [cloudApps]);
+
+  const nsChartData = useMemo(
+    () => [{
+      name: "Namespaces",
+      Migrated: nsAnalytics.migrated,
+      "In Progress": nsAnalytics.in_progress,
+      Decommissioned: nsAnalytics.decommissioned,
+    }],
+    [nsAnalytics],
+  );
 
   // ── Loading / Error ────────────────────────────────────────────
   if (isLoading) {
@@ -347,6 +391,93 @@ export default function AnalyticsPage() {
                 ))}
               </div>
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Namespace Migration Analytics ────────────────────── */}
+      <div className="ods-card" style={{ marginTop: "1.5rem" }}>
+        <div className="ods-card-header">
+          <h2 className="ods-card-title">{activeCloud} — Namespace Migration</h2>
+        </div>
+        <div className="ods-card-body">
+          {nsAnalytics.total_namespaces === 0 &&
+          nsAnalytics.migrated === 0 &&
+          nsAnalytics.in_progress === 0 &&
+          nsAnalytics.decommissioned === 0 ? (
+            <p style={{ color: "var(--ods-gray-500)", fontSize: "var(--ods-font-size-sm)", margin: 0 }}>
+              No namespace migration data available for {activeCloud}.
+            </p>
+          ) : (
+            <>
+              {/* Stat cards */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+                  gap: "1rem",
+                  marginBottom: "1.5rem",
+                }}
+              >
+                <div className="ods-stat-card" style={{ borderTopColor: cloudColor }}>
+                  <div className="ods-stat-value" style={{ color: cloudColor }}>
+                    {nsAnalytics.total_namespaces}
+                  </div>
+                  <div className="ods-stat-label">Total Namespaces</div>
+                </div>
+                <div className="ods-stat-card success">
+                  <div className="ods-stat-value">{nsAnalytics.migrated}</div>
+                  <div className="ods-stat-label">Migrated</div>
+                </div>
+                <div className="ods-stat-card warning">
+                  <div className="ods-stat-value">{nsAnalytics.in_progress}</div>
+                  <div className="ods-stat-label">In Progress</div>
+                </div>
+                <div className="ods-stat-card">
+                  <div className="ods-stat-value" style={{ color: NS_COLORS.Decommissioned }}>
+                    {nsAnalytics.decommissioned}
+                  </div>
+                  <div className="ods-stat-label">Decommissioned</div>
+                </div>
+              </div>
+
+              {/* Stacked bar */}
+              <div style={{ width: "100%", height: 280 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={nsChartData}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    barSize={48}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--ods-gray-200)" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "var(--ods-gray-600)" }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "var(--ods-gray-600)" }} />
+                    <Tooltip
+                      contentStyle={{
+                        background: "var(--ods-white)",
+                        border: "1px solid var(--ods-gray-200)",
+                        borderRadius: 0,
+                        fontSize: "var(--ods-font-size-sm)",
+                      }}
+                    />
+                    <Legend />
+                    {Object.entries(NS_COLORS).map(([name, color]) => (
+                      <Bar
+                        key={name}
+                        dataKey={name}
+                        stackId="ns"
+                        fill={color}
+                        radius={
+                          name === "Migrated" ? [4, 0, 0, 4]
+                            : name === "Decommissioned" ? [0, 4, 4, 0]
+                            : [0, 0, 0, 0]
+                        }
+                      />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </>
           )}
         </div>
       </div>

@@ -31,6 +31,9 @@ export interface ApplicationMigration {
   application_id:              number;
   hosting_location:            string | null;
   total_ns:                    number | null;
+  ns_migrated:                 number | null;
+  ns_in_progress:              number | null;
+  ns_decommissioned:           number | null;
   cloud_squad:                 string | null;
   ns_migration_progress:       string | null;
   initiated:                   string | null;

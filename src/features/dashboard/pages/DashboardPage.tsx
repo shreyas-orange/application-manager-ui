@@ -10,17 +10,12 @@ import {
   Users,
 } from "lucide-react";
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
   Cell,
   Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
-  YAxis,
 } from "recharts";
 
 import DashboardCard    from "../components/DashboardCard";
@@ -157,10 +152,19 @@ export default function DashboardPage() {
 
   const nsChartData = [
     {
-      name: "Namespaces",
-      Migrated: nsSummary?.migrated ?? 0,
-      "In Progress": nsSummary?.in_progress ?? 0,
-      Decommissioned: nsSummary?.decommissioned ?? 0,
+      name: "Migrated",
+      value: nsSummary?.migrated ?? 0,
+      fill: NS_COLORS.Migrated,
+    },
+    {
+      name: "In Progress",
+      value: nsSummary?.in_progress ?? 0,
+      fill: NS_COLORS["In Progress"],
+    },
+    {
+      name: "Decommissioned",
+      value: nsSummary?.decommissioned ?? 0,
+      fill: NS_COLORS.Decommissioned,
     },
   ];
 
@@ -473,17 +477,24 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Stacked bar */}
+              {/* Pie chart */}
               <div style={{ width: "100%", height: 280 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={nsChartData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                    barSize={48}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--ods-gray-200)" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "var(--ods-gray-600)" }} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "var(--ods-gray-600)" }} />
+                  <PieChart>
+                    <Pie
+                      data={nsChartData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={3}
+                    >
+                      {nsChartData.map((entry, index) => (
+                        <Cell key={index} fill={entry.fill} />
+                      ))}
+                    </Pie>
                     <Tooltip
                       contentStyle={{
                         background: "var(--ods-white)",
@@ -493,20 +504,7 @@ export default function DashboardPage() {
                       }}
                     />
                     <Legend />
-                    {Object.entries(NS_COLORS).map(([name, color]) => (
-                      <Bar
-                        key={name}
-                        dataKey={name}
-                        stackId="ns"
-                        fill={color}
-                        radius={
-                          name === "Migrated" ? [4, 0, 0, 4]
-                            : name === "Decommissioned" ? [0, 4, 4, 0]
-                            : [0, 0, 0, 0]
-                        }
-                      />
-                    ))}
-                  </BarChart>
+                  </PieChart>
                 </ResponsiveContainer>
               </div>
             </>

@@ -99,15 +99,13 @@ export default function RoadmapSection({ appId }: { appId: number }) {
           <Plus size={15} />
           Create Item
         </button>
-        {items.length > 0 && (
-          <RoadmapImportButton
-            applicationId={appId}
-            replaceExisting
-            label="Replace Roadmap"
-            className="btn btn-outline-secondary btn-sm"
-            onSuccess={() => { void refetch(); }}
-          />
-        )}
+        <RoadmapImportButton
+          applicationId={appId}
+          replaceExisting={items.length > 0}
+          label={items.length > 0 ? "Replace Roadmap" : "Upload Roadmap"}
+          className="btn btn-outline-secondary btn-sm"
+          onSuccess={() => { void refetch(); }}
+        />
       </div>
 
       {/* ── Table / empty state ───────────────────────────────── */}

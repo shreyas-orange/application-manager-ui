@@ -17,8 +17,8 @@ import {
 } from "lucide-react";
 
 import RoadmapAnalytics from "@/features/roadmap/components/RoadmapAnalytics";
-import RoadmapImportButton from "@/features/roadmap/components/RoadmapImportButton";
 import RoadmapSection  from "@/features/roadmap/components/RoadmapSection";
+import DbSyncupSection from "@/features/db-syncup/components/DbSyncupSection";
 
 import { useUpdateApplication } from "../hooks/useUpdateApplication";
 import type {
@@ -334,15 +334,13 @@ export default function ApplicationDetailsPage() {
   const updateMutation = useUpdateApplication();
   const [editing, setEditing] = useState(false);
   const [form, setForm]       = useState<FormState>(EMPTY_FORM);
-  const [activeTab, setActiveTab] = useState<"analytics" | "roadmap" | "application">("analytics");
-  const [hasRoadmap, setHasRoadmap] = useState(
-    Boolean(application?.has_roadmap),
-  );
+  const [activeTab, setActiveTab] = useState<"analytics" | "roadmap" | "application" | "db-syncup">("analytics");
 
-  const TABS: { id: "analytics" | "roadmap" | "application"; label: string }[] = [
+  const TABS: { id: "analytics" | "roadmap" | "application" | "db-syncup"; label: string }[] = [
     { id: "analytics",   label: "Analytics (roadmap)" },
     { id: "roadmap",     label: "Roadmap" },
     { id: "application", label: "Application" },
+    { id: "db-syncup",   label: "DB Syncup" },
   ];
 
   useEffect(() => {
@@ -466,40 +464,34 @@ export default function ApplicationDetailsPage() {
         </div>
 
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          {!hasRoadmap && (
-            <RoadmapImportButton
-              applicationId={application.id}
-              replaceExisting={false}
-              label="Upload Roadmap"
-              onSuccess={() => setHasRoadmap(true)}
-            />
-          )}
-          {!editing ? (
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => setEditing(true)}
-              style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
-            >
-              <Pencil size={15} />
-              Edit
-            </button>
-          ) : (
-            <>
+          {activeTab === "application" && (
+            !editing ? (
               <button
                 type="button"
-                className="btn btn-outline-secondary"
-                disabled={updateMutation.isPending}
-                onClick={() => {
-                  setForm(populateForm(application));
-                  setEditing(false);
-                }}
+                className="btn btn-primary"
+                onClick={() => setEditing(true)}
                 style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
               >
-                <X size={15} />
-                Cancel
+                <Pencil size={15} />
+                Edit
               </button>
-            </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  disabled={updateMutation.isPending}
+                  onClick={() => {
+                    setForm(populateForm(application));
+                    setEditing(false);
+                  }}
+                  style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+                >
+                  <X size={15} />
+                  Cancel
+                </button>
+              </>
+            )
           )}
         </div>
       </div>
@@ -548,6 +540,11 @@ export default function ApplicationDetailsPage() {
       {/* ── Tab: Roadmap ─────────────────────────────────────────── */}
       {activeTab === "roadmap" && (
         <RoadmapSection appId={application.id} />
+      )}
+
+      {/* ── Tab: DB Syncup ───────────────────────────────────────── */}
+      {activeTab === "db-syncup" && (
+        <DbSyncupSection application={application} />
       )}
 
       {/* ── Tab: Application ─────────────────────────────────────── */}

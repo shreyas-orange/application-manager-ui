@@ -5,12 +5,7 @@ import {
   useState,
 } from "react";
 import {
-  AppWindow,
-  CheckCircle,
-  CircleX,
-  Clock3,
   Download,
-  Hourglass,
   Search,
   X,
 } from "lucide-react";
@@ -110,7 +105,7 @@ const BLUE_COLOR  = "#0052CC";
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function HomeOverviewPage() {
   const { data, isLoading, isError, error, isFetching } = usePublicApplications();
-  const applications = data?.items ?? [];
+  const applications = useMemo(() => data?.items ?? [], [data]);
 
   // ── Filters ────────────────────────────────────────────────────
   const [searchInput, setSearchInput]   = useState("");
@@ -388,7 +383,7 @@ export default function HomeOverviewPage() {
                 <ResponsiveContainer width={200} height={200}>
                   <PieChart>
                     <Pie data={statusPieData} cx="50%" cy="50%" outerRadius={80} innerRadius={35} dataKey="value" labelLine={false}
-                      label={({ name, percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}>
+                      label={({ percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}>
                       {statusPieData.map((e) => (
                         <Cell key={e.name} fill={STATUS_COLORS[e.name] ?? "#999"} />
                       ))}

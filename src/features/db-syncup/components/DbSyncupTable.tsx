@@ -1,54 +1,43 @@
-import { Pencil, Trash2 } from "lucide-react";
+import { History, Pencil, Trash2 } from "lucide-react";
 
-import {
-  ENVIRONMENT_STATUS_FIELDS,
-  getStatusBadgeClass,
-} from "../constants";
 import type { DbSyncup } from "../types/db-syncup.types";
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  return value.slice(0, 10);
-}
 
 interface DbSyncupTableProps {
   items: DbSyncup[];
-  deletingId: number | null;
-  onEdit: (item: DbSyncup) => void;
-  onDelete: (item: DbSyncup) => void;
+  deletingId?: number | null;
+  onEdit?: (item: DbSyncup) => void;
+  onDelete?: (item: DbSyncup) => void;
+  onHistory?: (item: DbSyncup) => void;
 }
 
 export default function DbSyncupTable({
   items,
-  deletingId,
+  deletingId = null,
   onEdit,
   onDelete,
+  onHistory,
 }: DbSyncupTableProps) {
+  const hasActions = Boolean(onEdit || onDelete || onHistory);
+  const colSpan = 7;
+
   return (
     <div className="ods-table-wrapper">
       <table className="ods-table">
         <thead>
           <tr>
-            <th style={{ minWidth: 48 }}>#</th>
+            <th style={{ minWidth: 180 }}>Application</th>
+            <th style={{ minWidth: 130 }}>Carto</th>
             <th style={{ minWidth: 140 }}>Domain</th>
-            <th style={{ minWidth: 130 }}>DB Validation</th>
-            <th style={{ minWidth: 140 }}>Migration Incharge</th>
-            <th style={{ minWidth: 110 }}>Date of Request</th>
-            <th style={{ minWidth: 60 }}>Env</th>
-            {ENVIRONMENT_STATUS_FIELDS.map((field) => (
-              <th key={field.key} style={{ minWidth: 90 }}>
-                {field.label}
-              </th>
-            ))}
-            <th style={{ minWidth: 110 }}>Time in Prod</th>
-            <th style={{ minWidth: 160 }}>Remarks</th>
-            <th style={{ width: 84 }} />
+            <th style={{ minWidth: 130 }}>Basiat</th>
+            <th style={{ minWidth: 140 }}>Hosting</th>
+            <th style={{ minWidth: 180 }}>Data Anonymization</th>
+            {hasActions && <th style={{ width: 84 }} />}
           </tr>
         </thead>
         <tbody>
           {items.length === 0 ? (
             <tr>
-              <td colSpan={17}>
+              <td colSpan={colSpan}>
                 <div
                   className="ods-empty-state"
                   style={{ padding: "2rem" }}
@@ -62,65 +51,26 @@ export default function DbSyncupTable({
           ) : (
             items.map((item) => (
               <tr key={item.id}>
-                <td
-                  style={{
-                    color: "var(--ods-gray-500)",
-                    textAlign: "center",
-                    fontSize: "var(--ods-font-size-xs)",
-                  }}
-                >
-                  {item.serial_number}
+                <td style={{ color: "var(--ods-gray-700)", fontWeight: 500 }}>
+                  {item.application_name || "—"}
+                </td>
+                <td style={{ color: "var(--ods-gray-700)" }}>
+                  {item.carto_id || "—"}
                 </td>
                 <td style={{ color: "var(--ods-gray-700)" }}>
                   {item.domain || "—"}
                 </td>
                 <td style={{ color: "var(--ods-gray-700)" }}>
-                  {item.db_validation || "—"}
+                  {item.basicat || "—"}
                 </td>
                 <td style={{ color: "var(--ods-gray-700)" }}>
-                  {item.migration_incharge || "—"}
+                  {item.hosting || "—"}
                 </td>
-                <td
-                  style={{
-                    color: "var(--ods-gray-600)",
-                    whiteSpace: "nowrap",
-                    fontSize: "var(--ods-font-size-sm)",
-                  }}
-                >
-                  {formatDate(item.date_of_request)}
-                </td>
-                <td
-                  style={{
-                    color: "var(--ods-gray-700)",
-                    textAlign: "center",
-                  }}
-                >
-                  {item.environment_count}
-                </td>
-                {ENVIRONMENT_STATUS_FIELDS.map((field) => (
-                  <td key={field.key}>
-                    <span className={getStatusBadgeClass(item[field.key])}>
-                      {item[field.key] || "—"}
-                    </span>
-                  </td>
-                ))}
                 <td style={{ color: "var(--ods-gray-700)" }}>
-                  {item.time_taken_in_prod || "—"}
+                  {item.data_anonymization_status || "—"}
                 </td>
-                <td
-                  style={{
-                    color: "var(--ods-gray-600)",
-                    maxWidth: 220,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    fontSize: "var(--ods-font-size-xs)",
-                  }}
-                  title={item.remarks}
-                >
-                  {item.remarks || "—"}
-                </td>
-                <td>
+                {hasActions && (
+                  <td>
                   <div
                     style={{
                       display: "flex",
@@ -131,10 +81,21 @@ export default function DbSyncupTable({
                     <button
                       type="button"
                       className="ods-icon-btn"
+                      title="View history"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onHistory?.(item);
+                      }}
+                    >
+                      <History size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      className="ods-icon-btn"
                       title="Edit syncup"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onEdit(item);
+                        onEdit?.(item);
                       }}
                     >
                       <Pencil size={14} />
@@ -146,13 +107,14 @@ export default function DbSyncupTable({
                       disabled={deletingId === item.id}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onDelete(item);
+                        onDelete?.(item);
                       }}
                     >
                       <Trash2 size={14} />
                     </button>
                   </div>
-                </td>
+                  </td>
+                )}
               </tr>
             ))
           )}

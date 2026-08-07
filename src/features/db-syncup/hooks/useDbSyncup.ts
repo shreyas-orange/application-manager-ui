@@ -7,6 +7,7 @@ import {
 import {
   createDbSyncup,
   deleteDbSyncup,
+  getDbSyncups,
   getDbSyncupsByApplication,
   updateDbSyncup,
 } from "../api/db-syncup.api";
@@ -26,6 +27,13 @@ export function useDbSyncups(applicationId: number) {
   return useQuery({
     queryKey: dbSyncupKeys.byApplication(applicationId),
     queryFn: () => getDbSyncupsByApplication(applicationId),
+  });
+}
+
+export function useAllDbSyncups() {
+  return useQuery({
+    queryKey: dbSyncupKeys.all,
+    queryFn: () => getDbSyncups(),
   });
 }
 

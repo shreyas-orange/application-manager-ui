@@ -16,6 +16,9 @@ import { useUsers } from "../hooks/useUsers";
 import { useCreateUser } from "../hooks/useCreateUser";
 import { useUpdateUser } from "../hooks/useUpdateUser";
 import { useDeleteUser } from "../hooks/useDeleteUser";
+import { useRoles } from "../hooks/useRoles";
+
+import RolesSection from "../components/RolesSection";
 
 import type { User } from "../types/user.types";
 
@@ -42,12 +45,6 @@ const EMPTY_INVITE_FORM: InviteUserForm = {
   email: "",
   role_id: "",
 };
-
-const ROLE_OPTIONS = [
-  { id: 1, name: "Admin" },
-  { id: 2, name: "Manager" },
-  { id: 3, name: "User" },
-];
 
 function validateName(
   value: string,
@@ -104,6 +101,7 @@ function getInitials(
 }
 
 export default function UsersPage() {
+  const [activeSection, setActiveSection] = useState<"users" | "roles">("users");
   const [searchInput, setSearchInput] =
     useState("");
   const [search, setSearch] = useState("");
@@ -159,6 +157,9 @@ export default function UsersPage() {
     useUpdateUser();
   const deleteUserMutation =
     useDeleteUser();
+
+  const { data: roles } = useRoles();
+  const roleOptions = roles ?? [];
 
   const users = data?.items ?? [];
   const total = data?.total ?? 0;
@@ -472,14 +473,16 @@ export default function UsersPage() {
           </div>
 
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={openInviteModal}
-            >
-              <Plus size={16} style={{ marginRight: "0.35rem" }} />
-              Invite User
-            </button>
+            {activeSection === "users" && (
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={openInviteModal}
+              >
+                <Plus size={16} style={{ marginRight: "0.35rem" }} />
+                Invite User
+              </button>
+            )}
 
             <button
               type="button"
@@ -496,7 +499,47 @@ export default function UsersPage() {
           </div>
         </div>
 
+        {/* ── Tabs ─────────────────────────────────────────────────── */}
+        <div
+          style={{
+            display: "flex",
+            gap: "0.25rem",
+            borderBottom: "2px solid var(--ods-gray-200)",
+            marginBottom: "1.5rem",
+          }}
+        >
+          {(["users", "roles"] as const).map((tab) => {
+            const isActive = activeSection === tab;
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveSection(tab)}
+                style={{
+                  padding: "0.6rem 1.25rem",
+                  fontSize: "var(--ods-font-size-sm)",
+                  fontWeight: 600,
+                  color: isActive ? "var(--ods-orange)" : "var(--ods-gray-600)",
+                  background: "transparent",
+                  border: "none",
+                  borderBottom: isActive
+                    ? "3px solid var(--ods-orange)"
+                    : "3px solid transparent",
+                  cursor: "pointer",
+                  marginBottom: "-2px",
+                }}
+              >
+                {tab === "users" ? "Users" : "Roles"}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ── Roles section ───────────────────────────────────────── */}
+        {activeSection === "roles" && <RolesSection />}
+
         {/* ── Main panel ──────────────────────────────────────── */}
+        {activeSection === "users" && (
         <div className="ods-card">
 
           {/* ── Toolbar ───────────────────────────────────────── */}
@@ -706,6 +749,8 @@ export default function UsersPage() {
           </div>
 
         </div>
+        )}
+
       </div>
 
       {/* ── Invite User Modal ──────────────────────────────────── */}
@@ -820,7 +865,7 @@ export default function UsersPage() {
                   }}
                 >
                   <option value="">Select a role</option>
-                  {ROLE_OPTIONS.map((role) => (
+                  {roleOptions.map((role) => (
                     <option key={role.id} value={role.id}>
                       {role.name}
                     </option>

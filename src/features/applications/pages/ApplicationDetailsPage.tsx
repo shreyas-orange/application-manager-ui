@@ -7,7 +7,6 @@ import {
 import {
   useLocation,
   useNavigate,
-  useParams,
 } from "react-router-dom";
 import {
   ArrowLeft,
@@ -323,7 +322,6 @@ function FieldTextarea({
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function ApplicationDetailsPage() {
-  const { id }        = useParams<{ id: string }>();
   const navigate      = useNavigate();
   const location      = useLocation();
 

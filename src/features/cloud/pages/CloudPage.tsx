@@ -11,6 +11,8 @@ import {
   X,
 } from "lucide-react";
 
+import { getApiErrorMessage } from "@/lib/api-error";
+
 import CloudModal from "../components/CloudModal";
 import CloudTable from "../components/CloudTable";
 
@@ -28,37 +30,6 @@ import type {
 
 
 const PAGE_SIZE = 10;
-
-function getErrorMessage(
-  error: unknown,
-): string {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "response" in error
-  ) {
-    const axiosError = error as {
-      response?: {
-        data?: {
-          detail?: string;
-          message?: string;
-        };
-      };
-    };
-
-    return (
-      axiosError.response?.data?.detail ??
-      axiosError.response?.data?.message ??
-      "Something went wrong."
-    );
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "Something went wrong.";
-}
 
 export default function CloudPage() {
   const [page, setPage] = useState(1);
@@ -187,7 +158,7 @@ export default function CloudPage() {
       setSelectedCloud(null);
     } catch (error) {
       setPageError(
-        getErrorMessage(error),
+        getApiErrorMessage(error),
       );
     }
   };
@@ -226,14 +197,12 @@ export default function CloudPage() {
       }
     } catch (error) {
       setPageError(
-        getErrorMessage(error),
+        getApiErrorMessage(error),
       );
     }
   };
 
-  const handleTest = async (
-    cloud: CloudConfiguration,
-  ) => {
+  const handleTest = async () => {
     setPageError("");
     setMessage("");
 
@@ -243,7 +212,7 @@ export default function CloudPage() {
       );
     } catch (error) {
       setPageError(
-        getErrorMessage(error),
+        getApiErrorMessage(error),
       );
     }
   };
@@ -274,7 +243,7 @@ export default function CloudPage() {
         <span className="ods-empty-icon">⚠️</span>
         <div className="ods-empty-title">Unable to load cloud configurations</div>
         <p className="ods-empty-text">
-          {getErrorMessage(cloudQuery.error)}
+          {getApiErrorMessage(cloudQuery.error)}
         </p>
         <button
           type="button"

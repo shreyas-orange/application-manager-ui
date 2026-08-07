@@ -88,9 +88,6 @@ export default function UploadedFilesList() {
   const uploads =
     data?.items ?? [];
 
-  const total = data?.total ?? uploads.length;
-  const currentPage = data?.page ?? page;
-
   const totalPages =
     Math.max(
       1,

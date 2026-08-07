@@ -29,7 +29,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function RoadmapAnalytics({ appId }: { appId: number }) {
   const { data, isLoading, isError, error } = useRoadmapDetails(appId);
 
-  const items = data?.items ?? [];
+  const items = useMemo(() => data?.items ?? [], [data]);
 
   const statusBreakdown = useMemo(() => {
     const counts: Record<string, number> = {};

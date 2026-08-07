@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Plus, RefreshCw } from "lucide-react";
 
-import type { Application } from "@/features/applications/types/application.types";
+import { useAllApplications } from "@/features/applications/hooks/useAllApplications";
 import { getApiErrorMessage } from "@/lib/api-error";
 
-import DbSyncupEditDrawer from "./DbSyncupEditDrawer";
-import DbSyncupHistoryModal from "./DbSyncupHistoryModal";
-import DbSyncupTable from "./DbSyncupTable";
+import DbSyncupEditDrawer from "../components/DbSyncupEditDrawer";
+import DbSyncupHistoryModal from "../components/DbSyncupHistoryModal";
+import DbSyncupTable from "../components/DbSyncupTable";
 import {
+  useAllDbSyncups,
   useCreateDbSyncup,
-  useDbSyncups,
   useDeleteDbSyncup,
   useUpdateDbSyncup,
 } from "../hooks/useDbSyncup";
@@ -19,18 +19,25 @@ import type {
   UpdateDbSyncupPayload,
 } from "../types/db-syncup.types";
 
-export default function DbSyncupSection({
-  application,
-}: {
-  application: Application;
-}) {
-  const appId = application.id;
-  const { data, isLoading, isError, error, refetch, isFetching } =
-    useDbSyncups(appId);
+const PAGE_SIZE = 10;
+
+export default function DbSyncupPage() {
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    isFetching,
+    refetch,
+  } = useAllDbSyncups();
+
+  const applicationsQuery = useAllApplications();
+  const applications = applicationsQuery.data?.items ?? [];
   const createMutation = useCreateDbSyncup();
   const updateMutation = useUpdateDbSyncup();
   const deleteMutation = useDeleteDbSyncup();
 
+  const [page, setPage] = useState(1);
   const [editingItem, setEditingItem] = useState<DbSyncup | null>(null);
   const [creating, setCreating] = useState(false);
   const [historyItem, setHistoryItem] = useState<DbSyncup | null>(null);
@@ -38,6 +45,19 @@ export default function DbSyncupSection({
   const [pageError, setPageError] = useState("");
 
   const items = data ?? [];
+  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedItems = items.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+
+  const syncedApplicationIds = new Set(
+    items.map((i) => i.application_id),
+  );
+  const availableApplications = applications.filter(
+    (app) => !syncedApplicationIds.has(app.id),
+  );
 
   const nextSerialNumber =
     items.length > 0
@@ -88,7 +108,7 @@ export default function DbSyncupSection({
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          minHeight: "40vh",
+          minHeight: "60vh",
           gap: "1rem",
         }}
       >
@@ -106,14 +126,16 @@ export default function DbSyncupSection({
         <span className="ods-empty-icon">⚠️</span>
         <div className="ods-empty-title">Unable to load DB syncup</div>
         <p className="ods-empty-text">
-          {error instanceof Error ? error.message : "Something went wrong."}
+          {error instanceof Error ? error.message : "Something went wrong while loading DB syncup."}
         </p>
         <button
           type="button"
           className="btn btn-primary mt-3"
-          onClick={() => { void refetch(); }}
+          onClick={() => {
+            void refetch();
+          }}
         >
-          Try Again
+          Try again
         </button>
       </div>
     );
@@ -121,57 +143,51 @@ export default function DbSyncupSection({
 
   return (
     <div>
-      {/* ── Toolbar ───────────────────────────────────────────── */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "0.5rem",
-          marginBottom: "1rem",
-          flexWrap: "wrap",
-        }}
-      >
-        <span className="ods-list-count">
-          <strong style={{ color: "var(--ods-gray-900)" }}>{items.length}</strong>{" "}
-          syncup record{items.length === 1 ? "" : "s"}
-        </span>
+      {/* ── Page header ─────────────────────────────────────── */}
+      <div className="ods-page-header">
+        <div>
+          <h1 className="page-title">DB Syncup</h1>
+          <p className="page-subtitle">
+            View, create and manage database syncup records across applications.
+          </p>
+        </div>
 
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           <button
             type="button"
-            className="btn btn-outline-secondary btn-sm"
+            className="btn btn-outline-secondary"
             disabled={isFetching}
-            onClick={() => { void refetch(); }}
-            style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+            onClick={() => {
+              void refetch();
+            }}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
           >
             <RefreshCw
-              size={14}
+              size={15}
               style={{
-                animation: isFetching
-                  ? "ods-spin 0.7s linear infinite"
-                  : "none",
+                animation: isFetching ? "ods-spin 0.7s linear infinite" : "none",
               }}
             />
-            Refresh
+            {isFetching ? "Refreshing..." : "Refresh"}
           </button>
+
           <button
             type="button"
-            className="btn btn-primary btn-sm"
+            className="btn btn-primary"
             onClick={() => {
               setEditingItem(null);
               setPageError("");
               setCreating(true);
             }}
-            style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+            style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}
           >
-            <Plus size={15} />
+            <Plus size={16} />
             Add Syncup
           </button>
         </div>
       </div>
 
-      {/* ── Alerts ────────────────────────────────────────────── */}
+      {/* ── Alerts ───────────────────────────────────────────── */}
       {message && (
         <div className="ods-form-message success" style={{ margin: "0 0 1rem" }}>
           {message}
@@ -184,14 +200,22 @@ export default function DbSyncupSection({
         </div>
       )}
 
-      {/* ── Table / empty state ───────────────────────────────── */}
+      {/* ── Result count ────────────────────────────────────── */}
+      <div className="ods-list-toolbar">
+        <span className="ods-list-count">
+          <strong style={{ color: "var(--ods-gray-900)" }}>{items.length}</strong>{" "}
+          syncup record{items.length === 1 ? "" : "s"}
+        </span>
+      </div>
+
+      {/* ── Table / empty state ─────────────────────────────── */}
       {items.length === 0 ? (
         <div className="ods-card" style={{ padding: "3rem" }}>
           <div className="ods-empty-state">
             <span className="ods-empty-icon">🗄️</span>
             <div className="ods-empty-title">No DB syncup data</div>
             <p className="ods-empty-text">
-              No DB syncup records found for this application yet.
+              No DB syncup records found yet.
             </p>
           </div>
         </div>
@@ -199,7 +223,7 @@ export default function DbSyncupSection({
         <div className="ods-card">
           <div className="ods-card-body" style={{ padding: 0 }}>
             <DbSyncupTable
-              items={items}
+              items={pagedItems}
               deletingId={deleteMutation.isPending ? (deleteMutation.variables ?? null) : null}
               onEdit={(item) => {
                 setCreating(false);
@@ -210,15 +234,46 @@ export default function DbSyncupSection({
               onHistory={(item) => setHistoryItem(item)}
             />
           </div>
+
+          {/* ── Pagination ──────────────────────────────────── */}
+          <div className="ods-pagination">
+            <span className="ods-pagination-info">
+              Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
+            </span>
+
+            <div className="ods-pagination-actions">
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm"
+                disabled={currentPage <= 1}
+                onClick={() => {
+                  setPage((current) => Math.max(1, current - 1));
+                }}
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm"
+                disabled={currentPage >= totalPages}
+                onClick={() => {
+                  setPage((current) => Math.min(totalPages, current + 1));
+                }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* ── Edit / Create drawer ─────────────────────────────── */}
+      {/* ── Edit / Create drawer ────────────────────────────── */}
       <DbSyncupEditDrawer
-        application={application}
+        application={null}
         item={editingItem}
         isOpen={editingItem !== null || creating}
         nextSerialNumber={nextSerialNumber}
+        applications={availableApplications}
         onClose={() => {
           setEditingItem(null);
           setCreating(false);

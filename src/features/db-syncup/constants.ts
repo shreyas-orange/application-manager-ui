@@ -4,12 +4,21 @@ export const DB_SYNCUP_STATUS_OPTIONS: {
   value: string;
   label: string;
 }[] = [
-  { value: "Completed",   label: "Completed" },
-  { value: "In Progress", label: "In Progress" },
-  { value: "Pending",     label: "Pending" },
-  { value: "Not Started", label: "Not Started" },
-  { value: "Not Required", label: "Not Required" },
-  { value: "Failed",      label: "Failed" },
+  { value: "REQUESTED",   label: "Requested" },
+  { value: "IN_PROGRESS", label: "In Progress" },
+  { value: "COMPLETED",   label: "Completed" },
+  { value: "REJECTED",    label: "Rejected" },
+  { value: "CANCELLED",   label: "Cancelled" },
+];
+
+export const DB_SYNCUP_PRIORITY_OPTIONS: {
+  value: string;
+  label: string;
+}[] = [
+  { value: "LOW",     label: "Low" },
+  { value: "MEDIUM",  label: "Medium" },
+  { value: "HIGH",    label: "High" },
+  { value: "CRITICAL", label: "Critical" },
 ];
 
 export const ENVIRONMENT_STATUS_FIELDS: {
@@ -17,14 +26,10 @@ export const ENVIRONMENT_STATUS_FIELDS: {
   label: string;
 }[] = [
   { key: "dev_status",        label: "Dev" },
-  { key: "demo_status",       label: "Demo" },
   { key: "qa_status",         label: "QA" },
   { key: "uat_am_status",     label: "UAT / AM" },
   { key: "pprod_perf_status", label: "PP / Perf" },
   { key: "mnt_e_status",      label: "MNT / E" },
-  { key: "bench_status",      label: "Bench" },
-  { key: "staging_status",    label: "Staging" },
-  { key: "int_status",        label: "INT" },
   { key: "prod_status",       label: "Prod" },
 ];
 
@@ -35,9 +40,21 @@ export function getStatusBadgeClass(
 
   if (["completed", "complete", "done", "production"].includes(s))
     return "ods-badge ods-badge-success";
-  if (["failed", "failure", "cancelled", "blocked"].includes(s))
+  if (["rejected", "cancelled", "failed", "failure", "blocked"].includes(s))
     return "ods-badge ods-badge-danger";
-  if (["in progress", "in_progress", "ongoing", "started"].includes(s))
+  if (["in progress", "in_progress", "requested", "ongoing", "started"].includes(s))
+    return "ods-badge ods-badge-warning";
+  return "ods-badge ods-badge-neutral";
+}
+
+export function getPriorityBadgeClass(
+  priority: string | null | undefined,
+): string {
+  const p = String(priority ?? "").trim().toLowerCase();
+
+  if (["critical"].includes(p))
+    return "ods-badge ods-badge-danger";
+  if (["high"].includes(p))
     return "ods-badge ods-badge-warning";
   return "ods-badge ods-badge-neutral";
 }

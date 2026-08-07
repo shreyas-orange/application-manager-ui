@@ -5,7 +5,6 @@ import type {
   CloudListResponse,
   CreateCloudRequest,
   GetCloudParams,
-  TestCloudResponse,
   UpdateCloudRequest,
 } from "../types/clouds.types";
 

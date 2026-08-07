@@ -9,12 +9,12 @@ import {
   Upload,
   Users,
   Menu,
-  X,
   Bell,
   Search,
   LogOut,
   ChevronRight,
   BarChart3,
+  Database,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -42,6 +42,11 @@ const NAV_ITEMS: NavItem[] = [
     to:    "/app/analytics",
     label: "Analytics",
     icon:  <BarChart3 size={18} />,
+  },
+  {
+    to:    "/app/db-syncups",
+    label: "DB Syncup",
+    icon:  <Database size={18} />,
   },
   {
     to:    "/app/uploads",

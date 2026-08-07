@@ -81,7 +81,7 @@ export default function ApplicationsPage() {
   const { data, isLoading, isError, error, isFetching, refetch } =
     useApplications({ page, pageSize, search });
 
-  const applications = data?.items ?? [];
+  const applications = useMemo(() => data?.items ?? [], [data]);
   const total        = data?.total  ?? applications.length;
   const totalPages   = Math.max(1, Math.ceil(total / pageSize));
 

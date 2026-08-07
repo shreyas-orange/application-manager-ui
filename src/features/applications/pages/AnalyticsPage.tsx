@@ -74,7 +74,7 @@ type CloudChoice = "Azure" | "Blue";
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function AnalyticsPage() {
   const { data, isLoading, isError, error } = useAllApplications();
-  const applications = data?.items ?? [];
+  const applications = useMemo(() => data?.items ?? [], [data]);
   const [activeCloud, setActiveCloud] = useState<CloudChoice>("Azure");
 
   // ── Filtered apps for active cloud ─────────────────────────────

@@ -1,6 +1,8 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { X } from "lucide-react";
 
+import { getApiErrorMessage } from "@/lib/api-error";
+
 import type {
   RoadmapItem,
   UpdateRoadmapItemPayload,
@@ -282,9 +284,7 @@ export default function RoadmapEditDrawer({
       await onSave(payload, item?.id);
       onClose();
     } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { detail?: string; message?: string } } };
-      const detail = axiosErr?.response?.data?.detail || axiosErr?.response?.data?.message;
-      setError(detail || (err instanceof Error ? err.message : "Failed to save."));
+      setError(getApiErrorMessage(err));
     } finally {
       setSaving(false);
     }

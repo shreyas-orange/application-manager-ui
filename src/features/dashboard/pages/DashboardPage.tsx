@@ -31,18 +31,38 @@ const MIGRATION_COLORS: Record<string, string> = {
   Failed:        "var(--ods-danger)",
 };
 
+const FALLBACK_COLORS = [
+  "#3b82f6",
+  "#8b5cf6",
+  "#06b6d4",
+  "#ec4899",
+  "#84cc16",
+  "#f97316",
+];
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function normalizeMigrationStatus(status: string | null | undefined): string {
   if (!status?.trim()) return "Not Started";
 
   const s = status.trim().toLowerCase();
 
-  if (s === "in progress" || s === "in_progress") return "In Progress";
-  if (s === "completed")                           return "Completed";
-  if (s === "pending")                             return "Pending";
-  if (s === "failed")                              return "Failed";
+  if (["in progress", "in_progress", "ongoing", "started"].includes(s)) return "In Progress";
+  if (["completed", "complete", "done", "production"].includes(s))      return "Completed";
+  if (["not started", "not_started"].includes(s))                       return "Not Started";
+  if (["pending", "yet to start", "yet_to_start"].includes(s))          return "Pending";
+  if (["failed", "failure", "cancelled"].includes(s))                   return "Failed";
 
   return status.trim();
+}
+
+function migrationColor(
+  name: string,
+  index: number,
+): string {
+  return (
+    MIGRATION_COLORS[name] ??
+    FALLBACK_COLORS[index % FALLBACK_COLORS.length]
+  );
 }
 
 function formatDate(value: string | null | undefined): string {
@@ -299,7 +319,7 @@ export default function DashboardPage() {
                     {migrationChartData.map((item, index) => (
                       <Cell
                         key={`${item.name}-${index}`}
-                        fill={MIGRATION_COLORS[item.name] ?? "var(--ods-gray-400)"}
+                        fill={migrationColor(item.name, index)}
                       />
                     ))}
                   </Pie>

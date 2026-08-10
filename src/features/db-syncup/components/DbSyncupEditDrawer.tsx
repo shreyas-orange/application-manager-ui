@@ -11,6 +11,7 @@ import {
 } from "../constants";
 import type {
   CreateDbSyncupPayload,
+  DbSyncEnvironmentUpdate,
   DbSyncup,
   UpdateDbSyncupPayload,
 } from "../types/db-syncup.types";
@@ -20,6 +21,7 @@ interface DbSyncupEditDrawerProps {
   item: DbSyncup | null;
   isOpen: boolean;
   nextSerialNumber: number;
+  wide?: boolean;
   applications?: Application[];
   onClose: () => void;
   onSave: (
@@ -306,6 +308,7 @@ export default function DbSyncupEditDrawer({
   item,
   isOpen,
   nextSerialNumber,
+  wide = false,
   applications = [],
   onClose,
   onSave,
@@ -393,32 +396,45 @@ export default function DbSyncupEditDrawer({
 
   const buildUpdatePayload = (): UpdateDbSyncupPayload => {
     const request = item?.requests?.[0];
+    const payload: UpdateDbSyncupPayload = {};
 
-    const environments = (request?.environments ?? []).map((env) => {
-      const statusField = ENVIRONMENT_STATUS_FIELD_MAP[env.environment];
-      const formStatus = statusField ? form[statusField] : "";
-      const requestStatus =
-        formStatus || env.request_status;
+    if (form.db_validation !== (item?.db_validation ?? "")) {
+      payload.db_validation = form.db_validation;
+    }
+    if (form.migration_incharge !== (item?.migration_incharge ?? "")) {
+      payload.migration_incharge = form.migration_incharge;
+    }
+    if (form.remarks !== (item?.remarks ?? "")) {
+      payload.remarks = form.remarks;
+    }
 
-      return {
-        id: env.id,
-        request_status: requestStatus,
-        priority: form.environment_priority || env.priority,
-        remarks: env.remarks,
+    const changedEnvironments = (request?.environments ?? [])
+      .map((env): DbSyncEnvironmentUpdate | null => {
+        const statusField = ENVIRONMENT_STATUS_FIELD_MAP[env.environment];
+        const formStatus = statusField ? form[statusField] : "";
+        const envUpdate: DbSyncEnvironmentUpdate = { id: env.id };
+
+        if (formStatus !== (env.request_status ?? "")) {
+          envUpdate.request_status = formStatus;
+        }
+        if (form.environment_priority !== (env.priority ?? "")) {
+          envUpdate.priority = form.environment_priority;
+        }
+
+        return Object.keys(envUpdate).length > 1 ? envUpdate : null;
+      })
+      .filter(
+        (env): env is DbSyncEnvironmentUpdate => env != null,
+      );
+
+    if (request && changedEnvironments.length > 0) {
+      payload.request = {
+        id: request.id,
+        environments: changedEnvironments,
       };
-    });
+    }
 
-    return {
-      db_validation: form.db_validation,
-      migration_incharge: form.migration_incharge,
-      remarks: form.remarks,
-      request: {
-        id: request?.id ?? 0,
-        assigned_to_user_id: request?.assigned_to_user_id ?? null,
-        remarks: request?.remarks ?? "",
-        environments,
-      },
-    };
+    return payload;
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -490,7 +506,10 @@ export default function DbSyncupEditDrawer({
         onMouseDown={onClose}
       />
       <aside
-        className="ods-drawer open"
+        className={[
+          "ods-drawer open",
+          wide ? "ods-drawer--wide" : "",
+        ].filter(Boolean).join(" ")}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="ods-drawer-header">
@@ -583,6 +602,38 @@ export default function DbSyncupEditDrawer({
                 onChange={(v) => updateField("data_anonymization_status", v)}
                 fullWidth
               />
+              {(application?.migration?.ns_migration_progress ||
+                item?.ns_migration_progress) && (
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "var(--ods-font-size-xs)",
+                      fontWeight: 600,
+                      color: "var(--ods-gray-600)",
+                      marginBottom: "0.25rem",
+                    }}
+                  >
+                    NS Migration Progress
+                  </label>
+                  <pre
+                    style={{
+                      margin: 0,
+                      padding: "0.5rem 0.75rem",
+                      background: "var(--ods-gray-100)",
+                      border: "1px solid var(--ods-gray-300)",
+                      fontSize: "var(--ods-font-size-xs)",
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                      maxHeight: 120,
+                      overflowY: "auto",
+                    }}
+                  >
+                    {(application?.migration?.ns_migration_progress ||
+                      item?.ns_migration_progress) as string}
+                  </pre>
+                </div>
+              )}
             </DrawerSection>
 
             <DrawerSection title="Details">

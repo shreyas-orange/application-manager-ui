@@ -128,6 +128,73 @@ export interface ApplicationsResponse {
 
 // ─── Payload Types ────────────────────────────────────────────────────────────
 
+export interface CreateApplicationPayload {
+  application?: {
+    application_name?:    string | null;
+    carto_id?:            string | null;
+    basicat?:             string | null;
+    domain?:              string | null;
+    confirmed_domain?:    string | null;
+    portfolio?:           string | null;
+    business_importance?: string | null;
+    application_status?:  string | null;
+    priority?:            string | null;
+    sov_type?:            string | null;
+    out_of_scope?:        boolean;
+  };
+
+  owners?: UpdateOwnerPayload[];
+
+  migration?: {
+    migration_status?:   string | null;
+    migration_progress?: number | null;
+    hosting_location?:   string | null;
+    cloud_squad?:        string | null;
+    cluster?:            string | null;
+    strategy?:           string | null;
+    initiated?:          string | null;
+    tentative_start?:    string | null;
+    tentative_end?:      string | null;
+    tentative_end_prod?: string | null;
+    confirmed_end?:      string | null;
+    go_live?:            string | null;
+    total_ns?:           number | null;
+    ns_migration_progress?: string | null;
+    ns_backup_creation?: string | null;
+    ns_migration_status?: string | null;
+    assessment_status?:  string | null;
+    data_anonymization_status?: string | null;
+  };
+
+  meta_data?: {
+    dx_uid?:                   string | null;
+    mcp_id?:                   string | null;
+    wave?:                     string | null;
+    gate?:                     string | null;
+    assessment_status?:        string | null;
+    data_anonymization_status?: string | null;
+  };
+
+  security?: {
+    benchmark_status?:      string | null;
+    nexus_status?:          string | null;
+    rooted_status?:         string | null;
+    network_policy_status?: string | null;
+    security_prod_status?:  string | null;
+    security_prod_date?:    string | null;
+  };
+
+  remark?: {
+    remark?:           string | null;
+    remarks_imp?:      string | null;
+    source_comments?:  string | null;
+    archived_remarks?: string | null;
+    out_of_scope?:     string | null;
+  };
+
+  cloud_ids?: number[];
+}
+
 export interface UpdateOwnerPayload {
   owner_type:   string;
   owner_name:   string | null;
@@ -161,6 +228,7 @@ export interface UpdateApplicationPayload {
     initiated?:          string | null;
     tentative_start?:    string | null;
     tentative_end?:      string | null;
+    tentative_end_prod?: string | null;
     confirmed_end?:      string | null;
     go_live?:            string | null;
     total_ns?:           number | null;

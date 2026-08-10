@@ -59,6 +59,11 @@ export default function DbSyncupPage() {
     (app) => !syncedApplicationIds.has(app.id),
   );
 
+  const editingApplication =
+    editingItem
+      ? applications.find((app) => app.id === editingItem.application_id) ?? null
+      : null;
+
   const nextSerialNumber =
     items.length > 0
       ? Math.max(...items.map((i) => i.serial_number)) + 1
@@ -225,7 +230,7 @@ export default function DbSyncupPage() {
             <DbSyncupTable
               items={pagedItems}
               deletingId={deleteMutation.isPending ? (deleteMutation.variables ?? null) : null}
-              onEdit={(item) => {
+              onRowClick={(item) => {
                 setCreating(false);
                 setPageError("");
                 setEditingItem(item);
@@ -269,10 +274,11 @@ export default function DbSyncupPage() {
 
       {/* ── Edit / Create drawer ────────────────────────────── */}
       <DbSyncupEditDrawer
-        application={null}
+        application={editingApplication}
         item={editingItem}
         isOpen={editingItem !== null || creating}
         nextSerialNumber={nextSerialNumber}
+        wide={editingItem !== null}
         applications={availableApplications}
         onClose={() => {
           setEditingItem(null);

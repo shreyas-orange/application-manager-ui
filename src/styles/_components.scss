@@ -478,6 +478,10 @@
     transform: translateX(0);
   }
 
+  &.ods-drawer--wide {
+    width: 720px;
+  }
+
   .ods-drawer-header {
     padding:       1.25rem;
     border-bottom: 3px solid var(--ods-orange);

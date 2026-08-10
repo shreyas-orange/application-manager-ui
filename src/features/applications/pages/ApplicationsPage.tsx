@@ -13,11 +13,13 @@ import {
   CircleX,
   Clock3,
   Hourglass,
+  Plus,
   RefreshCw,
   Search,
   X,
 } from "lucide-react";
 
+import ApplicationCreateModal     from "../components/ApplicationCreateModal";
 import ApplicationSummaryCard        from "../components/ApplicationSummaryCard";
 import { useApplications }           from "../hooks/useApplications";
 import type {
@@ -75,6 +77,9 @@ export default function ApplicationsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [domainFilter, setDomainFilter] = useState("all");
   const [cloudFilter, setCloudFilter]   = useState("all");
+  const [createOpen, setCreateOpen]     = useState(false);
+  const [message, setMessage]           = useState("");
+  const [pageError, setPageError]       = useState("");
 
   const pageSize = 10;
 
@@ -202,24 +207,52 @@ export default function ApplicationsPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            className="btn btn-outline-secondary"
-            disabled={isFetching}
-            onClick={() => { void refetch(); }}
-            style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-          >
-            <RefreshCw
-              size={15}
-              style={{
-                animation: isFetching
-                  ? "ods-spin 0.7s linear infinite"
-                  : "none",
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              disabled={isFetching}
+              onClick={() => { void refetch(); }}
+              style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              <RefreshCw
+                size={15}
+                style={{
+                  animation: isFetching
+                    ? "ods-spin 0.7s linear infinite"
+                    : "none",
+                }}
+              />
+              {isFetching ? "Refreshing..." : "Refresh"}
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                setPageError("");
+                setCreateOpen(true);
               }}
-            />
-            {isFetching ? "Refreshing..." : "Refresh"}
-          </button>
+              style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}
+            >
+              <Plus size={16} />
+              Create Application
+            </button>
+          </div>
         </div>
+
+        {/* ── Alerts ──────────────────────────────────────────── */}
+        {message && (
+          <div className="ods-form-message success" style={{ margin: "0 0 1rem" }}>
+            {message}
+          </div>
+        )}
+
+        {pageError && (
+          <div className="ods-form-message error" style={{ margin: "0 0 1rem" }}>
+            {pageError}
+          </div>
+        )}
 
         {/* ── Summary stat cards ──────────────────────────────── */}
         <div
@@ -380,6 +413,7 @@ export default function ApplicationsPage() {
                     <th>Cloud</th>
                     <th>Migration</th>
                     <th>Progress</th>
+                    <th>NS Migration</th>
                     <th>Nexus</th>
                     <th>Security (RootId) PROD</th>
                     <th>Security (Net Pol) PROD</th>
@@ -392,7 +426,7 @@ export default function ApplicationsPage() {
                 <tbody>
                   {filteredApplications.length === 0 ? (
                     <tr>
-                      <td colSpan={13}>
+                      <td colSpan={14}>
                         <div
                           className="ods-empty-state"
                           style={{ padding: "2rem" }}
@@ -529,6 +563,33 @@ export default function ApplicationsPage() {
                             </div>
                           </td>
 
+                          {/* NS Migration Progress */}
+                          <td style={{ minWidth: 140 }}>
+                            {app.migration?.ns_migration_progress ? (
+                              <span
+                                style={{
+                                  display:      "block",
+                                  fontSize:     "var(--ods-font-size-xs)",
+                                  color:        "var(--ods-gray-700)",
+                                  maxWidth:     180,
+                                  overflow:     "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace:   "nowrap",
+                                }}
+                                title={app.migration.ns_migration_progress}
+                              >
+                                {app.migration.ns_migration_progress
+                                  .split("\n")
+                                  .map((s) => s.trim())
+                                  .filter(Boolean)
+                                  .length}{" "}
+                                ns migrated
+                              </span>
+                            ) : (
+                              <span style={{ color: "var(--ods-gray-400)" }}>—</span>
+                            )}
+                          </td>
+
                           {/* Nexus */}
                           <td style={{ color: "var(--ods-gray-600)" }}>
                             {app.security?.nexus_status || "—"}
@@ -610,6 +671,19 @@ export default function ApplicationsPage() {
         </div>
       </div>
 
+      {/* ── Create application drawer ────────────────────────── */}
+      <ApplicationCreateModal
+        isOpen={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={(msg) => {
+          setMessage(msg);
+          setPageError("");
+          setPage(1);
+        }}
+        onError={(msg) => {
+          setPageError(msg);
+        }}
+      />
     </>
   );
 }

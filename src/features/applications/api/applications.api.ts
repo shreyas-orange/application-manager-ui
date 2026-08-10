@@ -5,6 +5,7 @@ import type {
   Application,
   ApplicationsApiResponse,
   ApplicationsResponse,
+  CreateApplicationPayload,
   UpdateApplicationPayload,
 } from "../types/application.types";
 
@@ -72,6 +73,18 @@ export async function getPublicApplications({
   return toApplicationsResponse(response.data);
 }
 
+
+export async function createApplication(
+  payload: CreateApplicationPayload,
+): Promise<Application> {
+  const response =
+    await apiClient.post<Application>(
+      "/application",
+      payload,
+    );
+
+  return response.data;
+}
 
 export async function updateApplication(
   applicationId: number,

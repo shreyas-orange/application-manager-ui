@@ -68,6 +68,7 @@ export interface DbSyncup {
   environment_priority: string;
   application_priority: string;
   time_taken_in_prod: string;
+  ns_migration_progress?: string | null;
   requests: DbSyncRequest[];
 }
 
@@ -102,21 +103,21 @@ export interface CreateDbSyncupPayload {
 
 export interface DbSyncEnvironmentUpdate {
   id: number;
-  request_status: string;
-  priority: string;
-  remarks: string;
+  request_status?: string;
+  priority?: string;
+  remarks?: string;
 }
 
 export interface DbSyncRequestUpdate {
   id: number;
-  assigned_to_user_id: number | null;
-  remarks: string;
-  environments: DbSyncEnvironmentUpdate[];
+  assigned_to_user_id?: number | null;
+  remarks?: string;
+  environments?: DbSyncEnvironmentUpdate[];
 }
 
 export interface UpdateDbSyncupPayload {
-  db_validation: string;
-  migration_incharge: string;
-  remarks: string;
-  request: DbSyncRequestUpdate;
+  db_validation?: string;
+  migration_incharge?: string;
+  remarks?: string;
+  request?: DbSyncRequestUpdate;
 }

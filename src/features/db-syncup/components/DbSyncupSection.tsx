@@ -201,7 +201,7 @@ export default function DbSyncupSection({
             <DbSyncupTable
               items={items}
               deletingId={deleteMutation.isPending ? (deleteMutation.variables ?? null) : null}
-              onEdit={(item) => {
+              onRowClick={(item) => {
                 setCreating(false);
                 setPageError("");
                 setEditingItem(item);
@@ -219,6 +219,7 @@ export default function DbSyncupSection({
         item={editingItem}
         isOpen={editingItem !== null || creating}
         nextSerialNumber={nextSerialNumber}
+        wide={editingItem !== null}
         onClose={() => {
           setEditingItem(null);
           setCreating(false);

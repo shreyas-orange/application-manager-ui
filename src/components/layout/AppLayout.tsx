@@ -9,8 +9,6 @@ import {
   Upload,
   Users,
   Menu,
-  Bell,
-  Search,
   LogOut,
   ChevronRight,
   BarChart3,
@@ -125,38 +123,6 @@ export function AppLayout() {
 
         {/* Right section */}
         <div className="ods-navbar-right">
-
-          {/* Search */}
-          <div className="ods-search" style={{ width: 220 }}>
-            <Search className="ods-search-icon" size={15} />
-            <input
-              type="search"
-              className="form-control form-control-sm"
-              placeholder="Search..."
-            />
-          </div>
-
-          {/* Notifications */}
-          <button
-            className="ods-navbar-toggle"
-            aria-label="Notifications"
-            style={{ position: "relative" }}
-          >
-            <Bell size={20} />
-            {/* Notification dot */}
-            <span
-              style={{
-                position:   "absolute",
-                top:        6,
-                right:      6,
-                width:      7,
-                height:     7,
-                background: "var(--ods-orange)",
-                borderRadius: "50%",
-                border:     "1px solid var(--ods-black)",
-              }}
-            />
-          </button>
 
           {/* User dropdown */}
           <div className="ods-navbar-dropdown">

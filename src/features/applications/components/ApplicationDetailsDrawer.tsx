@@ -46,9 +46,6 @@ interface FormState {
   tentative_end:              string;
   confirmed_end:              string;
   go_live:                    string;
-  assessment_status:          string;
-  wave:                       string;
-  gate:                       string;
   data_anonymization_status:  string;
   nexus_status:               string;
   rooted_status:              string;
@@ -89,9 +86,6 @@ const EMPTY_FORM: FormState = {
   tentative_end:             "",
   confirmed_end:             "",
   go_live:                   "",
-  assessment_status:         "",
-  wave:                      "",
-  gate:                      "",
   data_anonymization_status: "",
   nexus_status:              "",
   rooted_status:             "",
@@ -272,12 +266,9 @@ export default function ApplicationDetailsDrawer({
       cluster:                   application.migration?.cluster                   ?? "",
       strategy:                  application.migration?.strategy                  ?? "",
       tentative_start:           dateInputValue(application.migration?.tentative_start),
-      tentative_end:             dateInputValue(application.migration?.tentative_end),
+      tentative_end:             dateInputValue(application.migration?.tentative_end_prod),
       confirmed_end:             dateInputValue(application.migration?.confirmed_end),
       go_live:                   dateInputValue(application.migration?.go_live),
-      assessment_status:         application.meta_data?.assessment_status         ?? "",
-      wave:                      application.meta_data?.wave                      ?? "",
-      gate:                      application.meta_data?.gate                      ?? "",
       data_anonymization_status: application.meta_data?.data_anonymization_status ?? "",
       nexus_status:              application.security?.nexus_status               ?? "",
       rooted_status:             application.security?.rooted_status              ?? "",
@@ -322,14 +313,11 @@ export default function ApplicationDetailsDrawer({
         cloud_squad:        form.cloud_squad         || null,
         cluster:            form.cluster             || null,
         tentative_start:    form.tentative_start     || null,
-        tentative_end:      form.tentative_end       || null,
+        tentative_end_prod: form.tentative_end       || null,
         confirmed_end:      form.confirmed_end       || null,
         go_live:            form.go_live             || null,
       },
       meta_data: {
-        wave:                      form.wave                      || null,
-        gate:                      form.gate                      || null,
-        assessment_status:         form.assessment_status         || null,
         data_anonymization_status: form.data_anonymization_status || null,
       },
       security: {
@@ -512,18 +500,12 @@ export default function ApplicationDetailsDrawer({
             <DrawerInput label="Go live"            value={form.go_live}            onChange={(v) => updateField("go_live", v)} type="date" />
           </DrawerSection>
 
-          <DrawerSection title="Metadata">
-            <DrawerInput label="Assessment status" value={form.assessment_status} onChange={(v) => updateField("assessment_status", v)} />
-            <DrawerInput label="Wave"              value={form.wave}              onChange={(v) => updateField("wave", v)} />
-            <DrawerInput label="Gate"              value={form.gate}              onChange={(v) => updateField("gate", v)} />
-            <DrawerTextarea label="Data anonymization" value={form.data_anonymization_status} onChange={(v) => updateField("data_anonymization_status", v)} />
-          </DrawerSection>
-
           <DrawerSection title="Security">
             <DrawerInput label="Nexus status"           value={form.nexus_status}           onChange={(v) => updateField("nexus_status", v)} />
             <DrawerInput label="Rooted status"          value={form.rooted_status}          onChange={(v) => updateField("rooted_status", v)} />
             <DrawerInput label="Network policy status"  value={form.network_policy_status}  onChange={(v) => updateField("network_policy_status", v)} />
             <DrawerInput label="Security prod status"   value={form.security_prod_status}   onChange={(v) => updateField("security_prod_status", v)} />
+            <DrawerTextarea label="Data anonymization" value={form.data_anonymization_status} onChange={(v) => updateField("data_anonymization_status", v)} />
           </DrawerSection>
 
           <DrawerSection title="Remarks">

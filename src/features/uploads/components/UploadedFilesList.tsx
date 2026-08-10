@@ -269,7 +269,7 @@ export default function UploadedFilesList() {
                   </td>
 
                   <td style={{ color: "var(--ods-gray-500)", whiteSpace: "nowrap" }}>
-                    {formatDate(upload.created_at)}
+                    {formatDate(upload.uploaded_at ?? upload.created_at)}
                   </td>
 
                   <td>

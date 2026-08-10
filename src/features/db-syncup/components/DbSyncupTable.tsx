@@ -1,11 +1,11 @@
-import { History, Pencil, Trash2 } from "lucide-react";
+import { History, Trash2 } from "lucide-react";
 
 import type { DbSyncup } from "../types/db-syncup.types";
 
 interface DbSyncupTableProps {
   items: DbSyncup[];
   deletingId?: number | null;
-  onEdit?: (item: DbSyncup) => void;
+  onRowClick?: (item: DbSyncup) => void;
   onDelete?: (item: DbSyncup) => void;
   onHistory?: (item: DbSyncup) => void;
 }
@@ -13,11 +13,11 @@ interface DbSyncupTableProps {
 export default function DbSyncupTable({
   items,
   deletingId = null,
-  onEdit,
+  onRowClick,
   onDelete,
   onHistory,
 }: DbSyncupTableProps) {
-  const hasActions = Boolean(onEdit || onDelete || onHistory);
+  const hasActions = Boolean(onDelete || onHistory);
   const colSpan = 7;
 
   return (
@@ -50,7 +50,12 @@ export default function DbSyncupTable({
             </tr>
           ) : (
             items.map((item) => (
-              <tr key={item.id}>
+              <tr
+                key={item.id}
+                onClick={() => onRowClick?.(item)}
+                style={{ cursor: onRowClick ? "pointer" : undefined }}
+                title={onRowClick ? "Open syncup details" : undefined}
+              >
                 <td style={{ color: "var(--ods-gray-700)", fontWeight: 500 }}>
                   {item.application_name || "—"}
                 </td>
@@ -88,17 +93,6 @@ export default function DbSyncupTable({
                       }}
                     >
                       <History size={14} />
-                    </button>
-                    <button
-                      type="button"
-                      className="ods-icon-btn"
-                      title="Edit syncup"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit?.(item);
-                      }}
-                    >
-                      <Pencil size={14} />
                     </button>
                     <button
                       type="button"

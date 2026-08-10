@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { loginUser, getCurrentUser } from "../api/auth.api";
+import { getAuthErrorMessage } from "../utils/auth-error";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface LoginForm {
@@ -99,11 +100,7 @@ export default function LoginPage() {
       });
 
     } catch (loginError) {
-      setError(
-        loginError instanceof Error
-          ? loginError.message
-          : "Unable to sign in. Please check your credentials.",
-      );
+      setError(getAuthErrorMessage(loginError));
     } finally {
       setIsSubmitting(false);
     }

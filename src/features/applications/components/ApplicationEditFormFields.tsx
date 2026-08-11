@@ -1,5 +1,8 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useFormContext } from "react-hook-form";
+
+import { useUsers } from "@/features/users/hooks/useUsers";
+import type { User } from "@/features/users/types/user.types";
 
 import type { ApplicationEditFormInput } from "../schemas/application-edit.schema";
 
@@ -106,6 +109,103 @@ function FieldTextarea({
   );
 }
 
+function SelectField({
+  label,
+  name,
+  options,
+  placeholder,
+  readOnly,
+}: {
+  label: string;
+  name: FieldName;
+  options: string[];
+  placeholder: string;
+  readOnly: boolean;
+}) {
+  const { register, getValues } = useFormContext<ApplicationEditFormInput>();
+
+  if (readOnly) {
+    return (
+      <div>
+        <label style={LABEL_STYLE}>{label}</label>
+        <div style={{ ...READONLY_BOX_STYLE, minHeight: "35px", display: "flex", alignItems: "center" }}>
+          {String(getValues(name) ?? "") || "—"}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <label style={LABEL_STYLE}>{label}</label>
+      <select className="form-select form-select-sm" {...register(name)}>
+        <option value="">{placeholder}</option>
+        {options.map((option) => (
+          <option key={option} value={option}>{option}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function OwnerField({
+  label,
+  nameField,
+  emailField,
+  users,
+  disabled,
+  readOnly,
+}: {
+  label: string;
+  nameField: FieldName;
+  emailField: FieldName;
+  users: User[];
+  disabled: boolean;
+  readOnly: boolean;
+}) {
+  const { setValue, watch } = useFormContext<ApplicationEditFormInput>();
+  const name = String(watch(nameField) ?? "");
+  const email = String(watch(emailField) ?? "");
+
+  if (readOnly) {
+    return <Field label={label} name={nameField} readOnly />;
+  }
+
+  return (
+    <div>
+      <label style={LABEL_STYLE}>{label}</label>
+      <select
+        className="form-select form-select-sm"
+        value={email || (name ? "__current__" : "")}
+        disabled={disabled}
+        onChange={(event) => {
+          const user = users.find((item) => item.email === event.target.value);
+          const userName = user
+            ? [user.first_name, user.last_name].filter(Boolean).join(" ").trim() || user.email
+            : "";
+          setValue(nameField, userName, { shouldDirty: true });
+          setValue(emailField, user?.email ?? "", { shouldDirty: true });
+        }}
+      >
+        <option value="">Select a user</option>
+        {email && !users.some((user) => user.email === email) && (
+          <option value={email}>{name || email}</option>
+        )}
+        {!email && name && (
+          <option value="__current__" disabled>{name}</option>
+        )}
+        {users.map((user) => {
+          const userName = [user.first_name, user.last_name]
+            .filter(Boolean)
+            .join(" ")
+            .trim() || user.email;
+          return <option key={user.id} value={user.email}>{userName}</option>;
+        })}
+      </select>
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 interface ApplicationEditFormFieldsProps {
   readOnly: boolean;
@@ -113,6 +213,9 @@ interface ApplicationEditFormFieldsProps {
 
 export default function ApplicationEditFormFields({ readOnly }: ApplicationEditFormFieldsProps) {
   const { register } = useFormContext<ApplicationEditFormInput>();
+  const [userSearch, setUserSearch] = useState("");
+  const usersQuery = useUsers({ page: 1, pageSize: 100, search: userSearch.trim() });
+  const users = (usersQuery.data?.items ?? []).filter((user) => user.is_active);
 
   return (
     <>
@@ -125,7 +228,7 @@ export default function ApplicationEditFormFields({ readOnly }: ApplicationEditF
         <Field label="Portfolio" name="portfolio" readOnly={readOnly} />
         <Field label="Business importance" name="business_importance" readOnly={readOnly} />
         <Field label="Application status" name="application_status" readOnly={readOnly} />
-        <Field label="Priority" name="priority" readOnly={readOnly} />
+        <SelectField label="Priority" name="priority" options={["P1", "P2", "P3"]} placeholder="Select priority" readOnly={readOnly} />
         <Field label="SOV type" name="sov_type" readOnly={readOnly} />
 
         <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -147,14 +250,25 @@ export default function ApplicationEditFormFields({ readOnly }: ApplicationEditF
       </Section>
 
       <Section title="Owners">
-        <Field label="QA owner" name="qa_owner_name" readOnly={readOnly} />
-        <Field label="QA email" name="qa_owner_email" readOnly={readOnly} />
-        <Field label="DevOps owner" name="devops_owner_name" readOnly={readOnly} />
-        <Field label="DevOps email" name="devops_owner_email" readOnly={readOnly} />
-        <Field label="PM owner" name="pm_owner_name" readOnly={readOnly} />
-        <Field label="PM email" name="pm_owner_email" readOnly={readOnly} />
-        <Field label="App manager" name="manager_owner_name" readOnly={readOnly} />
-        <Field label="Manager email" name="manager_owner_email" readOnly={readOnly} />
+        {!readOnly && (
+          <div style={{ gridColumn: "1 / -1" }}>
+            <label style={LABEL_STYLE}>Search users</label>
+            <input className="form-control form-control-sm" value={userSearch} onChange={(event) => setUserSearch(event.target.value)} />
+          </div>
+        )}
+        <OwnerField label="QA owner" nameField="qa_owner_name" emailField="qa_owner_email" users={users} disabled={usersQuery.isLoading} readOnly={readOnly} />
+        <Field label="QA email" name="qa_owner_email" readOnly />
+        <OwnerField label="DevOps owner" nameField="devops_owner_name" emailField="devops_owner_email" users={users} disabled={usersQuery.isLoading} readOnly={readOnly} />
+        <Field label="DevOps email" name="devops_owner_email" readOnly />
+        <OwnerField label="PM owner" nameField="pm_owner_name" emailField="pm_owner_email" users={users} disabled={usersQuery.isLoading} readOnly={readOnly} />
+        <Field label="PM email" name="pm_owner_email" readOnly />
+        <OwnerField label="App manager" nameField="manager_owner_name" emailField="manager_owner_email" users={users} disabled={usersQuery.isLoading} readOnly={readOnly} />
+        <Field label="Manager email" name="manager_owner_email" readOnly />
+        {usersQuery.isError && !readOnly && (
+          <div className="ods-form-message error" style={{ gridColumn: "1 / -1" }}>
+            Unable to load users. Please try again.
+          </div>
+        )}
       </Section>
 
       <Section title="Migration">

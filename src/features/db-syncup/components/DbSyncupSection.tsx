@@ -22,14 +22,15 @@ import type {
 
 export default function DbSyncupSection({
   application,
+  applicationId,
 }: {
   application: Application;
+  applicationId: number;
 }) {
   const { confirm, dialog } = useConfirmDialog();
 
-  const appId = application.id;
   const { data, isLoading, isError, error, refetch, isFetching } =
-    useDbSyncups(appId);
+    useDbSyncups(applicationId);
   const createMutation = useCreateDbSyncup();
   const updateMutation = useUpdateDbSyncup();
   const deleteMutation = useDeleteDbSyncup();
@@ -204,6 +205,7 @@ export default function DbSyncupSection({
       {/* ── Edit / Create drawer ─────────────────────────────── */}
       <DbSyncupEditDrawer
         application={application}
+        applicationId={applicationId}
         item={editingItem}
         isOpen={editingItem !== null || creating}
         nextSerialNumber={nextSerialNumber}

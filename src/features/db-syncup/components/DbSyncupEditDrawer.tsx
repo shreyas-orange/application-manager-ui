@@ -18,6 +18,7 @@ import type {
 
 interface DbSyncupEditDrawerProps {
   application: Application | null;
+  applicationId?: number;
   item: DbSyncup | null;
   isOpen: boolean;
   nextSerialNumber: number;
@@ -305,6 +306,7 @@ function DrawerApplicationSelect({
 
 export default function DbSyncupEditDrawer({
   application,
+  applicationId,
   item,
   isOpen,
   nextSerialNumber,
@@ -398,15 +400,37 @@ export default function DbSyncupEditDrawer({
     const request = item?.requests?.[0];
     const payload: UpdateDbSyncupPayload = {};
 
-    if (form.db_validation !== (item?.db_validation ?? "")) {
-      payload.db_validation = form.db_validation;
-    }
-    if (form.migration_incharge !== (item?.migration_incharge ?? "")) {
-      payload.migration_incharge = form.migration_incharge;
-    }
-    if (form.remarks !== (item?.remarks ?? "")) {
-      payload.remarks = form.remarks;
-    }
+    const setChanged = <K extends keyof UpdateDbSyncupPayload>(
+      key: K,
+      value: UpdateDbSyncupPayload[K],
+      original: unknown,
+    ) => {
+      if (value !== original) Object.assign(payload, { [key]: value });
+    };
+
+    setChanged("application_name", form.application_name, item?.application_name ?? "");
+    setChanged("carto_id", form.carto_id, item?.carto_id ?? "");
+    setChanged("basicat", form.basicat, item?.basicat ?? "");
+    setChanged("domain", form.domain, item?.domain ?? "");
+    setChanged("dx_uid", form.dx_uid, item?.dx_uid ?? "");
+    setChanged("mcp_id", form.mcp_id, item?.mcp_id ?? "");
+    setChanged("hosting", form.hosting, item?.hosting ?? "");
+    setChanged("reason", form.reason, item?.reason ?? "");
+    setChanged("data_anonymization_status", form.data_anonymization_status, item?.data_anonymization_status ?? "");
+    setChanged("db_validation", form.db_validation, item?.db_validation ?? "");
+    setChanged("migration_incharge", form.migration_incharge, item?.migration_incharge ?? "");
+    setChanged("date_of_request", form.date_of_request, item?.date_of_request?.slice(0, 10) ?? "");
+    setChanged("environment_count", Number(form.environment_count) || 0, item?.environment_count ?? 0);
+    setChanged("remarks", form.remarks, item?.remarks ?? "");
+    setChanged("dev_status", form.dev_status, item?.dev_status ?? "");
+    setChanged("qa_status", form.qa_status, item?.qa_status ?? "");
+    setChanged("uat_am_status", form.uat_am_status, item?.uat_am_status ?? "");
+    setChanged("pprod_perf_status", form.pprod_perf_status, item?.pprod_perf_status ?? "");
+    setChanged("mnt_e_status", form.mnt_e_status, item?.mnt_e_status ?? "");
+    setChanged("prod_status", form.prod_status, item?.prod_status ?? "");
+    setChanged("environment_priority", form.environment_priority, item?.environment_priority ?? "");
+    setChanged("application_priority", form.application_priority, item?.application_priority ?? "");
+    setChanged("time_taken_in_prod", form.time_taken_in_prod, item?.time_taken_in_prod ?? "");
 
     const changedEnvironments = (request?.environments ?? [])
       .map((env): DbSyncEnvironmentUpdate | null => {
@@ -427,10 +451,18 @@ export default function DbSyncupEditDrawer({
         (env): env is DbSyncEnvironmentUpdate => env != null,
       );
 
-    if (request && changedEnvironments.length > 0) {
+    const requestPriorityChanged =
+      request && form.application_priority !== (request.application_priority ?? "");
+
+    if (request && (changedEnvironments.length > 0 || requestPriorityChanged)) {
       payload.request = {
         id: request.id,
-        environments: changedEnvironments,
+        ...(requestPriorityChanged
+          ? { application_priority: form.application_priority }
+          : {}),
+        ...(changedEnvironments.length > 0
+          ? { environments: changedEnvironments }
+          : {}),
       };
     }
 
@@ -485,7 +517,7 @@ export default function DbSyncupEditDrawer({
       environment_priority: form.environment_priority,
       application_priority: form.application_priority,
       time_taken_in_prod: form.time_taken_in_prod,
-      application_id: createApplication?.id ?? 0,
+      application_id: applicationId ?? createApplication?.id ?? 0,
       uploaded_file_id: createApplication?.uploaded_file_id ?? 0,
     };
 

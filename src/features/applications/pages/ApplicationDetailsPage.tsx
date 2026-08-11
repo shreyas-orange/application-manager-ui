@@ -206,7 +206,7 @@ export default function ApplicationDetailsPage() {
   const onSubmit = async (values: ApplicationEditFormValues) => {
     try {
       await updateMutation.mutateAsync({
-        applicationId: application.id,
+        applicationId,
         payload: buildUpdatePayload(values),
       });
       setEditing(false);
@@ -232,7 +232,7 @@ export default function ApplicationDetailsPage() {
         title={application.application_name}
         subtitle={
           <>
-            Application ID: {application.id}
+            Application ID: {applicationId}
             {application.carto_id ? ` · Carto: ${application.carto_id}` : ""}
           </>
         }
@@ -267,17 +267,17 @@ export default function ApplicationDetailsPage() {
 
       {/* ── Tab: Analytics (roadmap) ─────────────────────────────── */}
       {activeTab === "analytics" && (
-        <RoadmapAnalytics appId={application.id} />
+        <RoadmapAnalytics appId={applicationId} />
       )}
 
       {/* ── Tab: Roadmap ─────────────────────────────────────────── */}
       {activeTab === "roadmap" && (
-        <RoadmapSection appId={application.id} />
+        <RoadmapSection appId={applicationId} />
       )}
 
       {/* ── Tab: DB Syncup ───────────────────────────────────────── */}
       {activeTab === "db-syncup" && (
-        <DbSyncupSection application={application} />
+        <DbSyncupSection application={application} applicationId={applicationId} />
       )}
 
       {/* ── Tab: Application ─────────────────────────────────────── */}

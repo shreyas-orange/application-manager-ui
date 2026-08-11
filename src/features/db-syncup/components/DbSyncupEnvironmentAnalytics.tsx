@@ -16,7 +16,8 @@ import type { DbSyncEnvironmentRequest } from "../types/db-syncup.types";
 const STATUS_COLORS: Record<NormalizedDbSyncupStatus, string> = {
   Completed:    "#198754",
   "In Progress": "#FFC107",
-  Pending:      "#6C757D",
+  Requested:    "#6C757D",
+  Pending:      "#ADB5BD",
   Failed:       "#DC3545",
 };
 

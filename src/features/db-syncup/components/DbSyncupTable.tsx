@@ -52,26 +52,26 @@ export default function DbSyncupTable({
                 title={onRowClick ? "Open syncup details" : undefined}
               >
                 <td style={{ color: "var(--ods-gray-700)", fontWeight: 500 }}>
-                  {item.application_name || "—"}
+                  {item.application_name || "NA"}
                 </td>
                 <td style={{ color: "var(--ods-gray-700)" }}>
-                  {item.carto_id || "—"}
+                  {item.carto_id || "NA"}
                 </td>
                 <td style={{ color: "var(--ods-gray-700)" }}>
-                  {item.domain || "—"}
+                  {item.domain || "NA"}
                 </td>
                 <td style={{ color: "var(--ods-gray-700)" }}>
-                  {item.basicat || "—"}
+                  {item.basicat || "NA"}
                 </td>
                 <td style={{ color: "var(--ods-gray-700)" }}>
-                  {item.hosting || "—"}
+                  {item.hosting || "NA"}
                 </td>
                 <td style={{ color: "var(--ods-gray-700)" }}>
-                  {item.data_anonymization_status || "—"}
+                  {item.data_anonymization_status || "NA"}
                 </td>
                 <td>
                   <span className={getStatusBadgeClass(item.prod_status)}>
-                    {item.prod_status || "—"}
+                    {item.prod_status || "NA"}
                   </span>
                 </td>
                 {hasActions && (

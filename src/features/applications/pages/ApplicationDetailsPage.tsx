@@ -63,27 +63,39 @@ function buildUpdatePayload(values: ApplicationEditFormValues): UpdateApplicatio
       hosting_location:   values.hosting_location   || null,
       cloud_squad:        values.cloud_squad         || null,
       cluster:             values.cluster             || null,
+      initiated:           values.initiated           || null,
       tentative_start:    values.tentative_start     || null,
       tentative_end:      values.tentative_end       || null,
       confirmed_end:      values.confirmed_end       || null,
       go_live:            values.go_live             || null,
+      total_ns:            values.total_ns,
+      ns_migration_progress: values.ns_migration_progress || null,
+      assessment_status:  values.migration_assessment_status         || null,
+      data_anonymization_status: values.migration_data_anonymization_status || null,
+      ns_backup_creation: values.ns_backup_creation || null,
+      ns_migration_status: values.ns_migration_status || null,
     },
     meta_data: {
+      dx_uid:                    values.dx_uid                    || null,
+      mcp_id:                    values.mcp_id                    || null,
       wave:                      values.wave                      || null,
       gate:                      values.gate                      || null,
       assessment_status:         values.assessment_status         || null,
       data_anonymization_status: values.data_anonymization_status || null,
     },
     security: {
+      benchmark_status:       values.benchmark_status       || null,
       nexus_status:           values.nexus_status           || null,
       rooted_status:          values.rooted_status          || null,
       network_policy_status:  values.network_policy_status  || null,
       security_prod_status:   values.security_prod_status   || null,
+      security_prod_date:     values.security_prod_date     || null,
     },
     remark: {
-      remark:          values.remark          || null,
-      remarks_imp:     values.remarks_imp     || null,
-      source_comments: values.source_comments || null,
+      remark:           values.remark           || null,
+      remarks_imp:      values.remarks_imp      || null,
+      source_comments:  values.source_comments  || null,
+      archived_remarks: values.archived_remarks || null,
     },
     owners: [
       { owner_type: "QA",                  owner_name: values.qa_owner_name      || null, owner_email: values.qa_owner_email      || null },
@@ -91,6 +103,7 @@ function buildUpdatePayload(values: ApplicationEditFormValues): UpdateApplicatio
       { owner_type: "PM",                  owner_name: values.pm_owner_name      || null, owner_email: values.pm_owner_email      || null },
       { owner_type: "Application Manager", owner_name: values.manager_owner_name || null, owner_email: values.manager_owner_email || null },
     ],
+    cloud_ids: values.cloud_ids,
   };
 }
 
@@ -294,7 +307,7 @@ export default function ApplicationDetailsPage() {
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="ods-card">
               <div className="ods-card-body">
-                <ApplicationEditFormFields readOnly={!editing} />
+                <ApplicationEditFormFields application={application} readOnly={!editing} />
               </div>
 
               {editing && (

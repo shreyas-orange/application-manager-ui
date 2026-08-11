@@ -15,10 +15,9 @@ export const DB_SYNCUP_PRIORITY_OPTIONS: {
   value: string;
   label: string;
 }[] = [
-  { value: "LOW",     label: "Low" },
-  { value: "MEDIUM",  label: "Medium" },
-  { value: "HIGH",    label: "High" },
-  { value: "CRITICAL", label: "Critical" },
+  { value: "P1", label: "P1" },
+  { value: "P2", label: "P2" },
+  { value: "P3", label: "P3" },
 ];
 
 export const ENVIRONMENT_STATUS_FIELDS: {
@@ -75,16 +74,14 @@ export function getStatusBadgeClass(
 export function getPriorityBadgeClass(
   priority: string | null | undefined,
 ): string {
-  const p = String(priority ?? "").trim().toLowerCase();
+  const p = String(priority ?? "").trim().toUpperCase();
 
-  if (["critical"].includes(p))
-    return "ods-badge ods-badge-danger";
-  if (["high"].includes(p))
-    return "ods-badge ods-badge-warning";
+  if (p === "P1") return "ods-badge ods-badge-danger";
+  if (p === "P2") return "ods-badge ods-badge-warning";
   return "ods-badge ods-badge-neutral";
 }
 
-export type NormalizedDbSyncupStatus = "Completed" | "In Progress" | "Failed" | "Pending";
+export type NormalizedDbSyncupStatus = "Completed" | "In Progress" | "Requested" | "Failed" | "Pending";
 
 /** Buckets a raw status value (e.g. prod_status) for summary counts and filtering. */
 export function normalizeDbSyncupStatus(
@@ -94,6 +91,7 @@ export function normalizeDbSyncupStatus(
 
   if (["completed", "complete", "done", "production"].includes(s)) return "Completed";
   if (["rejected", "cancelled", "failed", "failure", "blocked"].includes(s)) return "Failed";
-  if (["in progress", "in_progress", "requested", "ongoing", "started"].includes(s)) return "In Progress";
+  if (["requested"].includes(s)) return "Requested";
+  if (["in progress", "in_progress", "ongoing", "started"].includes(s)) return "In Progress";
   return "Pending";
 }

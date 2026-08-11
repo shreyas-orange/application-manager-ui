@@ -55,6 +55,7 @@ export default function DbSyncupDetailsPage() {
 
   const { data: items, isLoading, isError, error, refetch } = useAllDbSyncups();
   const updateMutation = useUpdateDbSyncup();
+  const requestEnvMutation = useUpdateDbSyncup();
 
   const item = useMemo(
     () => items?.find((i) => i.id === dbSyncupId) ?? null,
@@ -66,6 +67,7 @@ export default function DbSyncupDetailsPage() {
   const [envEdits, setEnvEdits] = useState<Record<number, EnvEdit>>({});
   const [newEnvSelections, setNewEnvSelections] = useState<Record<string, NewEnvSelection>>({});
   const [saveError, setSaveError] = useState("");
+  const [requestEnvError, setRequestEnvError] = useState("");
 
   useEffect(() => {
     if (item) {
@@ -74,6 +76,7 @@ export default function DbSyncupDetailsPage() {
       setNewEnvSelections({});
       setEditing(false);
       setSaveError("");
+      setRequestEnvError("");
     }
   }, [item]);
 
@@ -179,14 +182,36 @@ export default function DbSyncupDetailsPage() {
 
     const payload: UpdateDbSyncupPayload = {};
 
-    if (detailsForm.db_validation !== (item.db_validation ?? "")) {
-      payload.db_validation = detailsForm.db_validation;
-    }
-    if (detailsForm.migration_incharge !== (item.migration_incharge ?? "")) {
-      payload.migration_incharge = detailsForm.migration_incharge;
-    }
-    if (detailsForm.remarks !== (item.remarks ?? "")) {
-      payload.remarks = detailsForm.remarks;
+    const diffField = <K extends keyof DbSyncupDetailsFormValues & keyof UpdateDbSyncupPayload>(
+      field: K,
+      original: string,
+    ) => {
+      if (detailsForm[field] !== (original ?? "")) {
+        payload[field] = detailsForm[field];
+      }
+    };
+
+    diffField("application_name", item.application_name);
+    diffField("carto_id", item.carto_id);
+    diffField("basicat", item.basicat);
+    diffField("domain", item.domain);
+    diffField("dx_uid", item.dx_uid);
+    diffField("mcp_id", item.mcp_id);
+    diffField("hosting", item.hosting);
+    diffField("reason", item.reason);
+    diffField("data_anonymization_status", item.data_anonymization_status);
+    diffField("db_validation", item.db_validation);
+    diffField("migration_incharge", item.migration_incharge);
+    diffField("date_of_request", item.date_of_request?.slice(0, 10) ?? "");
+    diffField("time_taken_in_prod", item.time_taken_in_prod);
+    diffField("remarks", item.remarks);
+
+    const originalApplicationPriority = request?.application_priority ?? "";
+    if (detailsForm.application_priority !== originalApplicationPriority) {
+      // Sent both places — the syncup-level field and the request-level one —
+      // since the read shape has it on the request but the update payload also
+      // accepts it at the top level; harmless if the backend only honors one.
+      payload.application_priority = detailsForm.application_priority;
     }
 
     const environmentUpdates: DbSyncEnvironmentUpdate[] = environments
@@ -210,19 +235,13 @@ export default function DbSyncupDetailsPage() {
       })
       .filter((update): update is DbSyncEnvironmentUpdate => update !== null);
 
-    Object.entries(newEnvSelections)
-      .filter(([, selection]) => selection.selected)
-      .forEach(([envCode, selection]) => {
-        environmentUpdates.push({
-          environment: envCode,
-          priority: selection.priority || undefined,
-        });
-      });
+    const applicationPriorityChanged = detailsForm.application_priority !== originalApplicationPriority;
 
-    if (request && environmentUpdates.length > 0) {
+    if (request && (environmentUpdates.length > 0 || applicationPriorityChanged)) {
       payload.request = {
         id: request.id,
-        environments: environmentUpdates,
+        ...(environmentUpdates.length > 0 ? { environments: environmentUpdates } : {}),
+        ...(applicationPriorityChanged ? { application_priority: detailsForm.application_priority } : {}),
       };
     }
 
@@ -236,6 +255,39 @@ export default function DbSyncupDetailsPage() {
       setEditing(false);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Unable to save changes.");
+    }
+  };
+
+  // Independent of the page's Edit/Save flow — requesting a new environment
+  // submits immediately rather than waiting on the rest of the form.
+  const handleRequestEnvironments = async () => {
+    setRequestEnvError("");
+
+    if (!request) return;
+
+    const environmentUpdates: DbSyncEnvironmentUpdate[] = Object.entries(newEnvSelections)
+      .filter(([, selection]) => selection.selected)
+      .map(([envCode, selection]) => ({
+        environment: envCode,
+        priority: selection.priority || undefined,
+      }));
+
+    if (environmentUpdates.length === 0) return;
+
+    try {
+      await requestEnvMutation.mutateAsync({
+        syncupId: item.id,
+        payload: {
+          request: {
+            id: request.id,
+            environments: environmentUpdates,
+          },
+        },
+      });
+      setNewEnvSelections({});
+    } catch (err) {
+      setRequestEnvError(err instanceof Error ? err.message : "Unable to request environments.");
+      throw err;
     }
   };
 
@@ -320,6 +372,9 @@ export default function DbSyncupDetailsPage() {
         onToggleNewEnv={handleToggleNewEnv}
         onNewEnvPriorityChange={handleNewEnvPriorityChange}
         canRequestEnvironment={Boolean(request)}
+        onRequestEnvironments={handleRequestEnvironments}
+        isRequestingEnvironments={requestEnvMutation.isPending}
+        requestEnvironmentsError={requestEnvError}
       />
 
       {/* ── Everything else ──────────────────────────────────────── */}

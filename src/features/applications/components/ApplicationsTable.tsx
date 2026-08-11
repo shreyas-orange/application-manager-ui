@@ -4,7 +4,7 @@ import { getCloudNames, getMigrationStatus, getOwnerByType, getStatusBadgeClass 
 import type { Application } from "../types/application.types";
 
 function getOwnerName(app: Application, ownerType: string): string {
-  return getOwnerByType(app, ownerType)?.owner_name || "—";
+  return getOwnerByType(app, ownerType)?.owner_name || "NA";
 }
 
 interface ApplicationsTableProps {
@@ -61,17 +61,17 @@ export default function ApplicationsTable({ applications, onOpen }: Applications
                         {app.application_name}
                       </strong>
                       <span style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-500)" }}>
-                        Carto: {app.carto_id || "—"}
+                        Carto: {app.carto_id || "NA"}
                       </span>
                       <span style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-400)" }}>
-                        Basicat: {app.basicat || "—"}
+                        Basicat: {app.basicat || "NA"}
                       </span>
                     </div>
                   </td>
 
                   {/* Domain */}
                   <td style={{ color: "var(--ods-gray-700)" }}>
-                    {app.confirmed_domain || app.domain || "—"}
+                    {app.confirmed_domain || app.domain || "NA"}
                   </td>
 
                   {/* Owners */}
@@ -137,27 +137,27 @@ export default function ApplicationsTable({ applications, onOpen }: Applications
                         ns migrated
                       </span>
                     ) : (
-                      <span style={{ color: "var(--ods-gray-400)" }}>—</span>
+                      <span style={{ color: "var(--ods-gray-400)" }}>NA</span>
                     )}
                   </td>
 
                   {/* Nexus */}
-                  <td style={{ color: "var(--ods-gray-600)" }}>{app.security?.nexus_status || "—"}</td>
+                  <td style={{ color: "var(--ods-gray-600)" }}>{app.security?.nexus_status || "NA"}</td>
 
                   {/* Security (RootId) PROD */}
-                  <td style={{ color: "var(--ods-gray-600)" }}>{app.security?.security_prod_status || "—"}</td>
+                  <td style={{ color: "var(--ods-gray-600)" }}>{app.security?.security_prod_status || "NA"}</td>
 
                   {/* Security (Net Pol) PROD */}
-                  <td style={{ color: "var(--ods-gray-600)" }}>{app.security?.network_policy_status || "—"}</td>
+                  <td style={{ color: "var(--ods-gray-600)" }}>{app.security?.network_policy_status || "NA"}</td>
 
                   {/* Sov Type */}
-                  <td style={{ color: "var(--ods-gray-600)" }}>{app.sov_type || "—"}</td>
+                  <td style={{ color: "var(--ods-gray-600)" }}>{app.sov_type || "NA"}</td>
 
                   {/* DX-uid */}
-                  <td style={{ color: "var(--ods-gray-600)" }}>{app.meta_data?.dx_uid || "—"}</td>
+                  <td style={{ color: "var(--ods-gray-600)" }}>{app.meta_data?.dx_uid || "NA"}</td>
 
                   {/* MCP-id */}
-                  <td style={{ color: "var(--ods-gray-600)" }}>{app.meta_data?.mcp_id || "—"}</td>
+                  <td style={{ color: "var(--ods-gray-600)" }}>{app.meta_data?.mcp_id || "NA"}</td>
                 </tr>
               );
             })

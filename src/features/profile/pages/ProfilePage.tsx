@@ -74,7 +74,7 @@ export default function ProfilePage() {
                 Name
               </label>
               <div style={{ fontSize: "var(--ods-font-size-sm)", color: "var(--ods-gray-900)" }}>
-                {[user?.first_name, user?.last_name].filter(Boolean).join(" ") || "—"}
+                {[user?.first_name, user?.last_name].filter(Boolean).join(" ") || "NA"}
               </div>
             </div>
             <div>
@@ -82,7 +82,7 @@ export default function ProfilePage() {
                 Email
               </label>
               <div style={{ fontSize: "var(--ods-font-size-sm)", color: "var(--ods-gray-900)" }}>
-                {user?.email || "—"}
+                {user?.email || "NA"}
               </div>
             </div>
             <div>
@@ -90,7 +90,7 @@ export default function ProfilePage() {
                 Role
               </label>
               <span className="ods-role-badge" style={{ textTransform: "capitalize" }}>
-                {role || "—"}
+                {role || "NA"}
               </span>
             </div>
           </div>

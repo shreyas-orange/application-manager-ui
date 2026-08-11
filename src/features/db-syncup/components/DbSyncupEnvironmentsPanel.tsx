@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
 
+import { Spinner } from "@/components/ui";
+
 import {
   DB_SYNCUP_PRIORITY_OPTIONS,
   DB_SYNCUP_STATUS_OPTIONS,
@@ -29,6 +31,9 @@ interface DbSyncupEnvironmentsPanelProps {
   onToggleNewEnv: (envCode: string) => void;
   onNewEnvPriorityChange: (envCode: string, priority: string) => void;
   canRequestEnvironment: boolean;
+  onRequestEnvironments: () => Promise<void>;
+  isRequestingEnvironments: boolean;
+  requestEnvironmentsError?: string | null;
 }
 
 function envLabel(code: string): string {
@@ -44,6 +49,9 @@ export default function DbSyncupEnvironmentsPanel({
   onToggleNewEnv,
   onNewEnvPriorityChange,
   canRequestEnvironment,
+  onRequestEnvironments,
+  isRequestingEnvironments,
+  requestEnvironmentsError,
 }: DbSyncupEnvironmentsPanelProps) {
   const [addEnvOpen, setAddEnvOpen] = useState(false);
 
@@ -54,12 +62,22 @@ export default function DbSyncupEnvironmentsPanel({
 
   const selectedCount = Object.values(newEnvSelections).filter((s) => s.selected).length;
 
+  const handleSubmitRequest = async () => {
+    try {
+      await onRequestEnvironments();
+      setAddEnvOpen(false);
+    } catch {
+      // Stay open — the error is shown via requestEnvironmentsError below.
+    }
+  };
+
   return (
     <div className="ods-card" style={{ marginBottom: "1.5rem" }}>
       <div className="ods-card-header">
         <h2 className="ods-card-title">Environments</h2>
 
-        {!readOnly && canRequestEnvironment && availableEnvTypes.length > 0 && (
+        {/* Independent of the page's Edit toggle — can request an environment any time. */}
+        {canRequestEnvironment && availableEnvTypes.length > 0 && (
           <button
             type="button"
             className="btn btn-outline-secondary btn-sm"
@@ -87,7 +105,6 @@ export default function DbSyncupEnvironmentsPanel({
                 <th style={{ minWidth: 120 }}>Environment</th>
                 <th style={{ minWidth: 160 }}>Status</th>
                 <th style={{ minWidth: 160 }}>Priority</th>
-                <th style={{ minWidth: 90 }}>Score</th>
               </tr>
             </thead>
             <tbody>
@@ -101,14 +118,14 @@ export default function DbSyncupEnvironmentsPanel({
                     </td>
                     <td>
                       {readOnly ? (
-                        <span className={getStatusBadgeClass(edit.status)}>{edit.status || "—"}</span>
+                        <span className={getStatusBadgeClass(edit.status)}>{edit.status || "NA"}</span>
                       ) : (
                         <select
                           className="form-select form-select-sm"
                           value={edit.status}
                           onChange={(e) => onEnvEditChange(env.id, "status", e.target.value)}
                         >
-                          <option value="">—</option>
+                          <option value="">NA</option>
                           {DB_SYNCUP_STATUS_OPTIONS.map((o) => (
                             <option key={o.value} value={o.value}>{o.label}</option>
                           ))}
@@ -117,21 +134,20 @@ export default function DbSyncupEnvironmentsPanel({
                     </td>
                     <td>
                       {readOnly ? (
-                        <span className={getPriorityBadgeClass(edit.priority)}>{edit.priority || "—"}</span>
+                        <span className={getPriorityBadgeClass(edit.priority)}>{edit.priority || "NA"}</span>
                       ) : (
                         <select
                           className="form-select form-select-sm"
                           value={edit.priority}
                           onChange={(e) => onEnvEditChange(env.id, "priority", e.target.value)}
                         >
-                          <option value="">—</option>
+                          <option value="">NA</option>
                           {DB_SYNCUP_PRIORITY_OPTIONS.map((o) => (
                             <option key={o.value} value={o.value}>{o.label}</option>
                           ))}
                         </select>
                       )}
                     </td>
-                    <td style={{ color: "var(--ods-gray-600)" }}>{env.environment_score ?? "—"}</td>
                   </tr>
                 );
               })}
@@ -141,7 +157,7 @@ export default function DbSyncupEnvironmentsPanel({
       )}
 
       {/* ── Add Env — toggle any/all unrequested environments at once ── */}
-      {!readOnly && addEnvOpen && (
+      {addEnvOpen && (
         <div className="ods-card-footer" style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
           {availableEnvTypes.length === 0 ? (
             <p style={{ margin: 0, fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-500)" }}>
@@ -149,56 +165,91 @@ export default function DbSyncupEnvironmentsPanel({
             </p>
           ) : (
             <>
-              {availableEnvTypes.map((envType) => {
-                const selection = newEnvSelections[envType.value] ?? { selected: false, priority: "" };
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                  gap: "0.75rem",
+                }}
+              >
+                {availableEnvTypes.map((envType) => {
+                  const selection = newEnvSelections[envType.value] ?? { selected: false, priority: "" };
 
-                return (
-                  <div
-                    key={envType.value}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.75rem",
-                      padding: "0.5rem 0.75rem",
-                      background: selection.selected ? "rgba(255, 121, 0, 0.06)" : "var(--ods-gray-100)",
-                      border: `1px solid ${selection.selected ? "var(--ods-orange)" : "var(--ods-gray-200)"}`,
-                    }}
-                  >
-                    <input
-                      id={`new-env-${envType.value}`}
-                      type="checkbox"
-                      className="form-check-input"
-                      style={{ margin: 0, accentColor: "var(--ods-orange)" }}
-                      checked={selection.selected}
-                      onChange={() => onToggleNewEnv(envType.value)}
-                    />
-                    <label
-                      htmlFor={`new-env-${envType.value}`}
-                      style={{ flex: 1, fontSize: "var(--ods-font-size-sm)", color: "var(--ods-gray-800)", cursor: "pointer", margin: 0 }}
+                  return (
+                    <div
+                      key={envType.value}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "0.5rem",
+                        padding: "0.6rem 0.75rem",
+                        background: selection.selected ? "rgba(255, 121, 0, 0.06)" : "var(--ods-gray-100)",
+                        border: `1px solid ${selection.selected ? "var(--ods-orange)" : "var(--ods-gray-200)"}`,
+                      }}
                     >
-                      {envType.label}
-                    </label>
-                    <select
-                      className="form-select form-select-sm"
-                      style={{ width: 160 }}
-                      value={selection.priority}
-                      disabled={!selection.selected}
-                      onChange={(e) => onNewEnvPriorityChange(envType.value, e.target.value)}
-                    >
-                      <option value="">Priority...</option>
-                      {DB_SYNCUP_PRIORITY_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              })}
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                        <input
+                          id={`new-env-${envType.value}`}
+                          type="checkbox"
+                          className="form-check-input"
+                          style={{ margin: 0, accentColor: "var(--ods-orange)" }}
+                          checked={selection.selected}
+                          disabled={isRequestingEnvironments}
+                          onChange={() => onToggleNewEnv(envType.value)}
+                        />
+                        <label
+                          htmlFor={`new-env-${envType.value}`}
+                          style={{ flex: 1, fontSize: "var(--ods-font-size-sm)", color: "var(--ods-gray-800)", cursor: "pointer", margin: 0 }}
+                        >
+                          {envType.label}
+                        </label>
+                      </div>
+                      <select
+                        className="form-select form-select-sm"
+                        value={selection.priority}
+                        disabled={!selection.selected || isRequestingEnvironments}
+                        onChange={(e) => onNewEnvPriorityChange(envType.value, e.target.value)}
+                      >
+                        <option value="">Priority...</option>
+                        {DB_SYNCUP_PRIORITY_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                })}
+              </div>
 
-              <p style={{ margin: 0, fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-500)" }}>
-                {selectedCount > 0
-                  ? `${selectedCount} environment${selectedCount === 1 ? "" : "s"} will be requested when you save changes.`
-                  : "Toggle an environment on to request it, and set its priority."}
-              </p>
+              {requestEnvironmentsError && (
+                <div className="ods-form-message error" style={{ margin: 0 }}>
+                  {requestEnvironmentsError}
+                </div>
+              )}
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+                <p style={{ margin: 0, fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-500)" }}>
+                  {selectedCount > 0
+                    ? `${selectedCount} environment${selectedCount === 1 ? "" : "s"} selected.`
+                    : "Toggle an environment on to request it, and set its priority."}
+                </p>
+
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  disabled={selectedCount === 0 || isRequestingEnvironments}
+                  onClick={() => { void handleSubmitRequest(); }}
+                  style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+                >
+                  {isRequestingEnvironments ? (
+                    <>
+                      <Spinner size={14} />
+                      Requesting...
+                    </>
+                  ) : (
+                    `Request ${selectedCount > 0 ? selectedCount : ""} Environment${selectedCount === 1 ? "" : "s"}`
+                  )}
+                </button>
+              </div>
             </>
           )}
         </div>

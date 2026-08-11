@@ -8,7 +8,7 @@ import { getApiErrorMessage } from "@/lib/api-error";
 import { DB_SYNCUP_PRIORITY_OPTIONS } from "../constants";
 import type { CreateDbSyncupPayload } from "../types/db-syncup.types";
 
-const MIGRATION_INCHARGE_ROLE = "DB_MANAGER";
+const MIGRATION_INCHARGE_ROLE = "Migration Manager";
 
 interface DbSyncupCreateDrawerProps {
   application: Application | null;
@@ -332,7 +332,7 @@ export default function DbSyncupCreateDrawer({
                   value={form.application_priority}
                   onChange={(e) => updateField("application_priority", e.target.value)}
                 >
-                  <option value="">—</option>
+                  <option value="">NA</option>
                   {DB_SYNCUP_PRIORITY_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}

@@ -180,13 +180,7 @@ export default function DbSyncupSection({
       {/* ── Create drawer ─────────────────────────────────────── */}
       <DbSyncupCreateDrawer
         application={application}
-<<<<<<< HEAD
         isOpen={creating}
-=======
-        applicationId={applicationId}
-        item={editingItem}
-        isOpen={editingItem !== null || creating}
->>>>>>> 58ca5666021937c0451ec2e6c0f31599c32c5459
         nextSerialNumber={nextSerialNumber}
         onClose={() => setCreating(false)}
         onSave={handleCreate}

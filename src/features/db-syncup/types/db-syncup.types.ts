@@ -11,10 +11,9 @@ export type DbSyncupStatusField =
   | "prod_status";
 
 export type DbSyncupPriority =
-  | "LOW"
-  | "MEDIUM"
-  | "HIGH"
-  | "CRITICAL";
+  | "P1"
+  | "P2"
+  | "P3";
 
 export interface DbSyncEnvironmentRequest {
   id: number;

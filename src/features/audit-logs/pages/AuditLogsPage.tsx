@@ -65,13 +65,13 @@ export default function AuditLogsPage() {
     value?: string,
   ): string => {
     if (!value) {
-      return "—";
+      return "NA";
     }
 
     const date = new Date(value);
 
     if (Number.isNaN(date.getTime())) {
-      return "—";
+      return "NA";
     }
 
     return date.toLocaleString();
@@ -234,12 +234,12 @@ export default function AuditLogsPage() {
 
                       <td>
                         <span className={getActionBadgeClass(log.action ?? "")}>
-                          {log.action ?? "—"}
+                          {log.action ?? "NA"}
                         </span>
                       </td>
 
                       <td style={{ color: "var(--ods-gray-600)" }}>
-                        {log.module ?? log.entity_type ?? log.resource_type ?? "—"}
+                        {log.module ?? log.entity_type ?? log.resource_type ?? "NA"}
                       </td>
 
                       <td style={{ color: "var(--ods-gray-600)", maxWidth: 200 }}>
@@ -250,9 +250,9 @@ export default function AuditLogsPage() {
                             textOverflow: "ellipsis",
                             whiteSpace:   "nowrap",
                           }}
-                          title={log.description ?? log.details ?? "—"}
+                          title={log.description ?? log.details ?? "NA"}
                         >
-                          {log.description ?? log.details ?? "—"}
+                          {log.description ?? log.details ?? "NA"}
                         </span>
                       </td>
 

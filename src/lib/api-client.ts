@@ -1,9 +1,11 @@
 import axios, {
-  AxiosError,
+  type AxiosError,
   type InternalAxiosRequestConfig,
 } from "axios";
 
 import { tokenService } from "@/services/token.service";
+
+import { apiBaseUrl, createApiClient } from "./create-api-client";
 
 interface RetryableRequestConfig
   extends InternalAxiosRequestConfig {
@@ -16,25 +18,7 @@ interface RefreshResponse {
   token_type: string;
 }
 
-const apiBaseUrl =
-  import.meta.env.VITE_API_BASE_URL;
-
-if (!apiBaseUrl) {
-  throw new Error(
-    "VITE_API_BASE_URL is not configured",
-  );
-}
-
-export const apiClient = axios.create({
-  baseURL: apiBaseUrl,
-  headers: {
-    "Content-Type": "application/json",
-    "ngrok-skip-browser-warning": "true",
-  },
-  timeout: 15_000,
-});
- 
- 
+export const apiClient = createApiClient();
 
 apiClient.interceptors.request.use(
   (config) => {

@@ -1,10 +1,8 @@
 // src/features/auth/pages/LoginPage.tsx
-import {
-  type ChangeEvent,
-  type FormEvent,
-  useState,
-} from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Eye,
   EyeOff,
@@ -12,97 +10,52 @@ import {
   Mail,
 } from "lucide-react";
 
-import { loginUser, getCurrentUser } from "../api/auth.api";
-import { getAuthErrorMessage } from "../utils/auth-error";
+import { Spinner } from "@/components/ui";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface LoginForm {
-  email:    string;
-  password: string;
-}
+import { useLogin } from "../hooks/useLogin";
+import { getUserRole } from "../utils/get-user-role";
+import { getAuthErrorMessage } from "../utils/auth-error";
+import { loginSchema, type LoginFormValues } from "../schemas/login.schema";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const loginMutation = useLogin();
 
-  const [form, setForm]                 = useState<LoginForm>({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe]     = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError]               = useState("");
+  const [serverError, setServerError]   = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  const isLoading = isSubmitting || loginMutation.isPending;
 
   // ── Handlers ─────────────────────────────────────────────────────
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    if (error) setError("");
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!form.email.trim()) {
-      setError("Please enter your email address.");
-      return;
-    }
-    if (!form.password) {
-      setError("Please enter your password.");
-      return;
-    }
+  const onSubmit = async (values: LoginFormValues): Promise<void> => {
+    setServerError("");
 
     try {
-      setIsSubmitting(true);
-      setError("");
-
-      const loginResponse = await loginUser({
-        email:    form.email.trim(),
-        password: form.password,
+      const loginResponse = await loginMutation.mutateAsync({
+        ...values,
+        remember: rememberMe,
       });
 
-      const accessToken  = loginResponse.access_token;
-      const refreshToken = loginResponse.refresh_token;
+      const role = getUserRole(loginResponse.user);
+      const redirectTo =
+        (location.state as { from?: string } | null)?.from ??
+        (role === "admin" ? "/app/dashboard" : "/app/applications");
 
-      if (!accessToken) {
-        throw new Error("Access token was not returned by the server.");
-      }
-
-      const accessTokenKey  = "application_manager_access_token";
-      const refreshTokenKey = "application_manager_refresh_token";
-
-      if (rememberMe) {
-        localStorage.setItem(accessTokenKey, accessToken);
-        sessionStorage.removeItem(accessTokenKey);
-        if (refreshToken) {
-          localStorage.setItem(refreshTokenKey, refreshToken);
-          sessionStorage.removeItem(refreshTokenKey);
-        }
-      } else {
-        sessionStorage.setItem(accessTokenKey, accessToken);
-        localStorage.removeItem(accessTokenKey);
-        if (refreshToken) {
-          sessionStorage.setItem(refreshTokenKey, refreshToken);
-          localStorage.removeItem(refreshTokenKey);
-        }
-      }
-
-      const currentUser = await getCurrentUser();
-      localStorage.setItem("auth_user", JSON.stringify(currentUser));
-
-      const rawRole =
-        typeof currentUser?.role === "string"
-          ? currentUser.role
-          : (currentUser?.role as unknown as { name?: string })?.name ?? "";
-
-      const role = rawRole.trim().toLowerCase();
-
-      navigate(role === "admin" ? "/app/dashboard" : "/app/applications", {
-        replace: true,
-      });
-
+      navigate(redirectTo, { replace: true });
     } catch (loginError) {
-      setError(getAuthErrorMessage(loginError));
-    } finally {
-      setIsSubmitting(false);
+      setServerError(getAuthErrorMessage(loginError));
     }
   };
 
@@ -134,18 +87,18 @@ export default function LoginPage() {
       </div>
 
       {/* ── Error alert ───────────────────────────────────────── */}
-      {error && (
+      {serverError && (
         <div
           className="ods-alert ods-alert-danger"
           role="alert"
           style={{ marginBottom: "1.25rem" }}
         >
-          {error}
+          {serverError}
         </div>
       )}
 
       {/* ── Login form ────────────────────────────────────────── */}
-      <form onSubmit={handleSubmit} noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
 
         {/* Email */}
         <div className="mb-3">
@@ -158,16 +111,18 @@ export default function LoginPage() {
             </span>
             <input
               id="email"
-              name="email"
               type="email"
-              className="form-control"
-              value={form.email}
-              onChange={handleChange}
+              className={`form-control${errors.email ? " is-invalid" : ""}`}
               placeholder="Enter your email address"
               autoComplete="email"
-              disabled={isSubmitting}
+              disabled={isLoading}
+              aria-invalid={Boolean(errors.email)}
+              {...register("email")}
             />
           </div>
+          {errors.email && (
+            <div className="invalid-feedback d-block">{errors.email.message}</div>
+          )}
         </div>
 
         {/* Password */}
@@ -185,14 +140,13 @@ export default function LoginPage() {
             </span>
             <input
               id="password"
-              name="password"
               type={showPassword ? "text" : "password"}
-              className="form-control"
-              value={form.password}
-              onChange={handleChange}
+              className={`form-control${errors.password ? " is-invalid" : ""}`}
               placeholder="Enter your password"
               autoComplete="current-password"
-              disabled={isSubmitting}
+              disabled={isLoading}
+              aria-invalid={Boolean(errors.password)}
+              {...register("password")}
             />
             <button
               type="button"
@@ -210,6 +164,9 @@ export default function LoginPage() {
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
+          {errors.password && (
+            <div className="invalid-feedback d-block">{errors.password.message}</div>
+          )}
         </div>
 
         {/* Remember me */}
@@ -224,7 +181,7 @@ export default function LoginPage() {
             style={{ margin: 0, accentColor: "var(--ods-orange)" }}
             checked={rememberMe}
             onChange={(e) => setRememberMe(e.target.checked)}
-            disabled={isSubmitting}
+            disabled={isLoading}
           />
           <label
             htmlFor="rememberMe"
@@ -243,10 +200,10 @@ export default function LoginPage() {
         <button
           type="submit"
           className="btn btn-primary w-100"
-          disabled={isSubmitting}
+          disabled={isLoading}
           style={{ padding: "0.625rem" }}
         >
-          {isSubmitting ? (
+          {isLoading ? (
             <span
               style={{
                 display:        "flex",
@@ -255,10 +212,7 @@ export default function LoginPage() {
                 gap:            "0.5rem",
               }}
             >
-              <span
-                className="ods-spinner"
-                style={{ width: "1rem", height: "1rem", borderWidth: 2 }}
-              />
+              <Spinner size={16} />
               Signing in...
             </span>
           ) : (

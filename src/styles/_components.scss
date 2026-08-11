@@ -450,6 +450,53 @@
   }
 }
 
+// ─── Tabs ───────────────────────────────────────────────────────────────────
+
+.ods-tabs {
+  display:       flex;
+  gap:           0.25rem;
+  border-bottom: 2px solid var(--ods-gray-200);
+  margin-bottom: 1.5rem;
+  flex-wrap:     wrap;
+}
+
+.ods-tab {
+  padding:        0.6rem 1.25rem;
+  font-size:      var(--ods-font-size-sm);
+  font-weight:    var(--ods-font-weight-bold);
+  color:          var(--ods-gray-600);
+  background:     transparent;
+  border:         none;
+  border-bottom:  3px solid transparent;
+  cursor:         pointer;
+  margin-bottom:  -2px;
+  transition:     color var(--ods-transition), border-color var(--ods-transition);
+
+  &:hover {
+    color: var(--ods-gray-900);
+  }
+
+  &.active {
+    color:              var(--ods-orange);
+    border-bottom-color: var(--ods-orange);
+  }
+}
+
+// ─── Confirm Dialog ───────────────────────────────────────────────────────────
+
+.ods-confirm-message {
+  margin:     0 0 1.5rem;
+  font-size:  var(--ods-font-size-sm);
+  color:      var(--ods-gray-700);
+  line-height: 1.5;
+}
+
+.ods-confirm-actions {
+  display:        flex;
+  justify-content: flex-end;
+  gap:            0.75rem;
+}
+
 // ─── Drawer / Side Panel ──────────────────────────────────────────────────────
 
 .ods-drawer-overlay {

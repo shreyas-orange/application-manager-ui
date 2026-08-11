@@ -36,6 +36,12 @@
       margin:      0;
     }
 
+    .ods-modal-description {
+      font-size: var(--ods-font-size-xs);
+      color:     var(--ods-gray-400);
+      margin:    0.25rem 0 0;
+    }
+
     .ods-modal-close {
       background:  none;
       border:      none;

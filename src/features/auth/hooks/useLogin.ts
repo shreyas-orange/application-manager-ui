@@ -10,14 +10,19 @@ import type {
   LoginPayload,
 } from "../types/auth.types";
 
-export function useLogin() {
-  return useMutation<AuthResponse, Error, LoginPayload>({
-    mutationFn: loginUser,
+interface LoginVariables extends LoginPayload {
+  remember?: boolean;
+}
 
-    onSuccess: (response) => {
+export function useLogin() {
+  return useMutation<AuthResponse, Error, LoginVariables>({
+    mutationFn: ({ email, password }) => loginUser({ email, password }),
+
+    onSuccess: (response, variables) => {
       tokenService.setTokens(
         response.access_token,
         response.refresh_token,
+        { remember: variables.remember },
       );
 
       queryClient.setQueryData(

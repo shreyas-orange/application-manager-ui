@@ -1,16 +1,3 @@
-import axios from "axios";
+import { createApiClient } from "./create-api-client";
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-
-if (!apiBaseUrl) {
-  throw new Error("VITE_API_BASE_URL is not configured");
-}
-
-export const publicApiClient = axios.create({
-  baseURL: apiBaseUrl,
-  headers: {
-    "Content-Type": "application/json",
-    "ngrok-skip-browser-warning": "true",
-  },
-  timeout: 15_000,
-});
+export const publicApiClient = createApiClient();

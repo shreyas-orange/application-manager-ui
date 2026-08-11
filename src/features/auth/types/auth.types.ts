@@ -40,3 +40,16 @@ export interface RefreshTokenResponse {
 export interface LogoutResponse {
   message: string;
 }
+
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+export interface ResetPasswordPayload {
+  token: string;
+  new_password: string;
+}

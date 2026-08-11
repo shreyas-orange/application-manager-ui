@@ -1,132 +1,130 @@
-import {
-  createBrowserRouter,
-} from "react-router-dom";
+import { createBrowserRouter, Outlet } from "react-router-dom";
 
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 
-import { ForbiddenPage, NotFoundPage } from "./error-pages";
+import { ForbiddenPage, NotFoundPage, RouteErrorBoundary } from "./error-pages";
+import { lazyPage } from "./lazy-page";
 
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { RoleProtectedRoute } from "@/features/auth/components/RoleProtectedRoute";
 
-import  LoginPage  from "@/features/auth/pages/LoginPage";
-import { RegisterPage } from "@/features/auth/pages/RegisterPage";
-
-import UsersPage from "@/features/users/pages/UsersPage";
-
-import DashboardPage from "@/features/dashboard/pages/DashboardPage";
-import ApplicationsPage from "@/features/applications/pages/ApplicationsPage";
-import ApplicationDetailsPage from "@/features/applications/pages/ApplicationDetailsPage";
-import AnalyticsPage from "@/features/applications/pages/AnalyticsPage";
-import HomeOverviewPage from "@/features/applications/pages/HomeOverviewPage";
-import UploadFilePage from "@/features/uploads/pages/UploadFilePage";
-import AuditLogsPage from  "../features/audit-logs/pages/AuditLogsPage";
-
-import CloudPage from "@/features/cloud/pages/CloudPage";
-
-import DbSyncupPage from "@/features/db-syncup/pages/DbSyncupPage";
-
 // ─── Router ──────────────────────────────────────────────────────────────────
 export const router = createBrowserRouter([
-  // ── Public routes (no auth required) ─────────────────────────
   {
-    element: <PublicLayout />,
+    element: <Outlet />,
+    errorElement: <RouteErrorBoundary />,
     children: [
+      // ── Public routes (no auth required) ─────────────────────────
       {
-        path: "/",
-        element: <HomeOverviewPage />,
-      },
-      {
-        path: "/overview",
-        element: <HomeOverviewPage />,
-      },
-    ],
-  },
-
-  // ── Auth routes ──────────────────────────────────────────────
-  {
-    element: <AuthLayout />,
-    children: [
-      {
-        path: "/login",
-        element: <LoginPage />,
-      },
-      {
-        path: "/register",
-        element: <RegisterPage />,
-      },
-    ],
-  },
-
-  // ── Protected routes (require auth) ─────────────────────────
-  {
-    path: "/app",
-    element: <ProtectedRoute />,
-    children: [
-      {
-        element: <AppLayout />,
+        element: <PublicLayout />,
         children: [
           {
-            index: true,
-            element: <ApplicationsPage />,
+            path: "/",
+            element: lazyPage(() => import("@/features/applications/pages/HomeOverviewPage")),
           },
           {
-            path: "applications",
-            element: <ApplicationsPage />,
+            path: "/overview",
+            element: lazyPage(() => import("@/features/applications/pages/HomeOverviewPage")),
           },
           {
-            path: "applications/:id",
-            element: <ApplicationDetailsPage />,
+            path: "*",
+            element: <NotFoundPage />,
+          },
+        ],
+      },
+
+      // ── Auth routes ──────────────────────────────────────────────
+      {
+        element: <AuthLayout />,
+        children: [
+          {
+            path: "/login",
+            element: lazyPage(() => import("@/features/auth/pages/LoginPage")),
           },
           {
-            path: "analytics",
-            element: <AnalyticsPage />,
+            path: "/register",
+            element: lazyPage(() => import("@/features/auth/pages/RegisterPage")),
           },
           {
-            path: "db-syncups",
-            element: <DbSyncupPage />,
+            path: "/forgot-password",
+            element: lazyPage(() => import("@/features/auth/pages/ForgotPasswordPage")),
           },
           {
-            path: "forbidden",
-            element: <ForbiddenPage />,
+            path: "/reset-password",
+            element: lazyPage(() => import("@/features/auth/pages/ResetPasswordPage")),
           },
+        ],
+      },
+
+      // ── Protected routes (require auth) ─────────────────────────
+      {
+        path: "/app",
+        element: <ProtectedRoute />,
+        children: [
           {
-            element: (
-              <RoleProtectedRoute allowedRoles={["admin"]} />
-            ),
+            element: <AppLayout />,
             children: [
               {
-                path: "dashboard",
-                element: <DashboardPage />,
+                index: true,
+                element: lazyPage(() => import("@/features/applications/pages/ApplicationsPage")),
               },
               {
-                path: "users",
-                element: <UsersPage />,
+                path: "applications",
+                element: lazyPage(() => import("@/features/applications/pages/ApplicationsPage")),
               },
               {
-                path: "uploads",
-                element: <UploadFilePage />,
+                path: "applications/:id",
+                element: lazyPage(() => import("@/features/applications/pages/ApplicationDetailsPage")),
               },
               {
-                path: "audit-logs",
-                element: <AuditLogsPage />,
+                path: "analytics",
+                element: lazyPage(() => import("@/features/applications/pages/AnalyticsPage")),
               },
               {
-                path: "cloud",
-                element: <CloudPage />,
+                path: "db-syncups",
+                element: lazyPage(() => import("@/features/db-syncup/pages/DbSyncupPage")),
+              },
+              {
+                path: "forbidden",
+                element: <ForbiddenPage />,
+              },
+              {
+                path: "profile",
+                element: lazyPage(() => import("@/features/profile/pages/ProfilePage")),
+              },
+              {
+                element: (
+                  <RoleProtectedRoute allowedRoles={["admin"]} />
+                ),
+                children: [
+                  {
+                    path: "dashboard",
+                    element: lazyPage(() => import("@/features/dashboard/pages/DashboardPage")),
+                  },
+                  {
+                    path: "users",
+                    element: lazyPage(() => import("@/features/users/pages/UsersPage")),
+                  },
+                  {
+                    path: "uploads",
+                    element: lazyPage(() => import("@/features/uploads/pages/UploadFilePage")),
+                  },
+                  {
+                    path: "audit-logs",
+                    element: lazyPage(() => import("@/features/audit-logs/pages/AuditLogsPage")),
+                  },
+                  {
+                    path: "cloud",
+                    element: lazyPage(() => import("@/features/cloud/pages/CloudPage")),
+                  },
+                ],
               },
             ],
           },
         ],
       },
     ],
-  },
-
-  // ── Catch-all ────────────────────────────────────────────────
-  {
-    path: "*",
-    element: <NotFoundPage />,
   },
 ]);

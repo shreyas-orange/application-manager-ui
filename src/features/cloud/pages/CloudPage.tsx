@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { getApiErrorMessage } from "@/lib/api-error";
+import { EmptyState, PageHeader, PageLoader, useConfirmDialog } from "@/components/ui";
 
 import CloudModal from "../components/CloudModal";
 import CloudTable from "../components/CloudTable";
@@ -32,6 +33,8 @@ import type {
 const PAGE_SIZE = 10;
 
 export default function CloudPage() {
+  const { confirm, dialog } = useConfirmDialog();
+
   const [page, setPage] = useState(1);
 
   const [
@@ -166,10 +169,12 @@ export default function CloudPage() {
   const handleDelete = async (
     cloud: CloudConfiguration,
   ) => {
-    const confirmed =
-      window.confirm(
-        `Delete "${cloud.name}"?`,
-      );
+    const confirmed = await confirm({
+      title: "Delete cloud configuration",
+      message: `Delete "${cloud.name}"? This cannot be undone.`,
+      confirmLabel: "Delete",
+      danger: true,
+    });
 
     if (!confirmed) {
       return;
@@ -218,90 +223,72 @@ export default function CloudPage() {
   };
 
   if (cloudQuery.isLoading) {
-    return (
-      <div
-        style={{
-          display:        "flex",
-          flexDirection:  "column",
-          alignItems:     "center",
-          justifyContent: "center",
-          minHeight:      "60vh",
-          gap:            "1rem",
-        }}
-      >
-        <div className="ods-spinner" />
-        <p style={{ color: "var(--ods-gray-600)", fontSize: "var(--ods-font-size-sm)" }}>
-          Loading cloud configurations...
-        </p>
-      </div>
-    );
+    return <PageLoader label="Loading cloud configurations..." />;
   }
 
   if (cloudQuery.isError) {
     return (
-      <div className="ods-empty-state">
-        <span className="ods-empty-icon">⚠️</span>
-        <div className="ods-empty-title">Unable to load cloud configurations</div>
-        <p className="ods-empty-text">
-          {getApiErrorMessage(cloudQuery.error)}
-        </p>
-        <button
-          type="button"
-          className="btn btn-primary mt-3"
-          onClick={() => {
-            void cloudQuery.refetch();
-          }}
-        >
-          Try again
-        </button>
-      </div>
+      <EmptyState
+        icon="⚠️"
+        title="Unable to load cloud configurations"
+        text={getApiErrorMessage(cloudQuery.error)}
+        action={
+          <button
+            type="button"
+            className="btn btn-primary mt-3"
+            onClick={() => {
+              void cloudQuery.refetch();
+            }}
+          >
+            Try again
+          </button>
+        }
+      />
     );
   }
 
   return (
     <div>
 
-      {/* ── Page header ─────────────────────────────────────── */}
-      <div className="ods-page-header">
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+      <PageHeader
+        title={
+          <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <Cloud size={24} style={{ color: "var(--ods-orange)" }} />
-            <h1 className="page-title">Cloud Configurations</h1>
-          </div>
-          <p className="page-subtitle">
-            Manage cloud provider connections and regions.
-          </p>
-        </div>
-
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button
-            type="button"
-            className="btn btn-outline-secondary"
-            disabled={cloudQuery.isFetching}
-            onClick={() => {
-              void cloudQuery.refetch();
-            }}
-            style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-          >
-            <RefreshCw
-              size={15}
-              style={{
-                animation: cloudQuery.isFetching ? "ods-spin 0.7s linear infinite" : "none",
+            Cloud Configurations
+          </span>
+        }
+        subtitle="Manage cloud provider connections and regions."
+        actions={
+          <>
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              disabled={cloudQuery.isFetching}
+              onClick={() => {
+                void cloudQuery.refetch();
               }}
-            />
-            Refresh
-          </button>
+              style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              <RefreshCw
+                size={15}
+                style={{
+                  animation: cloudQuery.isFetching ? "ods-spin 0.7s linear infinite" : "none",
+                }}
+              />
+              Refresh
+            </button>
 
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={openCreateModal}
-          >
-            <Plus size={16} style={{ marginRight: "0.35rem" }} />
-            Add Cloud
-          </button>
-        </div>
-      </div>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={openCreateModal}
+            >
+              <Plus size={16} style={{ marginRight: "0.35rem" }} />
+              Add Cloud
+            </button>
+          </>
+        }
+      />
 
       {/* ── Alerts ──────────────────────────────────────────── */}
       {message && (
@@ -424,6 +411,8 @@ export default function CloudPage() {
         onClose={closeModal}
         onSubmit={handleSubmit}
       />
+
+      {dialog}
     </div>
   );
 }

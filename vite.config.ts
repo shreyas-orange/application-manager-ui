@@ -11,4 +11,18 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+
+  css: {
+    preprocessorOptions: {
+      scss: {
+        // Boosted (our Bootstrap fork) still uses the legacy Sass @import
+        // API internally, and our own partials mirror that today. These
+        // are deprecation *warnings* only — silenced here rather than
+        // fixed, since migrating to @use/@forward is a real refactor of
+        // every partial and Boosted's own source isn't ours to change.
+        silenceDeprecations: ["import", "global-builtin", "color-functions", "if-function"],
+        quietDeps: true,
+      },
+    },
+  },
 });

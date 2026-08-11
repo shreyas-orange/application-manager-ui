@@ -3,6 +3,7 @@ import { Plus, RefreshCw } from "lucide-react";
 
 import type { Application } from "@/features/applications/types/application.types";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { EmptyState, PageLoader, useConfirmDialog } from "@/components/ui";
 
 import DbSyncupEditDrawer from "./DbSyncupEditDrawer";
 import DbSyncupHistoryModal from "./DbSyncupHistoryModal";
@@ -24,6 +25,8 @@ export default function DbSyncupSection({
 }: {
   application: Application;
 }) {
+  const { confirm, dialog } = useConfirmDialog();
+
   const appId = application.id;
   const { data, isLoading, isError, error, refetch, isFetching } =
     useDbSyncups(appId);
@@ -64,9 +67,12 @@ export default function DbSyncupSection({
   };
 
   const handleDelete = async (item: DbSyncup) => {
-    const confirmed = window.confirm(
-      `Delete DB syncup record #${item.serial_number}?`,
-    );
+    const confirmed = await confirm({
+      title: "Delete DB syncup record",
+      message: `Delete DB syncup record #${item.serial_number}? This cannot be undone.`,
+      confirmLabel: "Delete",
+      danger: true,
+    });
     if (!confirmed) return;
 
     setPageError("");
@@ -81,41 +87,25 @@ export default function DbSyncupSection({
   };
 
   if (isLoading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "40vh",
-          gap: "1rem",
-        }}
-      >
-        <div className="ods-spinner" />
-        <p style={{ color: "var(--ods-gray-600)", fontSize: "var(--ods-font-size-sm)" }}>
-          Loading DB syncup...
-        </p>
-      </div>
-    );
+    return <PageLoader compact label="Loading DB syncup..." />;
   }
 
   if (isError) {
     return (
-      <div className="ods-empty-state">
-        <span className="ods-empty-icon">⚠️</span>
-        <div className="ods-empty-title">Unable to load DB syncup</div>
-        <p className="ods-empty-text">
-          {error instanceof Error ? error.message : "Something went wrong."}
-        </p>
-        <button
-          type="button"
-          className="btn btn-primary mt-3"
-          onClick={() => { void refetch(); }}
-        >
-          Try Again
-        </button>
-      </div>
+      <EmptyState
+        icon="⚠️"
+        title="Unable to load DB syncup"
+        text={error instanceof Error ? error.message : "Something went wrong."}
+        action={
+          <button
+            type="button"
+            className="btn btn-primary mt-3"
+            onClick={() => { void refetch(); }}
+          >
+            Try Again
+          </button>
+        }
+      />
     );
   }
 
@@ -187,13 +177,11 @@ export default function DbSyncupSection({
       {/* ── Table / empty state ───────────────────────────────── */}
       {items.length === 0 ? (
         <div className="ods-card" style={{ padding: "3rem" }}>
-          <div className="ods-empty-state">
-            <span className="ods-empty-icon">🗄️</span>
-            <div className="ods-empty-title">No DB syncup data</div>
-            <p className="ods-empty-text">
-              No DB syncup records found for this application yet.
-            </p>
-          </div>
+          <EmptyState
+            icon="🗄️"
+            title="No DB syncup data"
+            text="No DB syncup records found for this application yet."
+          />
         </div>
       ) : (
         <div className="ods-card">
@@ -233,6 +221,8 @@ export default function DbSyncupSection({
         isOpen={historyItem !== null}
         onClose={() => setHistoryItem(null)}
       />
+
+      {dialog}
     </div>
   );
 }

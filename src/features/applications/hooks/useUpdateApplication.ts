@@ -26,9 +26,13 @@ export function useUpdateApplication() {
         payload,
       ),
 
-    onSuccess: async () => {
+    onSuccess: async (_data, { applicationId }) => {
       await queryClient.invalidateQueries({
         queryKey: ["applications"],
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ["application", applicationId],
       });
 
       await queryClient.invalidateQueries({

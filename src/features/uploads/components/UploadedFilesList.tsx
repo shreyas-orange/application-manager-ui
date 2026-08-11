@@ -1,5 +1,5 @@
 import {
-  ChangeEvent,
+  type ChangeEvent,
   useRef,
   useState,
 } from "react";
@@ -10,6 +10,8 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
+
+import { EmptyState, PageLoader, useConfirmDialog } from "@/components/ui";
 
 import {
   useUploadedFiles,
@@ -47,6 +49,8 @@ function formatDate(
 }
 
 export default function UploadedFilesList() {
+  const { confirm, dialog } = useConfirmDialog();
+
   const replacementInputRef =
     useRef<HTMLInputElement>(null);
 
@@ -121,13 +125,12 @@ export default function UploadedFilesList() {
   const handleDelete = async (
     upload: UploadFileResponse,
   ) => {
-    const confirmed =
-      window.confirm(
-        `Delete ${
-          upload.original_file_name ??
-          upload.file_name
-        }?`,
-      );
+    const confirmed = await confirm({
+      title: "Delete uploaded file",
+      message: `Delete ${upload.original_file_name ?? upload.file_name}? This cannot be undone.`,
+      confirmLabel: "Delete",
+      danger: true,
+    });
 
     if (!confirmed) {
       return;
@@ -143,23 +146,7 @@ export default function UploadedFilesList() {
   };
 
   if (isLoading) {
-    return (
-      <div
-        style={{
-          display:        "flex",
-          flexDirection:  "column",
-          alignItems:     "center",
-          justifyContent: "center",
-          padding:        "3rem",
-          gap:            "1rem",
-        }}
-      >
-        <div className="ods-spinner" />
-        <p style={{ color: "var(--ods-gray-600)", fontSize: "var(--ods-font-size-sm)" }}>
-          Loading uploaded files...
-        </p>
-      </div>
-    );
+    return <PageLoader compact label="Loading uploaded files..." />;
   }
 
   if (isError) {
@@ -238,12 +225,7 @@ export default function UploadedFilesList() {
             {uploads.length === 0 ? (
               <tr>
                 <td colSpan={5}>
-                  <div className="ods-empty-state" style={{ padding: "2rem" }}>
-                    <span className="ods-empty-icon">📂</span>
-                    <p className="ods-empty-text">
-                      No uploaded files found.
-                    </p>
-                  </div>
+                  <EmptyState compact icon="📂" text="No uploaded files found." />
                 </td>
               </tr>
             ) : (
@@ -360,6 +342,8 @@ export default function UploadedFilesList() {
           </button>
         </div>
       </div>
+
+      {dialog}
     </section>
   );
 }

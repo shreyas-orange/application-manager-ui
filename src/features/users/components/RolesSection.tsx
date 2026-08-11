@@ -1,15 +1,14 @@
-import {
-  type FormEvent,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Pencil,
   Plus,
   Trash2,
-  X,
 } from "lucide-react";
 
 import { getApiErrorMessage } from "@/lib/api-error";
+import { EmptyState, Modal, PageLoader, useConfirmDialog } from "@/components/ui";
 
 import {
   useCreateRole,
@@ -17,10 +16,12 @@ import {
   useRoles,
   useUpdateRole,
 } from "../hooks/useRoles";
+import { roleFormSchema, type RoleFormValues } from "../schemas/role.schema";
 
 import type { Role } from "../types/role.types";
 
 export default function RolesSection() {
+  const { confirm, dialog } = useConfirmDialog();
   const { data, isLoading, isError, error, refetch, isFetching } = useRoles();
 
   const createMutation = useCreateRole();
@@ -29,24 +30,34 @@ export default function RolesSection() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
-  const [roleName, setRoleName] = useState("");
-  const [validationError, setValidationError] = useState<string | null>(null);
   const [pageError, setPageError] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<RoleFormValues>({
+    resolver: zodResolver(roleFormSchema),
+    defaultValues: { name: "" },
+  });
+
+  useEffect(() => {
+    if (modalOpen) {
+      reset({ name: editingRole?.name ?? "" });
+    }
+  }, [modalOpen, editingRole, reset]);
 
   const roles = data ?? [];
 
   const openCreateModal = () => {
     setEditingRole(null);
-    setRoleName("");
-    setValidationError(null);
     setPageError("");
     setModalOpen(true);
   };
 
   const openEditModal = (role: Role) => {
     setEditingRole(role);
-    setRoleName(role.name);
-    setValidationError(null);
     setPageError("");
     setModalOpen(true);
   };
@@ -59,26 +70,17 @@ export default function RolesSection() {
     setEditingRole(null);
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setValidationError(null);
+  const onSubmit = async (values: RoleFormValues) => {
     setPageError("");
-
-    const name = roleName.trim();
-
-    if (name.length < 2 || name.length > 50) {
-      setValidationError("Role name must be between 2 and 50 characters.");
-      return;
-    }
 
     try {
       if (editingRole) {
         await updateMutation.mutateAsync({
           roleId: editingRole.id,
-          data: { name },
+          data: { name: values.name },
         });
       } else {
-        await createMutation.mutateAsync({ name });
+        await createMutation.mutateAsync({ name: values.name });
       }
       setModalOpen(false);
       setEditingRole(null);
@@ -88,9 +90,12 @@ export default function RolesSection() {
   };
 
   const handleDelete = async (role: Role) => {
-    const confirmed = window.confirm(
-      `Delete the role "${role.name}"?`,
-    );
+    const confirmed = await confirm({
+      title: "Delete role",
+      message: `Delete the role "${role.name}"? This cannot be undone.`,
+      confirmLabel: "Delete",
+      danger: true,
+    });
     if (!confirmed) return;
 
     setPageError("");
@@ -103,43 +108,27 @@ export default function RolesSection() {
   };
 
   if (isLoading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "30vh",
-          gap: "1rem",
-        }}
-      >
-        <div className="ods-spinner" />
-        <p style={{ color: "var(--ods-gray-600)", fontSize: "var(--ods-font-size-sm)" }}>
-          Loading roles...
-        </p>
-      </div>
-    );
+    return <PageLoader compact label="Loading roles..." />;
   }
 
   if (isError) {
     return (
-      <div className="ods-empty-state">
-        <span className="ods-empty-icon">⚠️</span>
-        <div className="ods-empty-title">Unable to load roles</div>
-        <p className="ods-empty-text">
-          {error instanceof Error ? error.message : "Something went wrong."}
-        </p>
-        <button
-          type="button"
-          className="btn btn-primary mt-3"
-          onClick={() => {
-            void refetch();
-          }}
-        >
-          Try again
-        </button>
-      </div>
+      <EmptyState
+        icon="⚠️"
+        title="Unable to load roles"
+        text={error instanceof Error ? error.message : "Something went wrong."}
+        action={
+          <button
+            type="button"
+            className="btn btn-primary mt-3"
+            onClick={() => {
+              void refetch();
+            }}
+          >
+            Try again
+          </button>
+        }
+      />
     );
   }
 
@@ -208,10 +197,7 @@ export default function RolesSection() {
                 {roles.length === 0 ? (
                   <tr>
                     <td colSpan={3}>
-                      <div className="ods-empty-state" style={{ padding: "2rem" }}>
-                        <span className="ods-empty-icon">🛡️</span>
-                        <p className="ods-empty-text">No roles found.</p>
-                      </div>
+                      <EmptyState compact icon="🛡️" text="No roles found." />
                     </td>
                   </tr>
                 ) : (
@@ -263,113 +249,73 @@ export default function RolesSection() {
       </div>
 
       {/* ── Create / Edit Role Modal ─────────────────────────── */}
-      {modalOpen && (
-        <div
-          className="ods-modal-overlay"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              closeModal();
-            }
-          }}
-        >
-          <div
-            className="ods-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="role-modal-title"
-          >
-            <div className="ods-modal-header">
-              <div>
-                <h2 className="ods-modal-title" id="role-modal-title">
-                  {editingRole ? "Edit role" : "Add role"}
-                </h2>
-                <p style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-400)", margin: "0.25rem 0 0" }}>
-                  {editingRole
-                    ? "Update the role name."
-                    : "Create a new role for user accounts."}
-                </p>
-              </div>
-              <button
-                type="button"
-                className="ods-modal-close"
-                aria-label="Close role modal"
-                disabled={createMutation.isPending || updateMutation.isPending}
-                onClick={closeModal}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <form
-              onSubmit={handleSubmit}
-              style={{ padding: "1.5rem", flex: 1, overflowY: "auto" }}
-            >
-              <div className="ods-form-group" style={{ marginBottom: "1rem" }}>
-                <label htmlFor="role-name">Role name</label>
-                <input
-                  id="role-name"
-                  type="text"
-                  value={roleName}
-                  minLength={2}
-                  maxLength={50}
-                  required
-                  placeholder="e.g. Manager"
-                  autoFocus
-                  onChange={(event) => {
-                    setRoleName(event.target.value);
-                  }}
-                />
-              </div>
-
-              {validationError && (
-                <div className="ods-form-message error">
-                  {validationError}
-                </div>
-              )}
-
-              {(createMutation.isError || updateMutation.isError) && (
-                <div className="ods-form-message error">
-                  {createMutation.isError
-                    ? getApiErrorMessage(createMutation.error)
-                    : getApiErrorMessage(updateMutation.error)}
-                </div>
-              )}
-
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  gap: "0.75rem",
-                  paddingTop: "1rem",
-                  borderTop: "1px solid var(--ods-gray-200)",
-                  marginTop: "1rem",
-                }}
-              >
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                  onClick={closeModal}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                >
-                  {createMutation.isPending || updateMutation.isPending
-                    ? "Saving..."
-                    : editingRole
-                      ? "Save changes"
-                      : "Add Role"}
-                </button>
-              </div>
-            </form>
+      <Modal
+        open={modalOpen}
+        onClose={closeModal}
+        title={editingRole ? "Edit role" : "Add role"}
+        description={
+          editingRole ? "Update the role name." : "Create a new role for user accounts."
+        }
+        closeDisabled={createMutation.isPending || updateMutation.isPending}
+      >
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="ods-form-group" style={{ marginBottom: "1rem" }}>
+            <label htmlFor="role-name">Role name</label>
+            <input
+              id="role-name"
+              type="text"
+              placeholder="e.g. Manager"
+              autoFocus
+              aria-invalid={Boolean(errors.name)}
+              {...register("name")}
+            />
+            {errors.name && (
+              <div className="invalid-feedback d-block">{errors.name.message}</div>
+            )}
           </div>
-        </div>
-      )}
+
+          {(createMutation.isError || updateMutation.isError) && (
+            <div className="ods-form-message error">
+              {createMutation.isError
+                ? getApiErrorMessage(createMutation.error)
+                : getApiErrorMessage(updateMutation.error)}
+            </div>
+          )}
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: "0.75rem",
+              paddingTop: "1rem",
+              borderTop: "1px solid var(--ods-gray-200)",
+              marginTop: "1rem",
+            }}
+          >
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              disabled={createMutation.isPending || updateMutation.isPending}
+              onClick={closeModal}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={createMutation.isPending || updateMutation.isPending}
+            >
+              {createMutation.isPending || updateMutation.isPending
+                ? "Saving..."
+                : editingRole
+                  ? "Save changes"
+                  : "Add Role"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {dialog}
     </div>
   );
 }

@@ -8,6 +8,8 @@ import {
   X,
 } from "lucide-react";
 
+import { EmptyState, PageHeader, PageLoader } from "@/components/ui";
+
 import { useAuditLogs } from "../hooks/useAuditLogs";
 
 import type { AuditLog } from "../types/audit-log.types";
@@ -89,78 +91,60 @@ export default function AuditLogsPage() {
   };
 
   if (isLoading) {
-    return (
-      <div
-        style={{
-          display:        "flex",
-          flexDirection:  "column",
-          alignItems:     "center",
-          justifyContent: "center",
-          minHeight:      "60vh",
-          gap:            "1rem",
-        }}
-      >
-        <div className="ods-spinner" />
-        <p style={{ color: "var(--ods-gray-600)", fontSize: "var(--ods-font-size-sm)" }}>
-          Loading audit logs...
-        </p>
-      </div>
-    );
+    return <PageLoader label="Loading audit logs..." />;
   }
 
   if (isError) {
     return (
-      <div className="ods-empty-state">
-        <span className="ods-empty-icon">⚠️</span>
-        <div className="ods-empty-title">Unable to load audit logs</div>
-        <p className="ods-empty-text">
-          {error instanceof Error
+      <EmptyState
+        icon="⚠️"
+        title="Unable to load audit logs"
+        text={
+          error instanceof Error
             ? error.message
-            : "Something went wrong while loading audit logs."}
-        </p>
-        <button
-          type="button"
-          className="btn btn-primary mt-3"
-          onClick={() => {
-            void refetch();
-          }}
-        >
-          Try again
-        </button>
-      </div>
+            : "Something went wrong while loading audit logs."
+        }
+        action={
+          <button
+            type="button"
+            className="btn btn-primary mt-3"
+            onClick={() => {
+              void refetch();
+            }}
+          >
+            Try again
+          </button>
+        }
+      />
     );
   }
 
   return (
     <div>
 
-      {/* ── Page header ─────────────────────────────────────── */}
-      <div className="ods-page-header">
-        <div>
-          <h1 className="page-title">Audit Logs</h1>
-          <p className="page-subtitle">
-            Track user actions and system events.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          className="btn btn-outline-secondary"
-          disabled={isFetching}
-          onClick={() => {
-            void refetch();
-          }}
-          style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-        >
-          <RefreshCw
-            size={15}
-            style={{
-              animation: isFetching ? "ods-spin 0.7s linear infinite" : "none",
+      <PageHeader
+        title="Audit Logs"
+        subtitle="Track user actions and system events."
+        actions={
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            disabled={isFetching}
+            onClick={() => {
+              void refetch();
             }}
-          />
-          {isFetching ? "Refreshing..." : "Refresh"}
-        </button>
-      </div>
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+          >
+            <RefreshCw
+              size={15}
+              style={{
+                animation: isFetching ? "ods-spin 0.7s linear infinite" : "none",
+              }}
+            />
+            {isFetching ? "Refreshing..." : "Refresh"}
+          </button>
+        }
+      />
 
       {/* ── Main panel ──────────────────────────────────────── */}
       <div className="ods-card">
@@ -230,14 +214,11 @@ export default function AuditLogsPage() {
                 {auditLogs.length === 0 ? (
                   <tr>
                     <td colSpan={6}>
-                      <div className="ods-empty-state" style={{ padding: "2rem" }}>
-                        <span className="ods-empty-icon">📋</span>
-                        <p className="ods-empty-text">
-                          {search
-                            ? `No audit logs found for "${search}".`
-                            : "No audit logs found."}
-                        </p>
-                      </div>
+                      <EmptyState
+                        compact
+                        icon="📋"
+                        text={search ? `No audit logs found for "${search}".` : "No audit logs found."}
+                      />
                     </td>
                   </tr>
                 ) : (

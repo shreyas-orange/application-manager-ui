@@ -1,23 +1,21 @@
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import type {
   CloudConfiguration,
   CreateCloudRequest,
 } from "../types/clouds.types";
+import { cloudFormSchema, type CloudFormValues } from "../schemas/cloud.schema";
 
 interface CloudFormProps {
   cloud?: CloudConfiguration | null;
   isSubmitting: boolean;
-  onSubmit: (
-    payload: CreateCloudRequest,
-  ) => void;
+  onSubmit: (payload: CreateCloudRequest) => void;
   onCancel: () => void;
 }
 
-const initialForm: CreateCloudRequest = {
+const EMPTY_FORM: CloudFormValues = {
   name: "",
   provider: "AWS",
   region: "",
@@ -31,106 +29,64 @@ export default function CloudForm({
   onSubmit,
   onCancel,
 }: CloudFormProps) {
-  const [form, setForm] =
-    useState<CreateCloudRequest>(
-      initialForm,
-    );
-
-  const [error, setError] =
-    useState("");
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CloudFormValues>({
+    resolver: zodResolver(cloudFormSchema),
+    defaultValues: EMPTY_FORM,
+  });
 
   useEffect(() => {
-    if (cloud) {
-      setForm({
-        name: cloud.name,
-        provider: cloud.provider,
-        region: cloud.region ?? "",
-        description:
-          cloud.description ?? "",
-        is_active: cloud.is_active,
-      });
+    reset(
+      cloud
+        ? {
+            name: cloud.name,
+            provider: cloud.provider,
+            region: cloud.region ?? "",
+            description: cloud.description ?? "",
+            is_active: cloud.is_active,
+          }
+        : EMPTY_FORM,
+    );
+  }, [cloud, reset]);
 
-      return;
-    }
-
-    setForm(initialForm);
-  }, [cloud]);
-
-  const handleSubmit = (
-    event: React.FormEvent,
-  ) => {
-    event.preventDefault();
-
-    if (!form.name.trim()) {
-      setError(
-        "Cloud configuration name is required.",
-      );
-      return;
-    }
-
-    if (!form.provider) {
-      setError(
-        "Cloud provider is required.",
-      );
-      return;
-    }
-
-    setError("");
-
+  const submit = (values: CloudFormValues) => {
     onSubmit({
-      ...form,
-      name: form.name.trim(),
-      region:
-        form.region?.trim() || undefined,
-      description:
-        form.description?.trim() ||
-        undefined,
+      ...values,
+      region: values.region?.trim() || undefined,
+      description: values.description?.trim() || undefined,
     });
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{ padding: "1.5rem", flex: 1, overflowY: "auto" }}
-    >
-      {error && (
-        <div className="ods-form-message error">
-          {error}
-        </div>
-      )}
-
+    <form onSubmit={handleSubmit(submit)}>
       <div className="ods-form-group" style={{ marginBottom: "1rem" }}>
         <label htmlFor="cloud-name">Name</label>
         <input
           id="cloud-name"
           type="text"
-          value={form.name}
           placeholder="Production AWS"
-          onChange={(event) => {
-            setForm((current: CreateCloudRequest) => ({
-              ...current,
-              name: event.target.value,
-            }));
-          }}
+          aria-invalid={Boolean(errors.name)}
+          {...register("name")}
         />
+        {errors.name && (
+          <div className="invalid-feedback d-block">{errors.name.message}</div>
+        )}
       </div>
 
       <div className="ods-form-group" style={{ marginBottom: "1rem" }}>
         <label htmlFor="cloud-provider">Provider</label>
-        <select
-          id="cloud-provider"
-          value={form.provider}
-          onChange={(event) => {
-            setForm((current: CreateCloudRequest) => ({
-              ...current,
-              provider: event.target.value,
-            }));
-          }}
-        >
+        <select id="cloud-provider" {...register("provider")}>
           <option value="AWS">AWS</option>
           <option value="AZURE">Azure</option>
           <option value="GCP">Google Cloud</option>
         </select>
+        {errors.provider && (
+          <div className="invalid-feedback d-block">{errors.provider.message}</div>
+        )}
       </div>
 
       <div className="ods-form-group" style={{ marginBottom: "1rem" }}>
@@ -138,14 +94,8 @@ export default function CloudForm({
         <input
           id="cloud-region"
           type="text"
-          value={form.region}
           placeholder="ap-south-1"
-          onChange={(event) => {
-            setForm((current: CreateCloudRequest) => ({
-              ...current,
-              region: event.target.value,
-            }));
-          }}
+          {...register("region")}
         />
       </div>
 
@@ -153,33 +103,15 @@ export default function CloudForm({
         <label htmlFor="cloud-description">Description</label>
         <textarea
           id="cloud-description"
-          value={form.description}
           placeholder="Optional description"
           rows={4}
-          onChange={(event) => {
-            setForm((current: CreateCloudRequest) => ({
-              ...current,
-              description: event.target.value,
-            }));
-          }}
+          {...register("description")}
         />
       </div>
 
       <div className="ods-status-toggle" style={{ marginBottom: "1.5rem" }}>
-        <input
-          id="cloud-active"
-          type="checkbox"
-          checked={form.is_active}
-          onChange={(event) => {
-            setForm((current: CreateCloudRequest) => ({
-              ...current,
-              is_active: event.target.checked,
-            }));
-          }}
-        />
-        <label htmlFor="cloud-active">
-          Active configuration
-        </label>
+        <input id="cloud-active" type="checkbox" {...register("is_active")} />
+        <label htmlFor="cloud-active">Active configuration</label>
       </div>
 
       <div

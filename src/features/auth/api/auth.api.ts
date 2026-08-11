@@ -1,10 +1,14 @@
 import { apiClient } from "@/lib/api-client";
+import { tokenService } from "@/services/token.service";
 
 import type {
   AuthResponse,
+  ForgotPasswordPayload,
+  ForgotPasswordResponse,
   LoginPayload,
   LogoutResponse,
   RegisterPayload,
+  ResetPasswordPayload,
   User,
 } from "../types/auth.types";
 
@@ -45,10 +49,30 @@ export async function getCurrentUser(): Promise<User> {
   return response.data;
 }
 
-export async function logoutUser(): Promise<LogoutResponse> {
-  const refreshToken = localStorage.getItem(
-    "application_manager_refresh_token",
+export async function requestPasswordReset(
+  payload: ForgotPasswordPayload,
+): Promise<ForgotPasswordResponse> {
+  const response = await apiClient.post<ForgotPasswordResponse>(
+    "/auth/forgot-password",
+    payload,
   );
+
+  return response.data;
+}
+
+export async function resetPassword(
+  payload: ResetPasswordPayload,
+): Promise<string> {
+  const response = await apiClient.post<string>(
+    "/auth/reset-password",
+    payload,
+  );
+
+  return response.data;
+}
+
+export async function logoutUser(): Promise<LogoutResponse> {
+  const refreshToken = tokenService.getRefreshToken();
 
   const response = await apiClient.post<LogoutResponse>(
     "/auth/logout",

@@ -58,3 +58,17 @@ export function getPriorityBadgeClass(
     return "ods-badge ods-badge-warning";
   return "ods-badge ods-badge-neutral";
 }
+
+export type NormalizedDbSyncupStatus = "Completed" | "In Progress" | "Failed" | "Pending";
+
+/** Buckets a raw status value (e.g. prod_status) for summary counts and filtering. */
+export function normalizeDbSyncupStatus(
+  status: string | null | undefined,
+): NormalizedDbSyncupStatus {
+  const s = String(status ?? "").trim().toLowerCase();
+
+  if (["completed", "complete", "done", "production"].includes(s)) return "Completed";
+  if (["rejected", "cancelled", "failed", "failure", "blocked"].includes(s)) return "Failed";
+  if (["in progress", "in_progress", "requested", "ongoing", "started"].includes(s)) return "In Progress";
+  return "Pending";
+}

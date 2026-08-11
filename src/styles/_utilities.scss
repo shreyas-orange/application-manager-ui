@@ -56,11 +56,38 @@
   }
 }
 
+// Full-height content loader (page-level and section-level loading states)
+.ods-page-loader {
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  min-height:      60vh;
+  gap:             1rem;
+
+  // Compact variant — used inside a card/section rather than a full page
+  &.compact {
+    min-height: 0;
+    padding:    3rem 0;
+  }
+
+  .ods-page-loader-text {
+    color:     var(--ods-gray-600);
+    font-size: var(--ods-font-size-sm);
+    margin:    0;
+  }
+}
+
 // Empty state
 .ods-empty-state {
   text-align:  center;
   padding:     4rem 2rem;
   color:       var(--ods-gray-500);
+
+  // Compact variant — used inside table cells / smaller panels
+  &.compact {
+    padding: 2rem;
+  }
 
   .ods-empty-icon {
     font-size:     3rem;

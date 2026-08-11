@@ -1,5 +1,8 @@
 import { History, Trash2 } from "lucide-react";
 
+import { EmptyState } from "@/components/ui";
+
+import { getStatusBadgeClass } from "../constants";
 import type { DbSyncup } from "../types/db-syncup.types";
 
 interface DbSyncupTableProps {
@@ -18,7 +21,7 @@ export default function DbSyncupTable({
   onHistory,
 }: DbSyncupTableProps) {
   const hasActions = Boolean(onDelete || onHistory);
-  const colSpan = 7;
+  const colSpan = 8;
 
   return (
     <div className="ods-table-wrapper">
@@ -31,6 +34,7 @@ export default function DbSyncupTable({
             <th style={{ minWidth: 130 }}>Basiat</th>
             <th style={{ minWidth: 140 }}>Hosting</th>
             <th style={{ minWidth: 180 }}>Data Anonymization</th>
+            <th style={{ minWidth: 110 }}>Prod Status</th>
             {hasActions && <th style={{ width: 84 }} />}
           </tr>
         </thead>
@@ -38,14 +42,7 @@ export default function DbSyncupTable({
           {items.length === 0 ? (
             <tr>
               <td colSpan={colSpan}>
-                <div
-                  className="ods-empty-state"
-                  style={{ padding: "2rem" }}
-                >
-                  <p className="ods-empty-text">
-                    No DB syncup records found.
-                  </p>
-                </div>
+                <EmptyState compact icon="🗄️" text="No DB syncup records found." />
               </td>
             </tr>
           ) : (
@@ -73,6 +70,11 @@ export default function DbSyncupTable({
                 </td>
                 <td style={{ color: "var(--ods-gray-700)" }}>
                   {item.data_anonymization_status || "—"}
+                </td>
+                <td>
+                  <span className={getStatusBadgeClass(item.prod_status)}>
+                    {item.prod_status || "—"}
+                  </span>
                 </td>
                 {hasActions && (
                   <td>

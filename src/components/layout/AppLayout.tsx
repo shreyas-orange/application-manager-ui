@@ -1,6 +1,6 @@
 // src/components/layout/AppLayout.tsx
 import { useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 import {
   Cloud,
   ScrollText,
@@ -13,7 +13,12 @@ import {
   ChevronRight,
   BarChart3,
   Database,
+  UserCog,
 } from "lucide-react";
+
+import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
+import { useLogout } from "@/features/auth/hooks/useLogout";
+import { getUserRole } from "@/features/auth/utils/get-user-role";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface NavItem {
@@ -71,22 +76,19 @@ const NAV_ITEMS: NavItem[] = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export function AppLayout() {
-  const navigate                        = useNavigate();
   const [sidebarCollapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen]     = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // ── User from localStorage ───────────────────────────────────────
-  const storedUser  = localStorage.getItem("auth_user");
-  const currentUser = storedUser ? JSON.parse(storedUser) : null;
-  const role        = String(currentUser?.role ?? "").trim().toLowerCase();
+  // ── Current user (already cached by ProtectedRoute's query) ───────
+  const { data: currentUser } = useCurrentUser();
+  const role        = getUserRole(currentUser);
   const userInitial = String(currentUser?.email ?? "U").charAt(0).toUpperCase();
 
   // ── Logout ───────────────────────────────────────────────────────
+  const logoutMutation = useLogout();
   const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("auth_user");
-    navigate("/login", { replace: true });
+    logoutMutation.mutate();
   };
 
   // ── Nav link class helper ────────────────────────────────────────
@@ -147,6 +149,15 @@ export function AppLayout() {
               </div>
 
               <div className="ods-dropdown-divider" />
+
+              <NavLink
+                to="/app/profile"
+                className="ods-dropdown-item"
+                onClick={() => setDropdownOpen(false)}
+              >
+                <UserCog size={14} style={{ marginRight: "0.5rem" }} />
+                My Profile
+              </NavLink>
 
               <button
                 className="ods-dropdown-item danger"

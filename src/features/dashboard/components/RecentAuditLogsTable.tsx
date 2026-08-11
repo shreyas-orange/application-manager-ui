@@ -1,4 +1,6 @@
 // src/features/dashboard/components/RecentAuditLogsTable.tsx
+import { EmptyState } from "@/components/ui";
+
 import type { RecentAuditLog } from "../types/dashboard.types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -50,10 +52,7 @@ export function RecentAuditLogsTable({ logs }: RecentAuditLogsTableProps) {
 
         {/* Empty state */}
         {logs.length === 0 ? (
-          <div className="ods-empty-state" style={{ padding: "2rem" }}>
-            <span className="ods-empty-icon">📋</span>
-            <p className="ods-empty-text">No recent audit logs found.</p>
-          </div>
+          <EmptyState compact icon="📋" text="No recent audit logs found." />
         ) : (
 
           /* Log list */

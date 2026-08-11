@@ -5,12 +5,14 @@ import { useForm }                     from "react-hook-form";
 import { zodResolver }                 from "@hookform/resolvers/zod";
 import { Eye, EyeOff, UserPlus }       from "lucide-react";
 
+import { Spinner }                     from "@/components/ui";
+
 import { useRegister }                 from "../hooks/useRegister";
 import { registerSchema, type RegisterFormValues } from "../schemas/register.schema";
 import { getAuthErrorMessage }         from "../utils/auth-error";
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export function RegisterPage() {
+export default function RegisterPage() {
   const navigate         = useNavigate();
   const registerMutation = useRegister();
 
@@ -264,10 +266,7 @@ export function RegisterPage() {
                 gap:            "0.5rem",
               }}
             >
-              <span
-                className="ods-spinner"
-                style={{ width: "1rem", height: "1rem", borderWidth: 2 }}
-              />
+              <Spinner size={16} />
               Creating account...
             </span>
           ) : (

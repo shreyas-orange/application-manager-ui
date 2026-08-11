@@ -1,4 +1,6 @@
 // src/features/dashboard/components/RecentUploadsTable.tsx
+import { EmptyState } from "@/components/ui";
+
 import type { RecentUpload } from "../types/dashboard.types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -51,10 +53,7 @@ export function RecentUploadsTable({ uploads }: RecentUploadsTableProps) {
 
         {/* Empty state */}
         {uploads.length === 0 ? (
-          <div className="ods-empty-state" style={{ padding: "2rem" }}>
-            <span className="ods-empty-icon">📂</span>
-            <p className="ods-empty-text">No recent uploads found.</p>
-          </div>
+          <EmptyState compact icon="📂" text="No recent uploads found." />
         ) : (
 
           /* Table */

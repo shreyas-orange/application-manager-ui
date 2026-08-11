@@ -1,6 +1,6 @@
 import {
-  ChangeEvent,
-  DragEvent,
+  type ChangeEvent,
+  type DragEvent,
   useRef,
   useState,
 } from "react";
@@ -11,6 +11,8 @@ import {
   UploadCloud,
   X,
 } from "lucide-react";
+
+import { PageHeader } from "@/components/ui";
 
 import { useUploadFile } from "../hooks/useUploadFile";
 
@@ -209,15 +211,10 @@ export default function UploadFilePage() {
   return (
     <div>
 
-      {/* ── Page header ─────────────────────────────────────── */}
-      <div className="ods-page-header">
-        <div>
-          <h1 className="page-title">Upload Files</h1>
-          <p className="page-subtitle">
-            Upload application data using CSV or Excel files.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Upload Files"
+        subtitle="Upload application data using CSV or Excel files."
+      />
 
       {/* ── Upload Card ─────────────────────────────────────── */}
       <div className="ods-upload-card">

@@ -41,7 +41,7 @@ export async function updateRole(
   data: UpdateRoleRequest,
 ): Promise<Role> {
   const response =
-    await apiClient.put<Role>(
+    await apiClient.patch<Role>(
       `/roles/${roleId}`,
       data,
     );

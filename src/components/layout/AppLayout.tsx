@@ -144,7 +144,7 @@ export function AppLayout() {
                   {currentUser?.email ?? "Current User"}
                 </strong>
                 <span style={{ textTransform: "capitalize" }}>
-                  {currentUser?.role ?? "User"}
+                  {role || "User"}
                 </span>
               </div>
 
@@ -267,7 +267,7 @@ export function AppLayout() {
                     textTransform: "capitalize",
                   }}
                 >
-                  {currentUser?.role ?? "User"}
+                  {role || "User"}
                 </div>
               </div>
             </div>

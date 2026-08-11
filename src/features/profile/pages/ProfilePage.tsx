@@ -74,7 +74,7 @@ export default function ProfilePage() {
                 Name
               </label>
               <div style={{ fontSize: "var(--ods-font-size-sm)", color: "var(--ods-gray-900)" }}>
-                {user?.name || "—"}
+                {[user?.first_name, user?.last_name].filter(Boolean).join(" ") || "—"}
               </div>
             </div>
             <div>

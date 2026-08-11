@@ -9,7 +9,7 @@ export function getUserRole(user: Pick<User, "role"> | null | undefined): UserRo
   const rawRole =
     typeof user?.role === "string"
       ? user.role
-      : ((user?.role as unknown as { name?: string } | undefined)?.name ?? "");
+      : (user?.role?.name ?? "");
 
   return rawRole.trim().toLowerCase() as UserRole | "";
 }

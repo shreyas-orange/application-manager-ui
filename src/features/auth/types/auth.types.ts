@@ -1,10 +1,18 @@
 export type UserRole = "admin" | "manager" | "user";
 
-export interface User {
-  id: string;
+export interface UserRoleInfo {
+  id: number;
   name: string;
+}
+
+export interface User {
+  id: number;
+  first_name: string;
+  last_name: string;
   email: string;
-  role: UserRole;
+  // Observed as either a role object or a plain string depending on the
+  // endpoint — see getUserRole(), which normalizes both.
+  role: UserRoleInfo | string | null;
   is_active: boolean;
   created_at?: string;
   updated_at?: string;

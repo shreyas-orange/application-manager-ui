@@ -238,7 +238,7 @@ export default function ApplicationDetailsPage() {
         }
         actions={
           activeTab === "application" &&
-          (!editing ? (
+          !editing && (
             <button
               type="button"
               className="btn btn-primary"
@@ -248,18 +248,7 @@ export default function ApplicationDetailsPage() {
               <Pencil size={15} />
               Edit
             </button>
-          ) : (
-            <button
-              type="button"
-              className="btn btn-outline-secondary"
-              disabled={updateMutation.isPending}
-              onClick={cancelEditing}
-              style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
-            >
-              <X size={15} />
-              Cancel
-            </button>
-          ))
+          )
         }
       />
 
@@ -291,47 +280,68 @@ export default function ApplicationDetailsPage() {
             </div>
           )}
 
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form>
             <div className="ods-card">
               <div className="ods-card-body">
-                <ApplicationEditFormFields readOnly={!editing} />
+                <ApplicationEditFormFields readOnly />
               </div>
-
-              {editing && (
-                <div
-                  className="ods-card-footer"
-                  style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}
-                >
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary"
-                    disabled={updateMutation.isPending}
-                    onClick={cancelEditing}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={updateMutation.isPending}
-                    style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
-                  >
-                    {updateMutation.isPending ? (
-                      <>
-                        <Spinner size={16} />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save size={15} />
-                        Save changes
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
             </div>
           </form>
+
+          {editing && (
+            <>
+              <div className="ods-drawer-overlay" onMouseDown={cancelEditing} />
+              <aside
+                className="ods-drawer open ods-drawer--wide"
+                onMouseDown={(event) => event.stopPropagation()}
+              >
+                <div className="ods-drawer-header">
+                  <div>
+                    <div className="ods-drawer-title">Edit Application</div>
+                    <div style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-400)", marginTop: "0.15rem" }}>
+                      {application.application_name}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="ods-drawer-close"
+                    onClick={cancelEditing}
+                    aria-label="Close edit application drawer"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <form onSubmit={form.handleSubmit(onSubmit)} style={{ display: "contents" }}>
+                  <div className="ods-drawer-body">
+                    <ApplicationEditFormFields readOnly={false} />
+                  </div>
+                  <div className="ods-drawer-footer">
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      disabled={updateMutation.isPending}
+                      onClick={cancelEditing}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={updateMutation.isPending}
+                      style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+                    >
+                      {updateMutation.isPending ? (
+                        <><Spinner size={16} />Saving...</>
+                      ) : (
+                        <><Save size={15} />Save changes</>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </aside>
+            </>
+          )}
         </FormProvider>
       )}
     </div>

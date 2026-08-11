@@ -1,4 +1,4 @@
-import { History, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 import { EmptyState } from "@/components/ui";
 
@@ -10,7 +10,6 @@ interface DbSyncupTableProps {
   deletingId?: number | null;
   onRowClick?: (item: DbSyncup) => void;
   onDelete?: (item: DbSyncup) => void;
-  onHistory?: (item: DbSyncup) => void;
 }
 
 export default function DbSyncupTable({
@@ -18,9 +17,8 @@ export default function DbSyncupTable({
   deletingId = null,
   onRowClick,
   onDelete,
-  onHistory,
 }: DbSyncupTableProps) {
-  const hasActions = Boolean(onDelete || onHistory);
+  const hasActions = Boolean(onDelete);
   const colSpan = 8;
 
   return (
@@ -35,7 +33,7 @@ export default function DbSyncupTable({
             <th style={{ minWidth: 140 }}>Hosting</th>
             <th style={{ minWidth: 180 }}>Data Anonymization</th>
             <th style={{ minWidth: 110 }}>Prod Status</th>
-            {hasActions && <th style={{ width: 84 }} />}
+            {hasActions && <th style={{ width: 50 }} />}
           </tr>
         </thead>
         <tbody>
@@ -78,27 +76,9 @@ export default function DbSyncupTable({
                 </td>
                 {hasActions && (
                   <td>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "0.25rem",
-                      justifyContent: "center",
-                    }}
-                  >
                     <button
                       type="button"
-                      className="ods-icon-btn"
-                      title="View history"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onHistory?.(item);
-                      }}
-                    >
-                      <History size={14} />
-                    </button>
-                    <button
-                      type="button"
-                      className="ods-icon-btn"
+                      className="ods-icon-btn danger"
                       title="Delete syncup"
                       disabled={deletingId === item.id}
                       onClick={(e) => {
@@ -108,7 +88,6 @@ export default function DbSyncupTable({
                     >
                       <Trash2 size={14} />
                     </button>
-                  </div>
                   </td>
                 )}
               </tr>

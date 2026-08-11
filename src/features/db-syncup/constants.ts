@@ -26,11 +26,36 @@ export const ENVIRONMENT_STATUS_FIELDS: {
   label: string;
 }[] = [
   { key: "dev_status",        label: "Dev" },
+  { key: "demo_status",       label: "Demo" },
   { key: "qa_status",         label: "QA" },
   { key: "uat_am_status",     label: "UAT / AM" },
   { key: "pprod_perf_status", label: "PP / Perf" },
   { key: "mnt_e_status",      label: "MNT / E" },
+  { key: "bench_status",      label: "Bench" },
+  { key: "staging_status",    label: "Staging" },
+  { key: "int_status",        label: "Int" },
   { key: "prod_status",       label: "Prod" },
+];
+
+/**
+ * Environment type codes as used by DbSyncEnvironmentRequest.environment
+ * (e.g. "DEV", "UAT_AM") — distinct from ENVIRONMENT_STATUS_FIELDS, which
+ * keys off the flat form-field names (e.g. "dev_status").
+ */
+export const ENVIRONMENT_TYPE_OPTIONS: {
+  value: string;
+  label: string;
+}[] = [
+  { value: "DEV",         label: "Dev" },
+  { value: "DEMO",        label: "Demo" },
+  { value: "QA",          label: "QA" },
+  { value: "UAT_AM",      label: "UAT / AM" },
+  { value: "PPROD_PERF",  label: "PP / Perf" },
+  { value: "MNT_E",       label: "MNT / E" },
+  { value: "BENCH",       label: "Bench" },
+  { value: "STAGING",     label: "Staging" },
+  { value: "INT",         label: "Int" },
+  { value: "PROD",        label: "Prod" },
 ];
 
 export function getStatusBadgeClass(

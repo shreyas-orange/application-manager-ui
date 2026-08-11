@@ -87,6 +87,10 @@ export const router = createBrowserRouter([
                 element: lazyPage(() => import("@/features/db-syncup/pages/DbSyncupPage")),
               },
               {
+                path: "db-syncups/:id",
+                element: lazyPage(() => import("@/features/db-syncup/pages/DbSyncupDetailsPage")),
+              },
+              {
                 path: "forbidden",
                 element: <ForbiddenPage />,
               },

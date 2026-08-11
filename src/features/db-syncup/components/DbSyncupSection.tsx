@@ -17,15 +17,16 @@ import type { CreateDbSyncupPayload, DbSyncup } from "../types/db-syncup.types";
 
 export default function DbSyncupSection({
   application,
+  applicationId,
 }: {
   application: Application;
+  applicationId: number;
 }) {
   const navigate = useNavigate();
   const { confirm, dialog } = useConfirmDialog();
 
-  const appId = application.id;
   const { data, isLoading, isError, error, refetch, isFetching } =
-    useDbSyncups(appId);
+    useDbSyncups(applicationId);
   const createMutation = useCreateDbSyncup();
   const deleteMutation = useDeleteDbSyncup();
 
@@ -179,7 +180,13 @@ export default function DbSyncupSection({
       {/* ── Create drawer ─────────────────────────────────────── */}
       <DbSyncupCreateDrawer
         application={application}
+<<<<<<< HEAD
         isOpen={creating}
+=======
+        applicationId={applicationId}
+        item={editingItem}
+        isOpen={editingItem !== null || creating}
+>>>>>>> 58ca5666021937c0451ec2e6c0f31599c32c5459
         nextSerialNumber={nextSerialNumber}
         onClose={() => setCreating(false)}
         onSave={handleCreate}

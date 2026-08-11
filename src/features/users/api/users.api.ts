@@ -12,6 +12,8 @@ export interface GetUsersParams {
   page: number;
   pageSize: number;
   search?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
 
 export async function getUsers(
@@ -24,6 +26,8 @@ export async function getUsers(
         params: {
           page: params.page,
           page_size: params.pageSize,
+          sort_by: params.sortBy,
+          sort_order: params.sortOrder,
           search:
             params.search?.trim() || undefined,
         },

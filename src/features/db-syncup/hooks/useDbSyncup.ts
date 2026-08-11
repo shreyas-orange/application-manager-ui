@@ -27,6 +27,7 @@ export function useDbSyncups(applicationId: number) {
   return useQuery({
     queryKey: dbSyncupKeys.byApplication(applicationId),
     queryFn: () => getDbSyncupsByApplication(applicationId),
+    enabled: Number.isFinite(applicationId) && applicationId > 0,
   });
 }
 

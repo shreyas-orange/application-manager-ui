@@ -124,13 +124,34 @@ export interface DbSyncEnvironmentUpdate {
 export interface DbSyncRequestUpdate {
   id: number;
   assigned_to_user_id?: number | null;
+  application_priority?: string;
   remarks?: string;
   environments?: DbSyncEnvironmentUpdate[];
 }
 
 export interface UpdateDbSyncupPayload {
+  application_name?: string;
+  carto_id?: string;
+  basicat?: string;
+  domain?: string;
+  dx_uid?: string;
+  mcp_id?: string;
+  hosting?: string;
+  reason?: string;
+  data_anonymization_status?: string;
   db_validation?: string;
   migration_incharge?: string;
+  date_of_request?: string;
+  environment_count?: number;
   remarks?: string;
+  dev_status?: string;
+  qa_status?: string;
+  uat_am_status?: string;
+  pprod_perf_status?: string;
+  mnt_e_status?: string;
+  prod_status?: string;
+  environment_priority?: string;
+  application_priority?: string;
+  time_taken_in_prod?: string;
   request?: DbSyncRequestUpdate;
 }

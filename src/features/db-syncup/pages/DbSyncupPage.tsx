@@ -4,7 +4,6 @@ import { Plus, RefreshCw } from "lucide-react";
 
 import { useAllApplications } from "@/features/applications/hooks/useAllApplications";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { normalizeValue } from "@/lib/format";
 import { EmptyState, PageHeader, PageLoader, useConfirmDialog } from "@/components/ui";
 
 import DbSyncupCreateDrawer from "../components/DbSyncupCreateDrawer";
@@ -25,15 +24,6 @@ export default function DbSyncupPage() {
   const navigate = useNavigate();
   const { confirm, dialog } = useConfirmDialog();
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    isFetching,
-    refetch,
-  } = useAllDbSyncups();
-
   const applicationsQuery = useAllApplications();
   const applications = applicationsQuery.data?.items ?? [];
   const createMutation = useCreateDbSyncup();
@@ -48,43 +38,50 @@ export default function DbSyncupPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [domainFilter, setDomainFilter] = useState("all");
-  const [hostingFilter, setHostingFilter] = useState("all");
+  const [domainFilter, setDomainFilter] = useState("");
+  const [cloudFilter, setCloudFilter] = useState("");
+  const [environmentFilter, setEnvironmentFilter] = useState("");
+  const hasApiFilters = Boolean(
+    search || domainFilter || cloudFilter || environmentFilter,
+  );
+
+  const { data, isLoading, isError, error, isFetching, refetch } = useAllDbSyncups({
+    pageSize: 100,
+    search,
+    domain: domainFilter,
+    cloud: cloudFilter,
+    environment: environmentFilter,
+  });
 
   const items = useMemo(() => data ?? [], [data]);
 
   const domains = useMemo(() => {
     const values = new Set<string>();
-    items.forEach((item) => {
-      if (item.domain) values.add(item.domain);
+    applications.forEach((application) => {
+      const domain = application.domain?.trim();
+      if (domain) values.add(domain);
     });
     return Array.from(values).sort();
-  }, [items]);
+  }, [applications]);
 
-  const hostingOptions = useMemo(() => {
+  const cloudOptions = useMemo(() => {
     const values = new Set<string>();
-    items.forEach((item) => {
-      if (item.hosting) values.add(item.hosting);
+    applications.forEach((application) => {
+      application.cloud_mappings.forEach((mapping) => {
+        const cloud = mapping.cloud?.name?.trim();
+        if (cloud) values.add(cloud);
+      });
     });
     return Array.from(values).sort();
-  }, [items]);
+  }, [applications]);
 
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
-      const matchesSearch =
-        !search ||
-        normalizeValue(item.application_name).includes(normalizeValue(search)) ||
-        normalizeValue(item.carto_id).includes(normalizeValue(search)) ||
-        normalizeValue(item.domain).includes(normalizeValue(search));
       const matchesStatus =
         statusFilter === "all" || normalizeDbSyncupStatus(item.prod_status) === statusFilter;
-      const matchesDomain =
-        domainFilter === "all" || normalizeValue(item.domain) === normalizeValue(domainFilter);
-      const matchesHosting =
-        hostingFilter === "all" || normalizeValue(item.hosting) === normalizeValue(hostingFilter);
-      return matchesSearch && matchesStatus && matchesDomain && matchesHosting;
+      return matchesStatus;
     });
-  }, [items, search, statusFilter, domainFilter, hostingFilter]);
+  }, [items, statusFilter]);
 
   // ── Summary counts (from filtered) ───────────────────────────────
   const summary = useMemo(() => {
@@ -128,8 +125,9 @@ export default function DbSyncupPage() {
     setSearchInput("");
     setSearch("");
     setStatusFilter("all");
-    setDomainFilter("all");
-    setHostingFilter("all");
+    setDomainFilter("");
+    setCloudFilter("");
+    setEnvironmentFilter("");
     setPage(1);
   };
 
@@ -247,7 +245,7 @@ export default function DbSyncupPage() {
         failed={summary.failed}
       />
 
-      {items.length === 0 ? (
+      {items.length === 0 && !hasApiFilters ? (
         <div className="ods-card" style={{ padding: "3rem" }}>
           <EmptyState icon="🗄️" title="No DB syncup data" text="No DB syncup records found yet." />
         </div>
@@ -262,9 +260,11 @@ export default function DbSyncupPage() {
             domainFilter={domainFilter}
             onDomainFilterChange={(value) => { setDomainFilter(value); setPage(1); }}
             domains={domains}
-            hostingFilter={hostingFilter}
-            onHostingFilterChange={(value) => { setHostingFilter(value); setPage(1); }}
-            hostingOptions={hostingOptions}
+            cloudFilter={cloudFilter}
+            onCloudFilterChange={(value) => { setCloudFilter(value); setPage(1); }}
+            cloudOptions={cloudOptions}
+            environmentFilter={environmentFilter}
+            onEnvironmentFilterChange={(value) => { setEnvironmentFilter(value); setPage(1); }}
             onClearFilters={handleClearFilters}
           />
 

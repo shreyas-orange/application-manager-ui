@@ -18,15 +18,37 @@ export async function getDbSyncupsByApplication(
   return response.data;
 }
 
-export async function getDbSyncups(): Promise<DbSyncup[]> {
+export interface GetDbSyncupsParams {
+  page?: number;
+  pageSize?: number;
+  applicationId?: number;
+  search?: string;
+  domain?: string;
+  cloud?: string;
+  environment?: string;
+}
+
+export async function getDbSyncups(
+  params: GetDbSyncupsParams = {},
+): Promise<DbSyncup[]> {
   const response =
     await apiClient.get<
-      DbSyncup[] | { items: DbSyncup[] }
-    >("/db-syncups");
+      DbSyncup[] | { items?: DbSyncup[]; data?: DbSyncup[] }
+    >("/db-syncups", {
+      params: {
+        page: params.page ?? 1,
+        page_size: params.pageSize ?? 100,
+        application_id: params.applicationId || undefined,
+        search: params.search || undefined,
+        domain: params.domain || undefined,
+        cloud: params.cloud || undefined,
+        environment: params.environment || undefined,
+      },
+    });
 
   return Array.isArray(response.data)
     ? response.data
-    : (response.data?.items ?? []);
+    : (response.data?.items ?? response.data?.data ?? []);
 }
 
 export async function createDbSyncup(

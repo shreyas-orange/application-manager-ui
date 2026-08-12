@@ -9,6 +9,7 @@ import {
   deleteDbSyncup,
   getDbSyncups,
   getDbSyncupsByApplication,
+  type GetDbSyncupsParams,
   updateDbSyncup,
 } from "../api/db-syncup.api";
 
@@ -31,10 +32,10 @@ export function useDbSyncups(applicationId: number) {
   });
 }
 
-export function useAllDbSyncups() {
+export function useAllDbSyncups(params: GetDbSyncupsParams = {}) {
   return useQuery({
-    queryKey: dbSyncupKeys.all,
-    queryFn: () => getDbSyncups(),
+    queryKey: [...dbSyncupKeys.all, "list", params] as const,
+    queryFn: () => getDbSyncups(params),
   });
 }
 

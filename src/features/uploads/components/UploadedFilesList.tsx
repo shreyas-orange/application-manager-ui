@@ -36,13 +36,13 @@ function formatDate(
   value?: string,
 ): string {
   if (!value) {
-    return "—";
+    return "NA";
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "—";
+    return "NA";
   }
 
   return date.toLocaleString();

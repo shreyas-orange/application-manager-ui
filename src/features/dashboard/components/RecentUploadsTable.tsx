@@ -94,7 +94,7 @@ export function RecentUploadsTable({ uploads }: RecentUploadsTableProps) {
 
                     {/* Uploaded by */}
                     <td style={{ color: "var(--ods-gray-600)" }}>
-                      {upload.uploaded_by || "—"}
+                      {upload.uploaded_by || "NA"}
                     </td>
 
                     {/* Date */}

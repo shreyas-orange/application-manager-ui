@@ -1,4 +1,5 @@
 import { type FormEvent, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, RefreshCw } from "lucide-react";
 
 import { useAllApplications } from "@/features/applications/hooks/useAllApplications";
@@ -6,8 +7,7 @@ import { getApiErrorMessage } from "@/lib/api-error";
 import { normalizeValue } from "@/lib/format";
 import { EmptyState, PageHeader, PageLoader, useConfirmDialog } from "@/components/ui";
 
-import DbSyncupEditDrawer from "../components/DbSyncupEditDrawer";
-import DbSyncupHistoryModal from "../components/DbSyncupHistoryModal";
+import DbSyncupCreateDrawer from "../components/DbSyncupCreateDrawer";
 import DbSyncupTable from "../components/DbSyncupTable";
 import DbSyncupSummaryCards from "../components/DbSyncupSummaryCards";
 import DbSyncupToolbar from "../components/DbSyncupToolbar";
@@ -16,17 +16,13 @@ import {
   useAllDbSyncups,
   useCreateDbSyncup,
   useDeleteDbSyncup,
-  useUpdateDbSyncup,
 } from "../hooks/useDbSyncup";
-import type {
-  CreateDbSyncupPayload,
-  DbSyncup,
-  UpdateDbSyncupPayload,
-} from "../types/db-syncup.types";
+import type { CreateDbSyncupPayload, DbSyncup } from "../types/db-syncup.types";
 
 const PAGE_SIZE = 10;
 
 export default function DbSyncupPage() {
+  const navigate = useNavigate();
   const { confirm, dialog } = useConfirmDialog();
 
   const {
@@ -41,13 +37,10 @@ export default function DbSyncupPage() {
   const applicationsQuery = useAllApplications();
   const applications = applicationsQuery.data?.items ?? [];
   const createMutation = useCreateDbSyncup();
-  const updateMutation = useUpdateDbSyncup();
   const deleteMutation = useDeleteDbSyncup();
 
   const [page, setPage] = useState(1);
-  const [editingItem, setEditingItem] = useState<DbSyncup | null>(null);
   const [creating, setCreating] = useState(false);
-  const [historyItem, setHistoryItem] = useState<DbSyncup | null>(null);
   const [message, setMessage] = useState("");
   const [pageError, setPageError] = useState("");
 
@@ -120,11 +113,6 @@ export default function DbSyncupPage() {
     (app) => !syncedApplicationIds.has(app.id),
   );
 
-  const editingApplication =
-    editingItem
-      ? applications.find((app) => app.id === editingItem.application_id) ?? null
-      : null;
-
   const nextSerialNumber =
     items.length > 0
       ? Math.max(...items.map((i) => i.serial_number)) + 1
@@ -145,23 +133,11 @@ export default function DbSyncupPage() {
     setPage(1);
   };
 
-  const handleSave = async (
-    payload: CreateDbSyncupPayload | UpdateDbSyncupPayload,
-    syncupId?: number,
-  ) => {
+  const handleCreate = async (payload: CreateDbSyncupPayload) => {
     setPageError("");
     setMessage("");
-
-    if (syncupId != null) {
-      await updateMutation.mutateAsync({
-        syncupId,
-        payload: payload as UpdateDbSyncupPayload,
-      });
-      setMessage("DB syncup updated successfully.");
-    } else {
-      await createMutation.mutateAsync(payload as CreateDbSyncupPayload);
-      setMessage("DB syncup created successfully.");
-    }
+    await createMutation.mutateAsync(payload);
+    setMessage("DB syncup created successfully.");
   };
 
   const handleDelete = async (item: DbSyncup) => {
@@ -238,7 +214,6 @@ export default function DbSyncupPage() {
               type="button"
               className="btn btn-primary"
               onClick={() => {
-                setEditingItem(null);
                 setPageError("");
                 setCreating(true);
               }}
@@ -305,13 +280,8 @@ export default function DbSyncupPage() {
             <DbSyncupTable
               items={pagedItems}
               deletingId={deleteMutation.isPending ? (deleteMutation.variables ?? null) : null}
-              onRowClick={(item) => {
-                setCreating(false);
-                setPageError("");
-                setEditingItem(item);
-              }}
+              onRowClick={(item) => navigate(`/app/db-syncups/${item.id}`)}
               onDelete={handleDelete}
-              onHistory={(item) => setHistoryItem(item)}
             />
           </div>
 
@@ -347,26 +317,14 @@ export default function DbSyncupPage() {
         </div>
       )}
 
-      {/* ── Edit / Create drawer ────────────────────────────── */}
-      <DbSyncupEditDrawer
-        application={editingApplication}
-        item={editingItem}
-        isOpen={editingItem !== null || creating}
+      {/* ── Create drawer ────────────────────────────────────── */}
+      <DbSyncupCreateDrawer
+        application={null}
+        isOpen={creating}
         nextSerialNumber={nextSerialNumber}
-        wide={editingItem !== null}
         applications={availableApplications}
-        onClose={() => {
-          setEditingItem(null);
-          setCreating(false);
-        }}
-        onSave={handleSave}
-      />
-
-      {/* ── History modal ───────────────────────────────────── */}
-      <DbSyncupHistoryModal
-        syncup={historyItem}
-        isOpen={historyItem !== null}
-        onClose={() => setHistoryItem(null)}
+        onClose={() => setCreating(false)}
+        onSave={handleCreate}
       />
 
       {dialog}

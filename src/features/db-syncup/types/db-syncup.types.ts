@@ -1,16 +1,19 @@
 export type DbSyncupStatusField =
   | "dev_status"
+  | "demo_status"
   | "qa_status"
   | "uat_am_status"
   | "pprod_perf_status"
   | "mnt_e_status"
+  | "bench_status"
+  | "staging_status"
+  | "int_status"
   | "prod_status";
 
 export type DbSyncupPriority =
-  | "LOW"
-  | "MEDIUM"
-  | "HIGH"
-  | "CRITICAL";
+  | "P1"
+  | "P2"
+  | "P3";
 
 export interface DbSyncEnvironmentRequest {
   id: number;
@@ -60,13 +63,15 @@ export interface DbSyncup {
   migration_incharge: string;
   date_of_request: string;
   dev_status: string;
+  demo_status: string;
   qa_status: string;
   uat_am_status: string;
   pprod_perf_status: string;
   mnt_e_status: string;
+  bench_status: string;
+  staging_status: string;
+  int_status: string;
   prod_status: string;
-  environment_priority: string;
-  application_priority: string;
   time_taken_in_prod: string;
   ns_migration_progress?: string | null;
   requests: DbSyncRequest[];
@@ -89,10 +94,14 @@ export interface CreateDbSyncupPayload {
   migration_incharge: string;
   date_of_request: string;
   dev_status: string;
+  demo_status: string;
   qa_status: string;
   uat_am_status: string;
   pprod_perf_status: string;
   mnt_e_status: string;
+  bench_status: string;
+  staging_status: string;
+  int_status: string;
   prod_status: string;
   environment_priority: string;
   application_priority: string;
@@ -102,7 +111,10 @@ export interface CreateDbSyncupPayload {
 }
 
 export interface DbSyncEnvironmentUpdate {
-  id: number;
+  /** Omit to request a new environment — `environment` must be set instead. */
+  id?: number;
+  /** Required when creating a new environment (id omitted). e.g. "DEV", "PROD" */
+  environment?: string;
   request_status?: string;
   priority?: string;
   remarks?: string;

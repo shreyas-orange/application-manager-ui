@@ -18,7 +18,7 @@ const STATUS_STYLES: Record<string, { color: string; background: string }> = {
 };
 
 function formatDate(v: string | null): string {
-  if (!v) return "—";
+  if (!v) return "NA";
   return v.slice(0, 10);
 }
 
@@ -39,7 +39,7 @@ function getUniqueValues(items: RoadmapItem[], key: keyof RoadmapItem): string[]
 }
 
 function StatusBadge({ status }: { status: RoadmapStatus }) {
-  if (!status) return <span style={{ color: "var(--ods-gray-400)" }}>—</span>;
+  if (!status) return <span style={{ color: "var(--ods-gray-400)" }}>NA</span>;
   const style = STATUS_STYLES[status];
   const label = STATUS_OPTIONS.find((s) => s.value === status)?.label ?? status;
   return (
@@ -321,7 +321,7 @@ export default function RoadmapTable({ items, onEdit }: RoadmapTableProps) {
                     {!isCollapsed &&
                       group.items.map((item) => {
                         const isExpanded = expandedActivity.has(item.id);
-                        const activityText = item.activity || "—";
+                        const activityText = item.activity || "NA";
                         const needsTruncation = activityText.length > 80;
 
                         return (
@@ -384,7 +384,7 @@ export default function RoadmapTable({ items, onEdit }: RoadmapTableProps) {
                                 fontSize: "var(--ods-font-size-xs)",
                               }}
                             >
-                              {item.environment || "—"}
+                              {item.environment || "NA"}
                             </td>
                             <td
                               style={{
@@ -392,7 +392,7 @@ export default function RoadmapTable({ items, onEdit }: RoadmapTableProps) {
                                 fontSize: "var(--ods-font-size-xs)",
                               }}
                             >
-                              {item.section_name || "—"}
+                              {item.section_name || "NA"}
                             </td>
                             <td>
                               <StatusBadge status={item.status} />
@@ -426,7 +426,7 @@ export default function RoadmapTable({ items, onEdit }: RoadmapTableProps) {
                               }}
                               title={item.responsible_teams}
                             >
-                              {item.responsible_teams || "—"}
+                              {item.responsible_teams || "NA"}
                             </td>
                             <td
                               style={{
@@ -439,7 +439,7 @@ export default function RoadmapTable({ items, onEdit }: RoadmapTableProps) {
                               }}
                               title={item.assigned_resources}
                             >
-                              {item.assigned_resources || "—"}
+                              {item.assigned_resources || "NA"}
                             </td>
                             <td style={{ padding: "0.625rem 0.5rem" }}>
                               <button

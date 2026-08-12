@@ -204,7 +204,7 @@ function DrawerSelect({
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >
-        <option value="">—</option>
+        <option value="">NA</option>
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}

@@ -82,7 +82,7 @@ export default function CloudTable({
                 </td>
 
                 <td style={{ color: "var(--ods-gray-600)" }}>
-                  {cloud.region || "—"}
+                  {cloud.region || "NA"}
                 </td>
 
                 <td>

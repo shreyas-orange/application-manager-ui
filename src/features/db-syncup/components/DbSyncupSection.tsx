@@ -1,24 +1,19 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, RefreshCw } from "lucide-react";
 
 import type { Application } from "@/features/applications/types/application.types";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { EmptyState, PageLoader, useConfirmDialog } from "@/components/ui";
 
-import DbSyncupEditDrawer from "./DbSyncupEditDrawer";
-import DbSyncupHistoryModal from "./DbSyncupHistoryModal";
+import DbSyncupCreateDrawer from "./DbSyncupCreateDrawer";
 import DbSyncupTable from "./DbSyncupTable";
 import {
   useCreateDbSyncup,
   useDbSyncups,
   useDeleteDbSyncup,
-  useUpdateDbSyncup,
 } from "../hooks/useDbSyncup";
-import type {
-  CreateDbSyncupPayload,
-  DbSyncup,
-  UpdateDbSyncupPayload,
-} from "../types/db-syncup.types";
+import type { CreateDbSyncupPayload, DbSyncup } from "../types/db-syncup.types";
 
 export default function DbSyncupSection({
   application,
@@ -27,17 +22,15 @@ export default function DbSyncupSection({
   application: Application;
   applicationId: number;
 }) {
+  const navigate = useNavigate();
   const { confirm, dialog } = useConfirmDialog();
 
   const { data, isLoading, isError, error, refetch, isFetching } =
     useDbSyncups(applicationId);
   const createMutation = useCreateDbSyncup();
-  const updateMutation = useUpdateDbSyncup();
   const deleteMutation = useDeleteDbSyncup();
 
-  const [editingItem, setEditingItem] = useState<DbSyncup | null>(null);
   const [creating, setCreating] = useState(false);
-  const [historyItem, setHistoryItem] = useState<DbSyncup | null>(null);
   const [message, setMessage] = useState("");
   const [pageError, setPageError] = useState("");
 
@@ -48,23 +41,11 @@ export default function DbSyncupSection({
       ? Math.max(...items.map((i) => i.serial_number)) + 1
       : 1;
 
-  const handleSave = async (
-    payload: CreateDbSyncupPayload | UpdateDbSyncupPayload,
-    syncupId?: number,
-  ) => {
+  const handleCreate = async (payload: CreateDbSyncupPayload) => {
     setPageError("");
     setMessage("");
-
-    if (syncupId != null) {
-      await updateMutation.mutateAsync({
-        syncupId,
-        payload: payload as UpdateDbSyncupPayload,
-      });
-      setMessage("DB syncup updated successfully.");
-    } else {
-      await createMutation.mutateAsync(payload as CreateDbSyncupPayload);
-      setMessage("DB syncup created successfully.");
-    }
+    await createMutation.mutateAsync(payload);
+    setMessage("DB syncup created successfully.");
   };
 
   const handleDelete = async (item: DbSyncup) => {
@@ -150,7 +131,6 @@ export default function DbSyncupSection({
             type="button"
             className="btn btn-primary btn-sm"
             onClick={() => {
-              setEditingItem(null);
               setPageError("");
               setCreating(true);
             }}
@@ -190,38 +170,20 @@ export default function DbSyncupSection({
             <DbSyncupTable
               items={items}
               deletingId={deleteMutation.isPending ? (deleteMutation.variables ?? null) : null}
-              onRowClick={(item) => {
-                setCreating(false);
-                setPageError("");
-                setEditingItem(item);
-              }}
+              onRowClick={(item) => navigate(`/app/db-syncups/${item.id}`)}
               onDelete={handleDelete}
-              onHistory={(item) => setHistoryItem(item)}
             />
           </div>
         </div>
       )}
 
-      {/* ── Edit / Create drawer ─────────────────────────────── */}
-      <DbSyncupEditDrawer
+      {/* ── Create drawer ─────────────────────────────────────── */}
+      <DbSyncupCreateDrawer
         application={application}
-        applicationId={applicationId}
-        item={editingItem}
-        isOpen={editingItem !== null || creating}
+        isOpen={creating}
         nextSerialNumber={nextSerialNumber}
-        wide={editingItem !== null}
-        onClose={() => {
-          setEditingItem(null);
-          setCreating(false);
-        }}
-        onSave={handleSave}
-      />
-
-      {/* ── History modal ───────────────────────────────────── */}
-      <DbSyncupHistoryModal
-        syncup={historyItem}
-        isOpen={historyItem !== null}
-        onClose={() => setHistoryItem(null)}
+        onClose={() => setCreating(false)}
+        onSave={handleCreate}
       />
 
       {dialog}

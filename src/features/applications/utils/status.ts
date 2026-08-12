@@ -36,7 +36,7 @@ export function getCloudNames(app: Application): string {
       ?.map((mapping) => mapping.cloud?.name?.trim())
       .filter((name): name is string => Boolean(name)) ?? [];
 
-  return names.length > 0 ? names.join(", ") : "—";
+  return names.length > 0 ? names.join(", ") : "NA";
 }
 
 export function getCloudPrimary(app: Application): "Azure" | "Blue" | "Other" {

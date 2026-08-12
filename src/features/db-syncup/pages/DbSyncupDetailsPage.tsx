@@ -21,15 +21,6 @@ import type {
 
 function buildDetailsForm(item: DbSyncup): DbSyncupDetailsFormValues {
   return {
-    application_name: item.application_name || "",
-    carto_id: item.carto_id || "",
-    basicat: item.basicat || "",
-    domain: item.domain || "",
-    dx_uid: item.dx_uid || "",
-    mcp_id: item.mcp_id || "",
-    hosting: item.hosting || "",
-    reason: item.reason || "",
-    data_anonymization_status: item.data_anonymization_status || "",
     db_validation: item.db_validation || "",
     migration_incharge: item.migration_incharge || "",
     date_of_request: item.date_of_request?.slice(0, 10) || "",
@@ -43,7 +34,10 @@ function buildDetailsForm(item: DbSyncup): DbSyncupDetailsFormValues {
 function buildEnvEdits(item: DbSyncup): Record<number, EnvEdit> {
   const envMap: Record<number, EnvEdit> = {};
   (item.requests?.[0]?.environments ?? []).forEach((env) => {
-    envMap[env.id] = { status: env.request_status || "", priority: env.priority || "" };
+    envMap[env.id] = {
+      status: env.request_status || "",
+      prodSecondLoadCutOver: env.prod_second_load_cut_over || "",
+    };
   });
   return envMap;
 }
@@ -139,12 +133,12 @@ export default function DbSyncupDetailsPage() {
     setSaveError("");
   };
 
-  const handleEnvEditChange = (envId: number, field: "status" | "priority", value: string) => {
+  const handleEnvEditChange = (envId: number, field: "status" | "prodSecondLoadCutOver", value: string) => {
     setEnvEdits((prev) => ({
       ...prev,
       [envId]: {
         status: prev[envId]?.status ?? "",
-        priority: prev[envId]?.priority ?? "",
+        prodSecondLoadCutOver: prev[envId]?.prodSecondLoadCutOver ?? "",
         [field]: value,
       },
     }));
@@ -191,15 +185,6 @@ export default function DbSyncupDetailsPage() {
       }
     };
 
-    diffField("application_name", item.application_name);
-    diffField("carto_id", item.carto_id);
-    diffField("basicat", item.basicat);
-    diffField("domain", item.domain);
-    diffField("dx_uid", item.dx_uid);
-    diffField("mcp_id", item.mcp_id);
-    diffField("hosting", item.hosting);
-    diffField("reason", item.reason);
-    diffField("data_anonymization_status", item.data_anonymization_status);
     diffField("db_validation", item.db_validation);
     diffField("migration_incharge", item.migration_incharge);
     diffField("date_of_request", item.date_of_request?.slice(0, 10) ?? "");
@@ -226,8 +211,8 @@ export default function DbSyncupDetailsPage() {
           update.request_status = edit.status;
           changed = true;
         }
-        if (edit.priority !== (env.priority ?? "")) {
-          update.priority = edit.priority;
+        if (edit.prodSecondLoadCutOver !== (env.prod_second_load_cut_over ?? "")) {
+          update.prod_second_load_cut_over = edit.prodSecondLoadCutOver;
           changed = true;
         }
 

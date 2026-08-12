@@ -23,6 +23,8 @@ export interface DbSyncEnvironmentRequest {
   environment_score: number;
   request_status: string;
   remarks: string;
+  date_of_request: string;
+  prod_second_load_cut_over: string;
 }
 
 export interface DbSyncRequest {
@@ -118,6 +120,7 @@ export interface DbSyncEnvironmentUpdate {
   request_status?: string;
   priority?: string;
   remarks?: string;
+  prod_second_load_cut_over?: string;
 }
 
 export interface DbSyncRequestUpdate {

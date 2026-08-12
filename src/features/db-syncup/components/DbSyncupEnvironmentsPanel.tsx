@@ -2,19 +2,19 @@ import { useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
 
 import { Spinner } from "@/components/ui";
+import { formatDate } from "@/lib/format";
 
 import {
   DB_SYNCUP_PRIORITY_OPTIONS,
   DB_SYNCUP_STATUS_OPTIONS,
   ENVIRONMENT_TYPE_OPTIONS,
-  getPriorityBadgeClass,
   getStatusBadgeClass,
 } from "../constants";
 import type { DbSyncEnvironmentRequest } from "../types/db-syncup.types";
 
 export interface EnvEdit {
   status: string;
-  priority: string;
+  prodSecondLoadCutOver: string;
 }
 
 export interface NewEnvSelection {
@@ -26,7 +26,7 @@ interface DbSyncupEnvironmentsPanelProps {
   environments: DbSyncEnvironmentRequest[];
   readOnly: boolean;
   envEdits: Record<number, EnvEdit>;
-  onEnvEditChange: (envId: number, field: "status" | "priority", value: string) => void;
+  onEnvEditChange: (envId: number, field: "status" | "prodSecondLoadCutOver", value: string) => void;
   newEnvSelections: Record<string, NewEnvSelection>;
   onToggleNewEnv: (envCode: string) => void;
   onNewEnvPriorityChange: (envCode: string, priority: string) => void;
@@ -104,12 +104,16 @@ export default function DbSyncupEnvironmentsPanel({
               <tr>
                 <th style={{ minWidth: 120 }}>Environment</th>
                 <th style={{ minWidth: 160 }}>Status</th>
-                <th style={{ minWidth: 160 }}>Priority</th>
+                <th style={{ minWidth: 140 }}>Date of Request</th>
+                <th style={{ minWidth: 170 }}>Prod Second Load Cut Over</th>
               </tr>
             </thead>
             <tbody>
               {environments.map((env) => {
-                const edit = envEdits[env.id] ?? { status: env.request_status ?? "", priority: env.priority ?? "" };
+                const edit = envEdits[env.id] ?? {
+                  status: env.request_status ?? "",
+                  prodSecondLoadCutOver: env.prod_second_load_cut_over ?? "",
+                };
 
                 return (
                   <tr key={env.id}>
@@ -132,20 +136,19 @@ export default function DbSyncupEnvironmentsPanel({
                         </select>
                       )}
                     </td>
+                    <td style={{ color: "var(--ods-gray-700)" }}>
+                      {formatDate(env.date_of_request)}
+                    </td>
                     <td>
                       {readOnly ? (
-                        <span className={getPriorityBadgeClass(edit.priority)}>{edit.priority || "NA"}</span>
+                        <span style={{ color: "var(--ods-gray-700)" }}>{edit.prodSecondLoadCutOver || "NA"}</span>
                       ) : (
-                        <select
-                          className="form-select form-select-sm"
-                          value={edit.priority}
-                          onChange={(e) => onEnvEditChange(env.id, "priority", e.target.value)}
-                        >
-                          <option value="">NA</option>
-                          {DB_SYNCUP_PRIORITY_OPTIONS.map((o) => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
-                          ))}
-                        </select>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={edit.prodSecondLoadCutOver}
+                          onChange={(e) => onEnvEditChange(env.id, "prodSecondLoadCutOver", e.target.value)}
+                        />
                       )}
                     </td>
                   </tr>

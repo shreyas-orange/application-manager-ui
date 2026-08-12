@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 
 import { EmptyState, PageLoader } from "@/components/ui";
@@ -11,6 +11,12 @@ import { useDbSyncupHistory } from "../hooks/useDbSyncupHistory";
 import type { DbSyncHistoryEntry } from "../types/history.types";
 
 const PAGE_SIZE = 20;
+
+const HISTORY_ACTION_OPTIONS: { value: string; label: string }[] = [
+  { value: "CREATED", label: "Created" },
+  { value: "UPDATED", label: "Updated" },
+  { value: "DELETED", label: "Deleted" },
+];
 
 function formatDateTime(value: string | undefined): string {
   if (!value) return "NA";
@@ -124,16 +130,52 @@ interface DbSyncupHistoryPanelProps {
 
 export default function DbSyncupHistoryPanel({ dbSyncupId }: DbSyncupHistoryPanelProps) {
   const [page, setPage] = useState(1);
+  const [action, setAction] = useState("");
+  const [changedByName, setChangedByName] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   const { data, isLoading, isError, isFetching } = useDbSyncupHistory({
     dbSyncupId,
     page,
     pageSize: PAGE_SIZE,
+    action: action || null,
   });
 
-  const items = (data?.items ?? []).filter((entry) => !isScoreField(entry.field_name));
+  const items = useMemo(() => {
+    const nameQuery = changedByName.trim().toLowerCase();
+    const from = fromDate ? new Date(fromDate) : null;
+    // Include the entire "to" day rather than cutting off at midnight.
+    const to = toDate ? new Date(`${toDate}T23:59:59.999`) : null;
+
+    return (data?.items ?? []).filter((entry) => {
+      if (isScoreField(entry.field_name)) return false;
+
+      if (nameQuery) {
+        const name = `${entry.changed_by_full_name || ""} ${entry.changed_by_name || ""} ${entry.changed_by_email || ""}`.toLowerCase();
+        if (!name.includes(nameQuery)) return false;
+      }
+
+      if (from || to) {
+        const changedAt = entry.created_at ? new Date(entry.created_at) : null;
+        if (!changedAt || Number.isNaN(changedAt.getTime())) return false;
+        if (from && changedAt < from) return false;
+        if (to && changedAt > to) return false;
+      }
+
+      return true;
+    });
+  }, [data, changedByName, fromDate, toDate]);
+
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const handleFilterChange = (setter: (value: string) => void) => (value: string) => {
+    setter(value);
+    setPage(1);
+  };
+
+  const hasActiveFilters = Boolean(action || changedByName || fromDate || toDate);
 
   return (
     <div className="ods-card">
@@ -146,13 +188,86 @@ export default function DbSyncupHistoryPanel({ dbSyncupId }: DbSyncupHistoryPane
         )}
       </div>
 
+      <div
+        className="ods-card-body"
+        style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "flex-end", borderBottom: "1px solid var(--ods-gray-200)" }}
+      >
+        <div>
+          <label style={{ display: "block", fontSize: "var(--ods-font-size-xs)", fontWeight: 600, color: "var(--ods-gray-600)", marginBottom: "0.25rem" }}>
+            From
+          </label>
+          <input
+            type="date"
+            className="form-control form-control-sm"
+            value={fromDate}
+            onChange={(e) => handleFilterChange(setFromDate)(e.target.value)}
+          />
+        </div>
+        <div>
+          <label style={{ display: "block", fontSize: "var(--ods-font-size-xs)", fontWeight: 600, color: "var(--ods-gray-600)", marginBottom: "0.25rem" }}>
+            To
+          </label>
+          <input
+            type="date"
+            className="form-control form-control-sm"
+            value={toDate}
+            onChange={(e) => handleFilterChange(setToDate)(e.target.value)}
+          />
+        </div>
+        <div>
+          <label style={{ display: "block", fontSize: "var(--ods-font-size-xs)", fontWeight: 600, color: "var(--ods-gray-600)", marginBottom: "0.25rem" }}>
+            Changed by
+          </label>
+          <input
+            type="text"
+            placeholder="Search name..."
+            className="form-control form-control-sm"
+            value={changedByName}
+            onChange={(e) => handleFilterChange(setChangedByName)(e.target.value)}
+          />
+        </div>
+        <div>
+          <label style={{ display: "block", fontSize: "var(--ods-font-size-xs)", fontWeight: 600, color: "var(--ods-gray-600)", marginBottom: "0.25rem" }}>
+            Change
+          </label>
+          <select
+            className="form-select form-select-sm"
+            value={action}
+            onChange={(e) => handleFilterChange(setAction)(e.target.value)}
+          >
+            <option value="">All</option>
+            {HISTORY_ACTION_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </div>
+        {hasActiveFilters && (
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-sm"
+            onClick={() => {
+              setAction("");
+              setChangedByName("");
+              setFromDate("");
+              setToDate("");
+              setPage(1);
+            }}
+          >
+            Clear filters
+          </button>
+        )}
+      </div>
+
       <div className="ods-card-body" style={{ padding: isLoading || isError || items.length === 0 ? undefined : 0 }}>
         {isLoading ? (
           <PageLoader compact label="Loading history..." />
         ) : isError ? (
           <EmptyState icon="⚠️" title="Unable to load history" />
         ) : items.length === 0 ? (
-          <EmptyState icon="🗄️" text="No changes recorded for this DB syncup yet." />
+          <EmptyState
+            icon="🗄️"
+            text={hasActiveFilters ? "No changes match the selected filters." : "No changes recorded for this DB syncup yet."}
+          />
         ) : (
           <div className="ods-table-wrapper">
             <table className="ods-table">

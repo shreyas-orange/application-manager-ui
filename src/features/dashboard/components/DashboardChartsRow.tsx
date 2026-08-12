@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   Cell,
   Pie,
@@ -50,9 +52,12 @@ function migrationColor(name: string, index: number): string {
 interface CountListProps {
   items: { label: string; count: number }[];
   emptyText: string;
+  initialVisibleCount?: number;
 }
 
-function CountList({ items, emptyText }: CountListProps) {
+function CountList({ items, emptyText, initialVisibleCount }: CountListProps) {
+  const [showAll, setShowAll] = useState(false);
+
   if (items.length === 0) {
     return (
       <p style={{ color: "var(--ods-gray-500)", fontSize: "var(--ods-font-size-sm)", textAlign: "center", padding: "2rem 0" }}>
@@ -61,9 +66,14 @@ function CountList({ items, emptyText }: CountListProps) {
     );
   }
 
+  const hasMore = initialVisibleCount !== undefined && items.length > initialVisibleCount;
+  const visibleItems = hasMore && !showAll
+    ? items.slice(0, initialVisibleCount)
+    : items;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-      {items.map((item, index) => (
+      {visibleItems.map((item, index) => (
         <div
           key={`${item.label}-${index}`}
           style={{
@@ -83,6 +93,17 @@ function CountList({ items, emptyText }: CountListProps) {
           </strong>
         </div>
       ))}
+      {hasMore && (
+        <button
+          type="button"
+          className="btn btn-outline-secondary btn-sm"
+          aria-expanded={showAll}
+          onClick={() => setShowAll((current) => !current)}
+          style={{ alignSelf: "center", marginTop: "0.25rem" }}
+        >
+          {showAll ? "View less" : `View more (${items.length - initialVisibleCount})`}
+        </button>
+      )}
     </div>
   );
 }
@@ -106,6 +127,10 @@ export default function DashboardChartsRow({
     }, new Map<string, number>()),
     ([name, value]) => ({ name, value }),
   ).sort((a, b) => b.value - a.value);
+
+  const domainItems = applicationsByDomain
+    .map((item) => ({ label: item.domain?.trim() ?? "", count: item.count }))
+    .filter((item) => item.label.length > 0 && !/^\d+$/.test(item.label));
 
   return (
     <div
@@ -214,8 +239,9 @@ export default function DashboardChartsRow({
         </div>
         <div className="ods-card-body">
           <CountList
-            items={applicationsByDomain.map((item) => ({ label: item.domain, count: item.count }))}
+            items={domainItems}
             emptyText="No domain data found."
+            initialVisibleCount={5}
           />
         </div>
       </div>

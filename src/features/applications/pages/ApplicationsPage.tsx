@@ -20,7 +20,9 @@ import ApplicationsSummaryCards from "../components/ApplicationsSummaryCards";
 import ApplicationsToolbar from "../components/ApplicationsToolbar";
 import ApplicationsTable from "../components/ApplicationsTable";
 import { useApplications } from "../hooks/useApplications";
+import { useApplicationDomains } from "../hooks/useApplicationDomains";
 import { getMigrationStatus } from "../utils/status";
+import { sanitizeDomainName } from "../utils/domain";
 import type { Application } from "../types/application.types";
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -44,34 +46,33 @@ export default function ApplicationsPage() {
       pageSize,
       search,
       cloud: cloudFilter === "all" ? undefined : cloudFilter,
+      domain: domainFilter === "all" ? undefined : domainFilter,
     });
+
+  const { data: domainData } = useApplicationDomains();
 
   const applications = useMemo(() => data?.items ?? [], [data]);
   const total        = data?.total  ?? applications.length;
   const totalPages   = Math.max(1, Math.ceil(total / pageSize));
 
   // ── Derived domain list ──────────────────────────────────────────
-  const domains = useMemo(() => {
-    const values = new Set<string>();
-    applications.forEach((app) => {
-      const domain = app.confirmed_domain || app.domain;
-      if (domain) values.add(domain);
-    });
-    return Array.from(values).sort();
-  }, [applications]);
+  const domains = useMemo(
+    () => (domainData ?? []).flatMap((domain) => {
+      const value = sanitizeDomainName(domain);
+      return value ? [value] : [];
+    }),
+    [domainData],
+  );
 
   // ── Filtered list ────────────────────────────────────────────────
   const filteredApplications = useMemo(() => {
     return applications.filter((app) => {
       const status = normalizeValue(getMigrationStatus(app));
-      const domain = normalizeValue(app.confirmed_domain || app.domain);
       const matchesStatus =
         statusFilter === "all" || status === normalizeValue(statusFilter);
-      const matchesDomain =
-        domainFilter === "all" || domain === normalizeValue(domainFilter);
-      return matchesStatus && matchesDomain;
+      return matchesStatus;
     });
-  }, [applications, statusFilter, domainFilter]);
+  }, [applications, statusFilter]);
 
   // ── Summary counts ───────────────────────────────────────────────
   const summary = useMemo(() => {

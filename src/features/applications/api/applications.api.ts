@@ -114,6 +114,11 @@ export async function getApplications({
   return toApplicationsResponse(response.data);
 }
 
+export async function getApplicationDomains(): Promise<string[]> {
+  const response = await apiClient.get<string[]>("/clouds/all/domains");
+  return response.data;
+}
+
 export async function getPublicApplications({
   page = 1,
   pageSize = 50,

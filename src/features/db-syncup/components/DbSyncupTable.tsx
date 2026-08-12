@@ -1,8 +1,9 @@
 import { Trash2 } from "lucide-react";
 
 import { EmptyState } from "@/components/ui";
+import { sanitizeDomainName } from "@/features/applications/utils/domain";
 
-import { getStatusBadgeClass } from "../constants";
+import { getPriorityBadgeClass } from "../constants";
 import type { DbSyncup } from "../types/db-syncup.types";
 
 interface DbSyncupTableProps {
@@ -32,7 +33,7 @@ export default function DbSyncupTable({
             <th style={{ minWidth: 130 }}>Basiat</th>
             <th style={{ minWidth: 140 }}>Hosting</th>
             <th style={{ minWidth: 180 }}>Data Anonymization</th>
-            <th style={{ minWidth: 110 }}>Prod Status</th>
+            <th style={{ minWidth: 140 }}>Application Priority</th>
             {hasActions && <th style={{ width: 50 }} />}
           </tr>
         </thead>
@@ -58,7 +59,7 @@ export default function DbSyncupTable({
                   {item.carto_id || "NA"}
                 </td>
                 <td style={{ color: "var(--ods-gray-700)" }}>
-                  {item.domain || "NA"}
+                  {sanitizeDomainName(item.domain) || "NA"}
                 </td>
                 <td style={{ color: "var(--ods-gray-700)" }}>
                   {item.basicat || "NA"}
@@ -70,8 +71,8 @@ export default function DbSyncupTable({
                   {item.data_anonymization_status || "NA"}
                 </td>
                 <td>
-                  <span className={getStatusBadgeClass(item.prod_status)}>
-                    {item.prod_status || "NA"}
+                  <span className={getPriorityBadgeClass(item.requests?.[0]?.application_priority)}>
+                    {item.requests?.[0]?.application_priority || "NA"}
                   </span>
                 </td>
                 {hasActions && (

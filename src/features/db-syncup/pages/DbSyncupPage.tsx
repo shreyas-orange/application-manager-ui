@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, RefreshCw } from "lucide-react";
 
 import { useAllApplications } from "@/features/applications/hooks/useAllApplications";
+import { sanitizeDomainName } from "@/features/applications/utils/domain";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { EmptyState, PageHeader, PageLoader, useConfirmDialog } from "@/components/ui";
 
@@ -58,7 +59,9 @@ export default function DbSyncupPage() {
   const domains = useMemo(() => {
     const values = new Set<string>();
     applications.forEach((application) => {
-      const domain = application.domain?.trim();
+      const domain = sanitizeDomainName(
+        application.confirmed_domain || application.domain,
+      );
       if (domain) values.add(domain);
     });
     return Array.from(values).sort();

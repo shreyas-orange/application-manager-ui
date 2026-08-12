@@ -81,9 +81,9 @@ export default function ApplicationsToolbar({
           value={cloudFilter}
           onChange={(e) => onCloudFilterChange(e.target.value)}
         >
-          <option value="">All clouds</option>
+          <option value="all">All clouds</option>
           <option value="Azure">Azure</option>
-          <option value="Blue">Blue</option>
+          <option value="Bleu">Bleu Cloud</option>
         </select>
 
         <button

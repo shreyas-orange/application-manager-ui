@@ -1,6 +1,5 @@
 import {
   Cell,
-  Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -99,10 +98,14 @@ export default function DashboardChartsRow({
   cloudDistribution,
   applicationsByDomain,
 }: DashboardChartsRowProps) {
-  const migrationChartData = migrationStatus.map((item) => ({
-    name:  normalizeMigrationStatus(item.status),
-    value: item.count,
-  }));
+  const migrationChartData = Array.from(
+    migrationStatus.reduce((totals, item) => {
+      const name = normalizeMigrationStatus(item.status);
+      totals.set(name, (totals.get(name) ?? 0) + item.count);
+      return totals;
+    }, new Map<string, number>()),
+    ([name, value]) => ({ name, value }),
+  ).sort((a, b) => b.value - a.value);
 
   return (
     <div
@@ -124,30 +127,69 @@ export default function DashboardChartsRow({
               No migration data found.
             </p>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={migrationChartData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="43%"
-                  innerRadius={40}
-                  outerRadius={68}
-                  paddingAngle={2}
-                  label={({ name, value }) => `${name}: ${value}`}
-                >
-                  {migrationChartData.map((item, index) => (
-                    <Cell key={`${item.name}-${index}`} fill={migrationColor(item.name, index)} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value) => [Number(value), "Applications"]}
-                  contentStyle={{ border: "1px solid var(--ods-gray-300)", borderRadius: 0, fontSize: "0.8rem" }}
-                />
-                <Legend wrapperStyle={{ fontSize: "0.75rem" }} />
-              </PieChart>
-            </ResponsiveContainer>
+            <>
+              <ResponsiveContainer width="100%" height={170}>
+                <PieChart>
+                  <Pie
+                    data={migrationChartData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={48}
+                    outerRadius={76}
+                    paddingAngle={2}
+                  >
+                    {migrationChartData.map((item, index) => (
+                      <Cell key={item.name} fill={migrationColor(item.name, index)} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value) => [Number(value), "Applications"]}
+                    contentStyle={{ border: "1px solid var(--ods-gray-300)", borderRadius: 0, fontSize: "0.8rem" }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div
+                aria-label="Migration status legend"
+                style={{
+                  display:             "grid",
+                  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                  gap:                 "0.4rem 0.75rem",
+                  marginTop:           "0.5rem",
+                }}
+              >
+                {migrationChartData.map((item, index) => (
+                  <div
+                    key={item.name}
+                    title={`${item.name}: ${item.value}`}
+                    style={{ display: "flex", alignItems: "center", gap: "0.4rem", minWidth: 0 }}
+                  >
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        width:      10,
+                        height:     10,
+                        flexShrink: 0,
+                        background: migrationColor(item.name, index),
+                      }}
+                    />
+                    <span
+                      style={{
+                        minWidth:     0,
+                        overflow:     "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace:   "nowrap",
+                        color:        "var(--ods-gray-700)",
+                        fontSize:     "0.75rem",
+                      }}
+                    >
+                      {item.name}: <strong>{item.value}</strong>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>

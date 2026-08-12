@@ -39,7 +39,12 @@ export default function ApplicationsPage() {
   const pageSize = 10;
 
   const { data, isLoading, isError, error, isFetching, refetch } =
-    useApplications({ page, pageSize, search });
+    useApplications({
+      page,
+      pageSize,
+      search,
+      cloud: cloudFilter === "all" ? undefined : cloudFilter,
+    });
 
   const applications = useMemo(() => data?.items ?? [], [data]);
   const total        = data?.total  ?? applications.length;
@@ -60,19 +65,13 @@ export default function ApplicationsPage() {
     return applications.filter((app) => {
       const status = normalizeValue(getMigrationStatus(app));
       const domain = normalizeValue(app.confirmed_domain || app.domain);
-      const cloudNames = app.cloud_mappings
-        ?.map((m) => m.cloud?.name)
-        .filter((n): n is string => Boolean(n))
-        .map((n) => normalizeValue(n)) ?? [];
       const matchesStatus =
         statusFilter === "all" || status === normalizeValue(statusFilter);
       const matchesDomain =
         domainFilter === "all" || domain === normalizeValue(domainFilter);
-      const matchesCloud =
-        cloudFilter === "all" || cloudNames.includes(normalizeValue(cloudFilter));
-      return matchesStatus && matchesDomain && matchesCloud;
+      return matchesStatus && matchesDomain;
     });
-  }, [applications, statusFilter, domainFilter, cloudFilter]);
+  }, [applications, statusFilter, domainFilter]);
 
   // ── Summary counts ───────────────────────────────────────────────
   const summary = useMemo(() => {

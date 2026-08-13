@@ -2,13 +2,13 @@ import { type FormEvent, useEffect, useState } from "react";
 import { X } from "lucide-react";
 
 import type { Application } from "@/features/applications/types/application.types";
-import { useUsersByRole } from "@/features/users/hooks/useUsersByRole";
+import { useUsersByRoles } from "@/features/users/hooks/useUsersByRole";
 import { getApiErrorMessage } from "@/lib/api-error";
 
 import { DB_SYNCUP_PRIORITY_OPTIONS } from "../constants";
 import type { CreateDbSyncupPayload } from "../types/db-syncup.types";
 
-const MIGRATION_INCHARGE_ROLE = "Migration Manager";
+const DB_SYNCUP_USER_ROLES = ["DB Validator", "DB Manager"];
 
 interface DbSyncupCreateDrawerProps {
   application: Application | null;
@@ -149,8 +149,8 @@ export default function DbSyncupCreateDrawer({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const dbManagersQuery = useUsersByRole(MIGRATION_INCHARGE_ROLE);
-  const dbManagers = dbManagersQuery.data ?? [];
+  const dbSyncupUsersQuery = useUsersByRoles(DB_SYNCUP_USER_ROLES);
+  const dbSyncupUsers = dbSyncupUsersQuery.data ?? [];
 
   const targetApplication = selectedApp ?? application;
 
@@ -300,7 +300,23 @@ export default function DbSyncupCreateDrawer({
             </DrawerSection>
 
             <DrawerSection title="Details">
-              <DrawerInput label="DB validation" value={form.db_validation} onChange={(v) => updateField("db_validation", v)} />
+              <div>
+                <label style={{ display: "block", fontSize: "var(--ods-font-size-xs)", fontWeight: 600, color: "var(--ods-gray-600)", marginBottom: "0.25rem" }}>
+                  DB Validator
+                </label>
+                <select
+                  className="form-select form-select-sm"
+                  value={form.db_validation}
+                  disabled={dbSyncupUsersQuery.isLoading}
+                  onChange={(e) => updateField("db_validation", e.target.value)}
+                >
+                  <option value="">Select DB validator...</option>
+                  {dbSyncupUsers.map((user) => {
+                    const name = `${user.first_name} ${user.last_name}`.trim() || user.email;
+                    return <option key={user.id} value={name}>{name} ({user.role?.name})</option>;
+                  })}
+                </select>
+              </div>
 
               <div>
                 <label style={{ display: "block", fontSize: "var(--ods-font-size-xs)", fontWeight: 600, color: "var(--ods-gray-600)", marginBottom: "0.25rem" }}>
@@ -309,17 +325,24 @@ export default function DbSyncupCreateDrawer({
                 <select
                   className="form-select form-select-sm"
                   value={form.migration_incharge}
+                  disabled={dbSyncupUsersQuery.isLoading}
                   onChange={(e) => updateField("migration_incharge", e.target.value)}
                 >
-                  <option value="">Select DB manager...</option>
-                  {dbManagers.map((u) => {
+                  <option value="">Select migration in-charge...</option>
+                  {dbSyncupUsers.map((u) => {
                     const name = `${u.first_name} ${u.last_name}`.trim() || u.email;
                     return (
-                      <option key={u.id} value={name}>{name}</option>
+                      <option key={u.id} value={name}>{name} ({u.role?.name})</option>
                     );
                   })}
                 </select>
               </div>
+
+              {dbSyncupUsersQuery.isError && (
+                <p style={{ gridColumn: "1 / -1", margin: 0, color: "var(--ods-danger)", fontSize: "var(--ods-font-size-xs)" }}>
+                  Unable to load DB Validator and DB Manager users.
+                </p>
+              )}
 
               <DrawerInput label="Date of request" value={form.date_of_request} onChange={(v) => updateField("date_of_request", v)} type="date" />
 

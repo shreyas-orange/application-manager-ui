@@ -37,3 +37,17 @@ export function useUsersByRole(roleName: string) {
       ),
   });
 }
+
+export function useUsersByRoles(roleNames: string[]) {
+  const normalizedRoles = roleNames.map(normalizeValue).sort();
+
+  return useQuery({
+    queryKey: ["users", "by-roles", ...normalizedRoles],
+    queryFn: getAllUsers,
+    select: (users) =>
+      users.filter(
+        (user) => user.is_active
+          && normalizedRoles.includes(normalizeValue(user.role?.name)),
+      ),
+  });
+}

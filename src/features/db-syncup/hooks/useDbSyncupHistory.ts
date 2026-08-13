@@ -11,10 +11,12 @@ export function useDbSyncupHistory({
   dbSyncupId,
   page = 1,
   pageSize = 20,
+  action = null,
 }: {
   dbSyncupId: number | null;
   page?: number;
   pageSize?: number;
+  action?: string | null;
 }) {
   return useQuery({
     queryKey: [
@@ -23,12 +25,14 @@ export function useDbSyncupHistory({
       dbSyncupId,
       page,
       pageSize,
+      action,
     ],
     queryFn: () =>
       getDbSyncupHistory({
         page,
         pageSize,
         dbSyncupId,
+        action,
       }),
     enabled: dbSyncupId != null,
     placeholderData: keepPreviousData,

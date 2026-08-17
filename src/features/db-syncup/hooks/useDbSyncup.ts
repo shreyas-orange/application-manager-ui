@@ -11,6 +11,7 @@ import {
   getDbSyncupsByApplication,
   type GetDbSyncupsParams,
   updateDbSyncup,
+  updateDbSyncupEnvironmentStatus,
 } from "../api/db-syncup.api";
 
 import type {
@@ -70,6 +71,25 @@ export function useUpdateDbSyncup() {
       await queryClient.invalidateQueries({
         queryKey: dbSyncupKeys.all,
       });
+    },
+  });
+}
+
+export function useUpdateDbSyncupEnvironmentStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      syncupId,
+      environmentId,
+      requestStatus,
+    }: {
+      syncupId: number;
+      environmentId: number;
+      requestStatus: string;
+    }) => updateDbSyncupEnvironmentStatus(syncupId, environmentId, requestStatus),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: dbSyncupKeys.all });
     },
   });
 }

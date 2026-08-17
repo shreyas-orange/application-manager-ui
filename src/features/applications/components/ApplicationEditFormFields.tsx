@@ -272,7 +272,23 @@ export default function ApplicationEditFormFields({ readOnly }: ApplicationEditF
       </Section>
 
       <Section title="Migration">
-        <Field label="Migration status" name="migration_status" readOnly={readOnly} />
+        <SelectField
+          label="Migration status"
+          name="migration_status"
+          options={[
+            "IN PROGRESS",
+            "COMPLETED",
+            "PENDING",
+            "FAILED",
+            "ONHOLD",
+            "IN PROGRESS/ ON TRACK",
+            "IN PROGRESS/ AT RISK",
+            "PRODUCTION",
+            "DECOMMISSIONED",
+          ]}
+          placeholder="Select migration status"
+          readOnly={readOnly}
+        />
         <Field label="Progress (%)" name="migration_progress" type="number" readOnly={readOnly} />
         <Field label="Hosting location" name="hosting_location" readOnly={readOnly} />
         <Field label="Cloud squad" name="cloud_squad" readOnly={readOnly} />
@@ -282,6 +298,9 @@ export default function ApplicationEditFormFields({ readOnly }: ApplicationEditF
         <Field label="Tentative end" name="tentative_end" type="date" readOnly={readOnly} />
         <Field label="Confirmed end" name="confirmed_end" type="date" readOnly={readOnly} />
         <Field label="Go live" name="go_live" type="date" readOnly={readOnly} />
+        <Field label="NS migration status Azure count" name="ns_migration_status_azure_count" type="number" readOnly={readOnly} />
+        <Field label="NS to migrate BLEU environment names" name="ns_to_migrate_bleu_environment_names" readOnly={readOnly} />
+        <Field label="NS migration status BLEU count" name="ns_migration_status_bleu_count" type="number" readOnly={readOnly} />
       </Section>
 
       <Section title="Metadata">

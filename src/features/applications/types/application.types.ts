@@ -99,6 +99,9 @@ export interface Application {
   business_importance: string | null;
   sov_type:           string | null;
   out_of_scope:       boolean;
+  ns_migration_status_azure_count: number | null;
+  ns_to_migrate_bleu_environment_names: string | null;
+  ns_migration_status_bleu_count: number | null;
   has_roadmap:        boolean;
   created_at:         string;
   updated_at:         string;
@@ -141,6 +144,9 @@ export interface CreateApplicationPayload {
     priority?:            string | null;
     sov_type?:            string | null;
     out_of_scope?:        boolean;
+    ns_migration_status_azure_count?: number | null;
+    ns_to_migrate_bleu_environment_names?: string | null;
+    ns_migration_status_bleu_count?: number | null;
   };
 
   owners?: UpdateOwnerPayload[];
@@ -214,6 +220,9 @@ export interface UpdateApplicationPayload {
     priority?:            string | null;
     sov_type?:            string | null;
     out_of_scope?:        boolean;
+    ns_migration_status_azure_count?: number | null;
+    ns_to_migrate_bleu_environment_names?: string | null;
+    ns_migration_status_bleu_count?: number | null;
   };
 
   owners?: UpdateOwnerPayload[];

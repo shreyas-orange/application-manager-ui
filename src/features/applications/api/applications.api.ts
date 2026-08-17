@@ -18,6 +18,11 @@ export interface GetApplicationsParams {
   cloud?: string;
 }
 
+export interface SharePointSyncResponse {
+  message?: string;
+  detail?: string;
+}
+
 interface ApplicationDetailsApiResponse {
   application: Partial<Application> & Pick<Application, "id" | "application_name">;
   meta_data: Application["meta_data"];
@@ -59,6 +64,9 @@ function normalizeApplicationDetails(
     business_importance: null,
     sov_type: null,
     out_of_scope: false,
+    ns_migration_status_azure_count: null,
+    ns_to_migrate_bleu_environment_names: null,
+    ns_migration_status_bleu_count: null,
     has_roadmap: false,
     created_at: "",
     updated_at: "",
@@ -116,6 +124,13 @@ export async function getApplications({
 
 export async function getApplicationDomains(): Promise<string[]> {
   const response = await apiClient.get<string[]>("/clouds/all/domains");
+  return response.data;
+}
+
+export async function runSharePointSync(): Promise<SharePointSyncResponse> {
+  const response = await apiClient.post<SharePointSyncResponse>(
+    "/sharepoint-sync/run",
+  );
   return response.data;
 }
 

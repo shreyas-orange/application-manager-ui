@@ -159,7 +159,14 @@ export default function OverviewApplicationsPanel({
                         </span>
                       </td>
                       <td style={{ color: "var(--ods-gray-600)" }}>{getOwner("DevOps")?.owner_name || "NA"}</td>
-                      <td><span className={getStatusBadgeClass(migStatus)}>{migStatus}</span></td>
+                      <td>
+                        <span
+                          className={getStatusBadgeClass(migStatus)}
+                          style={{ textTransform: "none" }}
+                        >
+                          {migStatus}
+                        </span>
+                      </td>
                       <td style={{ minWidth: 90 }}>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                           <span style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-600)", textAlign: "right" }}>{progress}%</span>

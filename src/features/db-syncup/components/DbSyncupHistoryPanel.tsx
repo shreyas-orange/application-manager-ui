@@ -111,7 +111,7 @@ function HistoryRow({ entry }: { entry: DbSyncHistoryEntry }) {
         {entry.changed_by_full_name || entry.changed_by_name || entry.changed_by_email || "NA"}
       </td>
       <td style={{ color: "var(--ods-gray-500)", whiteSpace: "nowrap", fontSize: "var(--ods-font-size-xs)" }}>
-        {formatDateTime(entry.created_at)}
+        {formatDateTime(entry.changed_at || entry.created_at)}
       </td>
       <td style={valueCellStyle}>{entry.message || "NA"}</td>
     </tr>
@@ -277,7 +277,7 @@ export default function DbSyncupHistoryPanel({ dbSyncupId }: DbSyncupHistoryPane
                   <th style={{ minWidth: 90 }}>Action</th>
                   <th style={{ minWidth: 120 }}>Field</th>
                   <th style={{ minWidth: 140 }}>Changed By</th>
-                  <th style={{ minWidth: 140 }}>Date</th>
+                  <th style={{ minWidth: 160 }}>Changed At</th>
                   <th style={{ minWidth: 240 }}>Message</th>
                 </tr>
               </thead>

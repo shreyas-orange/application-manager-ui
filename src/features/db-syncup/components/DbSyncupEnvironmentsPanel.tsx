@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
-import { Plus, X } from "lucide-react";
 
-import { Spinner } from "@/components/ui";
+import { Spinner, useConfirmDialog } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 
 import {
@@ -24,6 +23,7 @@ export interface NewEnvSelection {
 
 interface DbSyncupEnvironmentsPanelProps {
   environments: DbSyncEnvironmentRequest[];
+  showBleuEnvironments: boolean;
   readOnly: boolean;
   envEdits: Record<number, EnvEdit>;
   onEnvEditChange: (envId: number, field: "status" | "prodSecondLoadCutOver", value: string) => void;
@@ -34,6 +34,9 @@ interface DbSyncupEnvironmentsPanelProps {
   onRequestEnvironments: () => Promise<void>;
   isRequestingEnvironments: boolean;
   requestEnvironmentsError?: string | null;
+  onEnvStatusUpdate: (environment: DbSyncEnvironmentRequest, status: string) => Promise<void>;
+  onMissingEnvStatusUpdate: (cloud: string, environment: string, status: string) => Promise<void>;
+  updatingEnvId?: number | null;
 }
 
 function envLabel(code: string): string {
@@ -42,9 +45,7 @@ function envLabel(code: string): string {
 
 export default function DbSyncupEnvironmentsPanel({
   environments,
-  readOnly,
-  envEdits,
-  onEnvEditChange,
+  showBleuEnvironments,
   newEnvSelections,
   onToggleNewEnv,
   onNewEnvPriorityChange,
@@ -52,15 +53,87 @@ export default function DbSyncupEnvironmentsPanel({
   onRequestEnvironments,
   isRequestingEnvironments,
   requestEnvironmentsError,
+  onEnvStatusUpdate,
+  onMissingEnvStatusUpdate,
+  updatingEnvId,
 }: DbSyncupEnvironmentsPanelProps) {
+  const { confirm, dialog } = useConfirmDialog();
   const [addEnvOpen, setAddEnvOpen] = useState(false);
+  const [selectedEnvironmentKey, setSelectedEnvironmentKey] = useState<string | null>(null);
+  const [detailCloud, setDetailCloud] = useState<string | null>(null);
 
   const availableEnvTypes = useMemo(() => {
-    const requested = new Set(environments.map((env) => env.environment));
+    const requested = new Set(
+      environments
+        .filter((env) => String(env.deployment_target ?? "").trim().toUpperCase() === "BLEU")
+        .map((env) => env.environment),
+    );
     return ENVIRONMENT_TYPE_OPTIONS.filter((o) => !requested.has(o.value));
   }, [environments]);
 
   const selectedCount = Object.values(newEnvSelections).filter((s) => s.selected).length;
+
+  const cloudEnvironmentGroups = useMemo(() => {
+    const azure: DbSyncEnvironmentRequest[] = [];
+    const bleu: DbSyncEnvironmentRequest[] = [];
+
+    environments.forEach((environment) => {
+      const target = String(environment.deployment_target ?? "AZURE").trim().toUpperCase();
+      if (target === "BLEU") bleu.push(environment);
+      else azure.push(environment);
+    });
+
+    return [
+      ["Azure", azure] as const,
+      ...(showBleuEnvironments ? [["Bleu", bleu] as const] : []),
+    ];
+  }, [environments, showBleuEnvironments]);
+
+  const statusButtonClass = (status: string | null | undefined) => {
+    const normalized = String(status ?? "").trim().toLowerCase();
+    if (["completed", "complete", "done", "production"].includes(normalized)) {
+      return "btn btn-success btn-sm";
+    }
+    if (["rejected", "cancelled", "failed", "failure", "blocked"].includes(normalized)) {
+      return "btn btn-danger btn-sm";
+    }
+    if (normalized === "requested") {
+      return "btn btn-primary btn-sm";
+    }
+    if (["in progress", "in_progress", "ongoing", "started"].includes(normalized)) {
+      return "btn btn-warning btn-sm";
+    }
+    return "btn btn-secondary btn-sm";
+  };
+
+  const statusLabel = (status: string | null | undefined) =>
+    DB_SYNCUP_STATUS_OPTIONS.find((option) => option.value === status)?.label || status || "Pending";
+
+  const handleStatusChange = async (environment: DbSyncEnvironmentRequest, status: string) => {
+    if (!status || status === environment.request_status) return;
+    const confirmed = await confirm({
+      title: "Update environment status",
+      message: `Are you sure you want to update ${envLabel(environment.environment)} (${environment.deployment_target || "AZURE"}) status to ${status}?`,
+      confirmLabel: "Update status",
+    });
+    if (!confirmed) return;
+
+    await onEnvStatusUpdate(environment, status);
+    setSelectedEnvironmentKey(null);
+  };
+
+  const handleMissingStatusChange = async (cloud: string, environment: string, status: string) => {
+    if (!status) return;
+    const confirmed = await confirm({
+      title: "Set environment status",
+      message: `Are you sure you want to set ${envLabel(environment)} (${cloud}) status to ${status}?`,
+      confirmLabel: "Set status",
+    });
+    if (!confirmed) return;
+
+    await onMissingEnvStatusUpdate(cloud, environment, status);
+    setSelectedEnvironmentKey(null);
+  };
 
   const handleSubmitRequest = async () => {
     try {
@@ -77,90 +150,162 @@ export default function DbSyncupEnvironmentsPanel({
         <h2 className="ods-card-title">Environments</h2>
 
         {/* Independent of the page's Edit toggle — can request an environment any time. */}
-        {canRequestEnvironment && availableEnvTypes.length > 0 && (
-          <button
-            type="button"
-            className="btn btn-outline-secondary btn-sm"
-            onClick={() => setAddEnvOpen((prev) => !prev)}
-            style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
-          >
-            {addEnvOpen ? <X size={14} /> : <Plus size={14} />}
-            {addEnvOpen ? "Close" : "Add Env"}
-          </button>
-        )}
       </div>
 
       {/* ── Existing environments — only ones actually requested ─────── */}
-      {environments.length === 0 ? (
-        <div className="ods-card-body">
-          <p style={{ color: "var(--ods-gray-500)", fontSize: "var(--ods-font-size-sm)", margin: 0 }}>
-            No environments requested yet.
-          </p>
-        </div>
-      ) : (
-        <div className="ods-table-wrapper">
-          <table className="ods-table">
-            <thead>
-              <tr>
-                <th style={{ minWidth: 120 }}>Environment</th>
-                <th style={{ minWidth: 160 }}>Status</th>
-                <th style={{ minWidth: 140 }}>Date of Request</th>
-                <th style={{ minWidth: 170 }}>Time taken In Cut Over</th>
-              </tr>
-            </thead>
-            <tbody>
-              {environments.map((env) => {
-                const isProd = env.environment?.trim().toUpperCase() === "PROD";
-                const edit = envEdits[env.id] ?? {
-                  status: env.request_status ?? "",
-                  prodSecondLoadCutOver: env.prod_second_load_cut_over ?? "",
-                };
-
-                return (
-                  <tr key={env.id}>
-                    <td style={{ fontWeight: 500, color: "var(--ods-gray-800)" }}>
-                      {envLabel(env.environment)}
-                    </td>
-                    <td>
-                      {readOnly ? (
-                        <span className={getStatusBadgeClass(edit.status)}>{edit.status || "NA"}</span>
-                      ) : (
+      <>
+          <div
+            className="ods-card-body"
+            style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem" }}
+          >
+            {cloudEnvironmentGroups.map(([cloud, cloudEnvironments]) => (
+              <div key={cloud}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem", marginBottom: "0.65rem" }}>
+                  <h3 style={{ fontSize: "var(--ods-font-size-sm)", margin: 0 }}>
+                    {cloud} All Environments
+                  </h3>
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={() => setDetailCloud((current) => current === cloud ? null : cloud)}
+                  >
+                    {detailCloud === cloud ? "Hide Details" : "View Details"}
+                  </button>
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                  {ENVIRONMENT_TYPE_OPTIONS.map((environmentType) => {
+                    const environmentKey = `${cloud}:${environmentType.value}`;
+                    const environment = cloudEnvironments.find(
+                      (item) => item.environment.trim().toUpperCase() === environmentType.value,
+                    );
+                    if (!environment) {
+                      return selectedEnvironmentKey === environmentKey ? (
                         <select
+                          key={environmentType.value}
                           className="form-select form-select-sm"
-                          value={edit.status}
-                          onChange={(e) => onEnvEditChange(env.id, "status", e.target.value)}
+                          style={{ width: "auto" }}
+                          defaultValue=""
+                          autoFocus
+                          onBlur={() => setSelectedEnvironmentKey(null)}
+                          onChange={(event) => { void handleMissingStatusChange(cloud, environmentType.value, event.target.value); }}
                         >
-                          <option value="">NA</option>
-                          {DB_SYNCUP_STATUS_OPTIONS.map((o) => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
+                          <option value="">Select status</option>
+                          {DB_SYNCUP_STATUS_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
                           ))}
                         </select>
-                      )}
-                    </td>
-                    <td style={{ color: "var(--ods-gray-700)" }}>
-                      {formatDate(env.date_of_request)}
-                    </td>
-                    <td>
-                      {!isProd ? (
-                        <span style={{ color: "var(--ods-gray-500)" }}>-</span>
-                      ) : readOnly ? (
-                        <span style={{ color: "var(--ods-gray-700)" }}>{edit.prodSecondLoadCutOver || "NA"}</span>
                       ) : (
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          value={edit.prodSecondLoadCutOver}
-                          onChange={(e) => onEnvEditChange(env.id, "prodSecondLoadCutOver", e.target.value)}
-                        />
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                        <button
+                          key={environmentType.value}
+                          type="button"
+                          className="btn btn-sm"
+                          style={{
+                            background: "var(--ods-gray-300)",
+                            borderColor: "var(--ods-gray-300)",
+                            color: "var(--ods-gray-700)",
+                          }}
+                          onClick={() => setSelectedEnvironmentKey(environmentKey)}
+                          title="No data — click to set status"
+                        >
+                          {environmentType.label}
+                        </button>
+                      );
+                    }
+
+                      const updating = updatingEnvId === environment.id;
+                      return selectedEnvironmentKey === environmentKey ? (
+                        <select
+                          key={environmentType.value}
+                          className="form-select form-select-sm"
+                          style={{ width: "auto" }}
+                          value={environment.request_status || ""}
+                          disabled={updating}
+                          autoFocus
+                          onBlur={() => setSelectedEnvironmentKey(null)}
+                          onChange={(event) => { void handleStatusChange(environment, event.target.value); }}
+                        >
+                          <option value="">Select status</option>
+                          {DB_SYNCUP_STATUS_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <button
+                          key={environmentType.value}
+                          type="button"
+                          className={statusButtonClass(environment.request_status)}
+                          disabled={updating}
+                          onClick={() => setSelectedEnvironmentKey(environmentKey)}
+                          title={`${environment.request_status || "No status"} — click to update`}
+                        >
+                          {updating
+                            ? "Updating..."
+                            : `${envLabel(environment.environment)} · ${statusLabel(environment.request_status)}`}
+                        </button>
+                      );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {detailCloud && (
+            <div>
+              <div style={{ padding: "0.75rem 1.25rem", borderTop: "1px solid var(--ods-gray-200)" }}>
+                <h3 style={{ margin: 0, fontSize: "var(--ods-font-size-sm)" }}>
+                  {detailCloud} Environment Details
+                </h3>
+              </div>
+              <div className="ods-table-wrapper">
+                <table className="ods-table">
+              <thead>
+                <tr>
+                  <th style={{ minWidth: 120 }}>Environment</th>
+                  <th style={{ minWidth: 110 }}>Cloud</th>
+                  <th style={{ minWidth: 160 }}>Status</th>
+                  <th style={{ minWidth: 140 }}>Date of Request</th>
+                  <th style={{ minWidth: 170 }}>Time taken In Cut Over</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(cloudEnvironmentGroups.find(([cloud]) => cloud === detailCloud)?.[1] ?? []).map((environment) => {
+                  const isProd = environment.environment.trim().toUpperCase() === "PROD";
+
+                  return (
+                    <tr key={environment.id}>
+                      <td style={{ fontWeight: 500, color: "var(--ods-gray-800)" }}>
+                        {envLabel(environment.environment)}
+                      </td>
+                      <td style={{ color: "var(--ods-gray-700)" }}>
+                        {environment.deployment_target || "AZURE"}
+                      </td>
+                      <td>
+                        <span className={getStatusBadgeClass(environment.request_status)}>
+                          {environment.request_status || "NA"}
+                        </span>
+                      </td>
+                      <td style={{ color: "var(--ods-gray-700)" }}>
+                        {formatDate(environment.date_of_request)}
+                      </td>
+                      <td>
+                        {!isProd ? (
+                          <span style={{ color: "var(--ods-gray-500)" }}>-</span>
+                        ) : (
+                          <span style={{ color: "var(--ods-gray-700)" }}>
+                            {environment.prod_second_load_cut_over || "NA"}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+      </>
 
       {/* ── Add Env — toggle any/all unrequested environments at once ── */}
       {addEnvOpen && (
@@ -236,7 +381,7 @@ export default function DbSyncupEnvironmentsPanel({
                 <p style={{ margin: 0, fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-500)" }}>
                   {selectedCount > 0
                     ? `${selectedCount} environment${selectedCount === 1 ? "" : "s"} selected.`
-                    : "Toggle an environment on to request it, and set its priority."}
+                    : "Select Bleu environments to request, and set their priority."}
                 </p>
 
                 <button
@@ -260,6 +405,8 @@ export default function DbSyncupEnvironmentsPanel({
           )}
         </div>
       )}
+
+      {dialog}
     </div>
   );
 }

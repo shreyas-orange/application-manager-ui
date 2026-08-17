@@ -2,6 +2,8 @@ import { apiClient } from "@/lib/api-client";
 
 import type {
   CreateDbSyncupPayload,
+  DbSyncEnvironmentRequest,
+  DbEnvironmentWorklistResponse,
   DbSyncup,
   UpdateDbSyncupPayload,
 } from "../types/db-syncup.types";
@@ -15,6 +17,32 @@ export async function getDbSyncupsByApplication(
       `/db-syncups/application/${applicationId}`,
     );
 
+  return response.data;
+}
+
+export interface GetEnvironmentWorklistParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  deploymentTarget?: string;
+  status?: string;
+}
+
+export async function getEnvironmentWorklist(
+  params: GetEnvironmentWorklistParams = {},
+): Promise<DbEnvironmentWorklistResponse> {
+  const response = await apiClient.get<DbEnvironmentWorklistResponse>(
+    "/db-syncups/environment-worklist",
+    {
+      params: {
+        page: params.page ?? 1,
+        page_size: params.pageSize ?? 20,
+        search: params.search || undefined,
+        deployment_target: params.deploymentTarget || undefined,
+        status: params.status || undefined,
+      },
+    },
+  );
   return response.data;
 }
 
@@ -109,6 +137,18 @@ export async function updateDbSyncup(
       payload,
     );
 
+  return response.data;
+}
+
+export async function updateDbSyncupEnvironmentStatus(
+  syncupId: number,
+  environmentId: number,
+  requestStatus: string,
+): Promise<DbSyncEnvironmentRequest> {
+  const response = await apiClient.patch<DbSyncEnvironmentRequest>(
+    `/db-syncups/${syncupId}/environments/${environmentId}/status`,
+    { request_status: requestStatus },
+  );
   return response.data;
 }
 

@@ -80,6 +80,15 @@ export const router = createBrowserRouter([
                 element: lazyPage(() => import("@/features/applications/pages/ApplicationDetailsPage")),
               },
               {
+                element: <RoleProtectedRoute allowedRoles={["manager"]} />,
+                children: [
+                  {
+                    path: "my-applications",
+                    element: lazyPage(() => import("@/features/applications/pages/MyApplicationsPage")),
+                  },
+                ],
+              },
+              {
                 element: <NonDbTeamRoute />,
                 children: [
                   {
@@ -95,6 +104,15 @@ export const router = createBrowserRouter([
               {
                 path: "db-syncups/:id",
                 element: lazyPage(() => import("@/features/db-syncup/pages/DbSyncupDetailsPage")),
+              },
+              {
+                element: <RoleProtectedRoute allowedRoles={["admin", "manager", "db validator"]} />,
+                children: [
+                  {
+                    path: "db-environment-requests",
+                    element: lazyPage(() => import("@/features/db-syncup/pages/DbEnvironmentWorklistPage")),
+                  },
+                ],
               },
               {
                 path: "forbidden",

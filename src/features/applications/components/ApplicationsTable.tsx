@@ -96,7 +96,12 @@ export default function ApplicationsTable({ applications, onOpen }: Applications
 
                   {/* Migration status badge */}
                   <td>
-                    <span className={getStatusBadgeClass(migStatus)}>{migStatus}</span>
+                    <span
+                      className={getStatusBadgeClass(migStatus)}
+                      style={{ textTransform: "none" }}
+                    >
+                      {migStatus}
+                    </span>
                   </td>
 
                   {/* Progress bar */}

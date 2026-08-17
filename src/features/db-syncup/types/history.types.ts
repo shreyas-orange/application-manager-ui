@@ -18,6 +18,7 @@ export interface DbSyncHistoryEntry {
   changed_by_email: string;
   source: string;
   change_reason: string;
+  changed_at?: string;
   created_at: string;
 }
 

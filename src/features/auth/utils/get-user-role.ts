@@ -11,5 +11,9 @@ export function getUserRole(user: Pick<User, "role"> | null | undefined): UserRo
       ? user.role
       : (user?.role?.name ?? "");
 
-  return rawRole.trim().toLowerCase() as UserRole | "";
+  return rawRole
+    .trim()
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ") as UserRole | "";
 }

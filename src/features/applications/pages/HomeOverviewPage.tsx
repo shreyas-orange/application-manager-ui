@@ -49,7 +49,11 @@ export default function HomeOverviewPage() {
   // ── Filtered list ──────────────────────────────────────────────
   const filteredApplications = useMemo(() => {
     return applications.filter((app) => {
-      const status = normalizeValue(getMigrationStatus(app));
+      const selectedStatus = normalizeValue(statusFilter);
+      const statuses = [
+        app.application_status,
+        app.migration?.migration_status,
+      ].map(normalizeValue);
       const domain = normalizeValue(app.confirmed_domain || app.domain);
       const cloudNames = app.cloud_mappings
         ?.map((m) => m.cloud?.name)
@@ -61,7 +65,7 @@ export default function HomeOverviewPage() {
         normalizeValue(app.application_name).includes(normalizeValue(search)) ||
         normalizeValue(app.carto_id).includes(normalizeValue(search)) ||
         normalizeValue(app.domain).includes(normalizeValue(search));
-      const matchesStatus = statusFilter === "all" || status === normalizeValue(statusFilter);
+      const matchesStatus = statusFilter === "all" || statuses.includes(selectedStatus);
       const matchesDomain = domainFilter === "all" || domain === normalizeValue(domainFilter);
       const matchesCloud  = cloudFilter === "all" || cloudNames.includes(normalizeValue(cloudFilter));
       return matchesSearch && matchesStatus && matchesDomain && matchesCloud;

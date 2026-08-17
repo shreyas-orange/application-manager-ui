@@ -18,6 +18,7 @@ export type DbSyncupPriority =
 export interface DbSyncEnvironmentRequest {
   id: number;
   request_id: number;
+  deployment_target: "AZURE" | "BLEU" | string;
   environment: string;
   priority: string;
   environment_score: number;
@@ -51,6 +52,7 @@ export interface DbSyncup {
   application_id: number;
   uploaded_file_id: number;
   application_name: string;
+  clouds?: Array<{ id: number; name: string; provider?: string | null; region?: string | null; status?: string }>;
   carto_id: string;
   basicat: string;
   hosting: string;
@@ -117,6 +119,7 @@ export interface DbSyncEnvironmentUpdate {
   id?: number;
   /** Required when creating a new environment (id omitted). e.g. "DEV", "PROD" */
   environment?: string;
+  deployment_target?: "AZURE" | "BLEU" | string;
   request_status?: string;
   priority?: string;
   remarks?: string;
@@ -124,7 +127,7 @@ export interface DbSyncEnvironmentUpdate {
 }
 
 export interface DbSyncRequestUpdate {
-  id: number;
+  id?: number;
   assigned_to_user_id?: number | null;
   application_priority?: string;
   remarks?: string;
@@ -156,4 +159,32 @@ export interface UpdateDbSyncupPayload {
   application_priority?: string;
   time_taken_in_prod?: string;
   request?: DbSyncRequestUpdate;
+}
+
+export interface DbEnvironmentWorklistItem {
+  environment_id: number;
+  request_id: number;
+  db_syncup_id: number;
+  application_id: number;
+  application_name: string | null;
+  carto_id: string | null;
+  domain: string | null;
+  deployment_target: "AZURE" | "BLEU";
+  environment: string;
+  request_status: string;
+  priority: string;
+  remarks: string | null;
+  date_of_request: string | null;
+  requested_at: string;
+  requested_by_name: string | null;
+  assigned_to_name: string | null;
+  clouds: Array<{ id: number; name: string; provider: string | null; region: string | null; status: string }>;
+}
+
+export interface DbEnvironmentWorklistResponse {
+  total: number;
+  page: number;
+  page_size: number;
+  pie_chart: { requested: number; pending: number; completed: number; total: number };
+  items: DbEnvironmentWorklistItem[];
 }

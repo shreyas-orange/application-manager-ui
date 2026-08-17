@@ -27,6 +27,7 @@ interface NavItem {
   label:    string;
   icon:     React.ReactNode;
   adminOnly?: boolean;
+  allowedRoles?: string[];
 }
 
 // ─── Nav Items Config ─────────────────────────────────────────────────────────
@@ -39,8 +40,14 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     to:    "/app/applications",
-    label: "Applications",
+    label: "Application List",
     icon:  <AppWindow size={18} />,
+  },
+  {
+    to: "/app/my-applications",
+    label: "My Applications",
+    icon: <UserCog size={18} />,
+    allowedRoles: ["manager"],
   },
   {
     to:    "/app/analytics",
@@ -51,6 +58,12 @@ const NAV_ITEMS: NavItem[] = [
     to:    "/app/db-syncups",
     label: "DB Syncup",
     icon:  <Database size={18} />,
+  },
+  {
+    to: "/app/db-environment-requests",
+    label: "DB Sync Requests",
+    icon: <Database size={18} />,
+    allowedRoles: ["admin", "manager", "db validator"],
   },
   {
     to:    "/app/uploads",
@@ -196,9 +209,16 @@ export function AppLayout() {
         {/* Nav links */}
         <nav>
           {NAV_ITEMS.filter(
-            (item) => isDbTeam
-              ? item.to === "/app/applications" || item.to === "/app/db-syncups"
-              : !item.adminOnly || role === "admin"
+            (item) => role === "manager"
+              ? [
+                  "/app/applications",
+                  "/app/my-applications",
+                  "/app/db-syncups",
+                  "/app/db-environment-requests",
+                ].includes(item.to)
+              : isDbTeam
+              ? item.to === "/app/applications" || item.to === "/app/db-syncups" || item.allowedRoles?.includes(role)
+              : (!item.adminOnly || role === "admin") && (!item.allowedRoles || item.allowedRoles.includes(role))
           ).map((item) => (
             <NavLink
               key={item.to}

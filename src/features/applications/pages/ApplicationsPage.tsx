@@ -8,6 +8,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import {
+  CloudDownload,
   Plus,
   RefreshCw,
 } from "lucide-react";
@@ -17,6 +18,7 @@ import { normalizeValue } from "@/lib/format";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { getUserRole } from "@/features/auth/utils/get-user-role";
 import { isDbTeamRole } from "@/features/auth/utils/is-db-team-role";
+import { getApiErrorMessage } from "@/lib/api-error";
 
 import ApplicationCreateModal from "../components/ApplicationCreateModal";
 import ApplicationsSummaryCards from "../components/ApplicationsSummaryCards";
@@ -24,7 +26,8 @@ import ApplicationsToolbar from "../components/ApplicationsToolbar";
 import ApplicationsTable from "../components/ApplicationsTable";
 import { useApplications } from "../hooks/useApplications";
 import { useApplicationDomains } from "../hooks/useApplicationDomains";
-import { getMigrationStatus } from "../utils/status";
+import { useSharePointSync } from "../hooks/useSharePointSync";
+import { normalizeStatus } from "../utils/status";
 import { sanitizeDomainName } from "../utils/domain";
 import type { Application } from "../types/application.types";
 
@@ -33,6 +36,7 @@ export default function ApplicationsPage() {
   const navigate                  = useNavigate();
   const { data: currentUser } = useCurrentUser();
   const isDbTeam = isDbTeamRole(getUserRole(currentUser));
+  const isAdmin = getUserRole(currentUser) === "admin";
   const [searchInput, setSearchInput]   = useState("");
   const [search, setSearch]             = useState("");
   const [page, setPage]                 = useState(1);
@@ -42,6 +46,7 @@ export default function ApplicationsPage() {
   const [createOpen, setCreateOpen]     = useState(false);
   const [message, setMessage]           = useState("");
   const [pageError, setPageError]       = useState("");
+  const sharePointSync = useSharePointSync();
 
   const pageSize = 10;
 
@@ -72,9 +77,13 @@ export default function ApplicationsPage() {
   // ── Filtered list ────────────────────────────────────────────────
   const filteredApplications = useMemo(() => {
     return applications.filter((app) => {
-      const status = normalizeValue(getMigrationStatus(app));
+      const selectedStatus = normalizeValue(statusFilter);
+      const statuses = [
+        app.application_status,
+        app.migration?.migration_status,
+      ].map(normalizeValue);
       const matchesStatus =
-        statusFilter === "all" || status === normalizeValue(statusFilter);
+        statusFilter === "all" || statuses.includes(selectedStatus);
       return matchesStatus;
     });
   }, [applications, statusFilter]);
@@ -83,11 +92,13 @@ export default function ApplicationsPage() {
   const summary = useMemo(() => {
     let inProgress = 0, completed = 0, failed = 0, pending = 0;
     applications.forEach((app) => {
-      const s = normalizeValue(app.migration?.migration_status);
-      if (["completed", "complete", "done"].includes(s))          completed  += 1;
-      else if (["in progress", "in_progress", "ongoing"].includes(s)) inProgress += 1;
-      else if (["failed", "failure", "cancelled"].includes(s))    failed     += 1;
-      else                                                         pending    += 1;
+      const s = normalizeStatus(
+        app.migration?.migration_status || app.application_status || "Pending",
+      );
+      if (s === "Completed") completed += 1;
+      else if (s === "In Progress") inProgress += 1;
+      else if (s === "Failed") failed += 1;
+      else pending += 1;
     });
     return { total, inProgress, completed, failed, pending };
   }, [applications, total]);
@@ -110,6 +121,19 @@ export default function ApplicationsPage() {
 
   const handleOpenApp = (app: Application) => {
     navigate(`/app/applications/${app.id}`, { state: { application: app } });
+  };
+
+  const handleSharePointSync = async () => {
+    setMessage("");
+    setPageError("");
+
+    try {
+      const result = await sharePointSync.mutateAsync();
+      setMessage(result.message || result.detail || "SharePoint synchronization completed successfully.");
+      setPage(1);
+    } catch (syncError) {
+      setPageError(getApiErrorMessage(syncError));
+    }
   };
 
   // ── Loading ──────────────────────────────────────────────────────
@@ -147,6 +171,19 @@ export default function ApplicationsPage() {
           subtitle="Manage applications, migrations and owners."
           actions={
             <>
+              {isAdmin && (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={sharePointSync.isPending}
+                  onClick={() => { void handleSharePointSync(); }}
+                  style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+                >
+                  <CloudDownload size={15} />
+                  {sharePointSync.isPending ? "Syncing SharePoint..." : "Sync SharePoint"}
+                </button>
+              )}
+
               <button
                 type="button"
                 className="btn btn-outline-secondary"

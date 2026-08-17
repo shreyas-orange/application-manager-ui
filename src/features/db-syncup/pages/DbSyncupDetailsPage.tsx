@@ -12,7 +12,7 @@ import DbSyncupEnvironmentsPanel, {
 } from "../components/DbSyncupEnvironmentsPanel";
 import DbSyncupDetailsForm, { type DbSyncupDetailsFormValues } from "../components/DbSyncupDetailsForm";
 import DbSyncupHistoryPanel from "../components/DbSyncupHistoryPanel";
-import { useAllDbSyncups, useUpdateDbSyncup } from "../hooks/useDbSyncup";
+import { useAllDbSyncups, useUpdateDbSyncup, useUpdateDbSyncupEnvironmentStatus } from "../hooks/useDbSyncup";
 import type {
   DbSyncEnvironmentUpdate,
   DbSyncup,
@@ -55,6 +55,7 @@ export default function DbSyncupDetailsPage() {
   const { data, isLoading, isError, error, refetch } = useAllDbSyncups({ applicationId });
   const updateMutation = useUpdateDbSyncup();
   const requestEnvMutation = useUpdateDbSyncup();
+  const environmentStatusMutation = useUpdateDbSyncupEnvironmentStatus();
 
   const item = useMemo(
     () => data?.items.find((i) => i.id === dbSyncupId) ?? null,
@@ -67,6 +68,7 @@ export default function DbSyncupDetailsPage() {
   const [newEnvSelections, setNewEnvSelections] = useState<Record<string, NewEnvSelection>>({});
   const [saveError, setSaveError] = useState("");
   const [requestEnvError, setRequestEnvError] = useState("");
+  const [updatingEnvId, setUpdatingEnvId] = useState<number | null>(null);
 
   useEffect(() => {
     if (item) {
@@ -259,6 +261,7 @@ export default function DbSyncupDetailsPage() {
       .filter(([, selection]) => selection.selected)
       .map(([envCode, selection]) => ({
         environment: envCode,
+        deployment_target: "BLEU",
         priority: selection.priority || undefined,
       }));
 
@@ -278,6 +281,46 @@ export default function DbSyncupDetailsPage() {
     } catch (err) {
       setRequestEnvError(err instanceof Error ? err.message : "Unable to request environments.");
       throw err;
+    }
+  };
+
+  const handleEnvironmentStatusUpdate = async (
+    environment: (typeof environments)[number],
+    status: string,
+  ) => {
+    setSaveError("");
+    setUpdatingEnvId(environment.id);
+    try {
+      await environmentStatusMutation.mutateAsync({
+        syncupId: item.id,
+        environmentId: environment.id,
+        requestStatus: status,
+      });
+    } catch (updateError) {
+      setSaveError(updateError instanceof Error ? updateError.message : "Unable to update environment status.");
+    } finally {
+      setUpdatingEnvId(null);
+    }
+  };
+
+  const handleMissingEnvironmentStatusUpdate = async (
+    cloud: string,
+    environment: string,
+    status: string,
+  ) => {
+    setSaveError("");
+    try {
+      await updateMutation.mutateAsync({
+        syncupId: item.id,
+        payload: {
+          request: {
+            ...(request ? { id: request.id } : {}),
+            environments: [{ deployment_target: cloud.toUpperCase(), environment, request_status: status }],
+          },
+        },
+      });
+    } catch (updateError) {
+      setSaveError(updateError instanceof Error ? updateError.message : "Unable to set environment status.");
     }
   };
 
@@ -355,16 +398,23 @@ export default function DbSyncupDetailsPage() {
 
       <DbSyncupEnvironmentsPanel
         environments={environments}
+        showBleuEnvironments={
+          environments.some((environment) => environment.deployment_target === "BLEU") ||
+          (item.clouds ?? []).some((cloud) => ["bleu", "blue"].includes(cloud.name.trim().toLowerCase()))
+        }
         readOnly={!editing}
         envEdits={envEdits}
         onEnvEditChange={handleEnvEditChange}
         newEnvSelections={newEnvSelections}
         onToggleNewEnv={handleToggleNewEnv}
         onNewEnvPriorityChange={handleNewEnvPriorityChange}
-        canRequestEnvironment={Boolean(request)}
+        canRequestEnvironment={Boolean(request) && (item.clouds ?? []).some((cloud) => ["bleu", "blue"].includes(cloud.name.trim().toLowerCase()))}
         onRequestEnvironments={handleRequestEnvironments}
         isRequestingEnvironments={requestEnvMutation.isPending}
         requestEnvironmentsError={requestEnvError}
+        onEnvStatusUpdate={handleEnvironmentStatusUpdate}
+        onMissingEnvStatusUpdate={handleMissingEnvironmentStatusUpdate}
+        updatingEnvId={updatingEnvId}
       />
 
       {/* ── Everything else ──────────────────────────────────────── */}

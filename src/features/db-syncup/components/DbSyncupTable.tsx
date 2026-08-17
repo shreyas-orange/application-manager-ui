@@ -20,7 +20,7 @@ export default function DbSyncupTable({
   onDelete,
 }: DbSyncupTableProps) {
   const hasActions = Boolean(onDelete);
-  const colSpan = 8;
+  const colSpan = 9;
 
   return (
     <div className="ods-table-wrapper">
@@ -28,6 +28,7 @@ export default function DbSyncupTable({
         <thead>
           <tr>
             <th style={{ minWidth: 180 }}>Application</th>
+            <th style={{ minWidth: 110 }}>Cloud</th>
             <th style={{ minWidth: 130 }}>Carto</th>
             <th style={{ minWidth: 140 }}>Domain</th>
             <th style={{ minWidth: 130 }}>Basiat</th>
@@ -54,6 +55,9 @@ export default function DbSyncupTable({
               >
                 <td style={{ color: "var(--ods-gray-700)", fontWeight: 500 }}>
                   {item.application_name || "NA"}
+                </td>
+                <td style={{ color: "var(--ods-gray-700)" }}>
+                  {(item.clouds ?? []).map((cloud) => cloud.name).join(", ") || "NA"}
                 </td>
                 <td style={{ color: "var(--ods-gray-700)" }}>
                   {item.carto_id || "NA"}

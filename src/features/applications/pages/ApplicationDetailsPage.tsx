@@ -58,6 +58,9 @@ function buildUpdatePayload(values: ApplicationEditFormValues): UpdateApplicatio
       portfolio:           values.portfolio           || null,
       business_importance: values.business_importance || null,
       sov_type:            values.sov_type            || null,
+      ns_migration_status_azure_count: values.ns_migration_status_azure_count,
+      ns_to_migrate_bleu_environment_names: values.ns_to_migrate_bleu_environment_names || null,
+      ns_migration_status_bleu_count: values.ns_migration_status_bleu_count,
     },
     migration: {
       migration_status:   values.migration_status  || null,

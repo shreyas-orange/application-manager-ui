@@ -32,7 +32,7 @@ interface FormState {
   application_status:        string;
   priority:                  string;
   sov_type:                  string;
-  out_of_scope:              string;
+  out_of_scope:              boolean;
   qa_owner_name:             string;
   qa_owner_email:            string;
   devops_owner_name:         string;
@@ -88,7 +88,7 @@ const EMPTY_FORM: FormState = {
   application_status:        "",
   priority:                  "",
   sov_type:                  "",
-  out_of_scope:              "",
+  out_of_scope:              false,
   qa_owner_name:             "",
   qa_owner_email:            "",
   devops_owner_name:         "",
@@ -415,6 +415,7 @@ export default function ApplicationCreateModal({
       application_status:  form.application_status.trim()  || null,
       priority:            form.priority.trim()            || null,
       sov_type:            form.sov_type.trim()            || null,
+      out_of_scope:        form.out_of_scope,
     },
     owners: [
       { owner_type: "QA",                  owner_name: form.qa_owner_name.trim()      || null, owner_email: form.qa_owner_email.trim()      || null },
@@ -462,7 +463,6 @@ export default function ApplicationCreateModal({
       remarks_imp:      form.remarks_imp.trim()      || null,
       source_comments:  form.source_comments.trim()  || null,
       archived_remarks: form.archived_remarks.trim() || null,
-      out_of_scope:     form.out_of_scope.trim()     || null,
     },
     cloud_ids: form.cloud_ids,
   });
@@ -537,6 +537,29 @@ export default function ApplicationCreateModal({
               <DrawerInput label="Application status" value={form.application_status}  onChange={(v) => updateField("application_status", v)} />
               <DrawerSelect label="Priority" value={form.priority} options={["P1", "P2", "P3"]} onChange={(v) => updateField("priority", v)} />
               <DrawerInput label="SOV type"           value={form.sov_type}           onChange={(v) => updateField("sov_type", v)} />
+              <div
+                style={{
+                  gridColumn: "1 / -1",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                }}
+              >
+                <input
+                  id="create_out_of_scope"
+                  type="checkbox"
+                  className="form-check-input"
+                  style={{ margin: 0, accentColor: "var(--ods-orange)" }}
+                  checked={form.out_of_scope}
+                  onChange={(event) => updateField("out_of_scope", event.target.checked)}
+                />
+                <label
+                  htmlFor="create_out_of_scope"
+                  style={{ fontSize: "var(--ods-font-size-sm)", color: "var(--ods-gray-700)", cursor: "pointer", margin: 0 }}
+                >
+                  Out of scope
+                </label>
+              </div>
             </DrawerSection>
 
             <DrawerSection title="Metadata">
@@ -568,7 +591,22 @@ export default function ApplicationCreateModal({
             </DrawerSection>
 
             <DrawerSection title="Migration">
-              <DrawerInput label="Migration status"   value={form.migration_status}   onChange={(v) => updateField("migration_status", v)} />
+              <DrawerSelect
+                label="Migration status"
+                value={form.migration_status}
+                options={[
+                  "IN PROGRESS",
+                  "COMPLETED",
+                  "PENDING",
+                  "FAILED",
+                  "ONHOLD",
+                  "IN PROGRESS/ ON TRACK",
+                  "IN PROGRESS/ AT RISK",
+                  "PRODUCTION",
+                  "DECOMMISSIONED",
+                ]}
+                onChange={(value) => updateField("migration_status", value)}
+              />
               <DrawerInput label="Progress (%)"       value={form.migration_progress} onChange={(v) => updateField("migration_progress", Number(v))} type="number" />
               <DrawerInput label="Hosting location"   value={form.hosting_location}   onChange={(v) => updateField("hosting_location", v)} />
               <DrawerInput label="Cloud squad"        value={form.cloud_squad}        onChange={(v) => updateField("cloud_squad", v)} />
@@ -639,7 +677,6 @@ export default function ApplicationCreateModal({
               <DrawerTextarea label="Important remarks" value={form.remarks_imp} onChange={(v) => updateField("remarks_imp", v)} />
               <DrawerTextarea label="Source comments" value={form.source_comments} onChange={(v) => updateField("source_comments", v)} />
               <DrawerTextarea label="Archived remarks" value={form.archived_remarks} onChange={(v) => updateField("archived_remarks", v)} />
-              <DrawerInput label="Out of scope" value={form.out_of_scope} onChange={(v) => updateField("out_of_scope", v)} />
             </DrawerSection>
 
             {error && (

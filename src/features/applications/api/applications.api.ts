@@ -36,6 +36,14 @@ interface ApplicationDetailsApiResponse {
   clouds: Array<{ id: number; name: string }>;
 }
 
+interface MyApplicationsApiResponse {
+  items: ApplicationDetailsApiResponse[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
 function normalizeApplicationDetails(
   raw: ApplicationDetailsApiResponse,
 ): Application {
@@ -120,6 +128,28 @@ export async function getApplications({
     );
 
   return toApplicationsResponse(response.data);
+}
+
+export async function getMyApplications({
+  page = 1,
+  pageSize = 10,
+}: Pick<GetApplicationsParams, "page" | "pageSize"> = {}): Promise<ApplicationsResponse> {
+  const response = await apiClient.get<MyApplicationsApiResponse>(
+    "/application/my-applications",
+    {
+      params: {
+        page,
+        page_size: pageSize,
+      },
+    },
+  );
+
+  return {
+    page: response.data.page,
+    pageSize: response.data.page_size,
+    total: response.data.total,
+    items: response.data.items.map(normalizeApplicationDetails),
+  };
 }
 
 export async function getApplicationDomains(): Promise<string[]> {

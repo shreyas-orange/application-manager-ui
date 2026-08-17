@@ -3,27 +3,23 @@ import { useNavigate } from "react-router-dom";
 import { RefreshCw, Search } from "lucide-react";
 
 import { EmptyState, PageHeader, PageLoader } from "@/components/ui";
-import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { normalizeValue } from "@/lib/format";
 
 import ApplicationsTable from "../components/ApplicationsTable";
-import { useAllApplications } from "../hooks/useAllApplications";
+import { useMyApplications } from "../hooks/useMyApplications";
 import type { Application } from "../types/application.types";
 
 export default function MyApplicationsPage() {
   const navigate = useNavigate();
-  const { data: currentUser } = useCurrentUser();
-  const { data, isLoading, isError, error, isFetching, refetch } = useAllApplications();
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const { data, isLoading, isError, error, isFetching, refetch } = useMyApplications(page, pageSize);
   const [search, setSearch] = useState("");
 
   const applications = useMemo(() => {
-    const userEmail = normalizeValue(currentUser?.email);
     const searchValue = normalizeValue(search);
 
     return (data?.items ?? []).filter((application) => {
-      const isOwnedByManager = Boolean(userEmail) && application.owners.some(
-        (owner) => normalizeValue(owner.owner_email) === userEmail,
-      );
       const matchesSearch = !searchValue || [
         application.application_name,
         application.carto_id,
@@ -31,9 +27,12 @@ export default function MyApplicationsPage() {
         application.confirmed_domain,
       ].some((value) => normalizeValue(value).includes(searchValue));
 
-      return isOwnedByManager && matchesSearch;
+      return matchesSearch;
     });
-  }, [currentUser?.email, data?.items, search]);
+  }, [data?.items, search]);
+
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const openApplication = (application: Application) => {
     navigate(`/app/applications/${application.id}`, { state: { application } });
@@ -85,7 +84,10 @@ export default function MyApplicationsPage() {
               value={search}
               placeholder="Search my applications"
               aria-label="Search my applications"
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setPage(1);
+              }}
             />
           </label>
         </div>
@@ -96,6 +98,38 @@ export default function MyApplicationsPage() {
 
         <div className="ods-card-body" style={{ padding: 0 }}>
           <ApplicationsTable applications={applications} onOpen={openApplication} />
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "0.75rem 1.25rem",
+            borderTop: "1px solid var(--ods-gray-200)",
+          }}
+        >
+          <span style={{ color: "var(--ods-gray-600)" }}>
+            Page <strong>{page}</strong> of <strong>{totalPages}</strong> · Total <strong>{total}</strong>
+          </span>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm"
+              disabled={page <= 1 || isFetching}
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm"
+              disabled={page >= totalPages || isFetching}
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>

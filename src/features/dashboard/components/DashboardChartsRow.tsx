@@ -45,6 +45,11 @@ function normalizeMigrationStatus(status: string | null | undefined): string {
   return status.trim();
 }
 
+function isVisibleMigrationStatus(status: string | null | undefined): boolean {
+  const value = status?.trim() ?? "";
+  return !/^#?n\/?a:?$/i.test(value) && !/^\d+$/.test(value);
+}
+
 function migrationColor(name: string, index: number): string {
   return MIGRATION_COLORS[name] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length];
 }
@@ -121,6 +126,8 @@ export default function DashboardChartsRow({
 }: DashboardChartsRowProps) {
   const migrationChartData = Array.from(
     migrationStatus.reduce((totals, item) => {
+      if (!isVisibleMigrationStatus(item.status)) return totals;
+
       const name = normalizeMigrationStatus(item.status);
       totals.set(name, (totals.get(name) ?? 0) + item.count);
       return totals;

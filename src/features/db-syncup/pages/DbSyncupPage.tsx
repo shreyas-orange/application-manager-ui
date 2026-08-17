@@ -11,7 +11,6 @@ import DbSyncupCreateDrawer from "../components/DbSyncupCreateDrawer";
 import DbSyncupTable from "../components/DbSyncupTable";
 import DbSyncupSummaryCards from "../components/DbSyncupSummaryCards";
 import DbSyncupToolbar from "../components/DbSyncupToolbar";
-import { normalizeDbSyncupStatus } from "../constants";
 import {
   useAllDbSyncups,
   useCreateDbSyncup,
@@ -43,7 +42,7 @@ export default function DbSyncupPage() {
   const [cloudFilter, setCloudFilter] = useState("");
   const [environmentFilter, setEnvironmentFilter] = useState("");
   const hasApiFilters = Boolean(
-    search || domainFilter || cloudFilter || environmentFilter,
+    search || statusFilter !== "all" || domainFilter || cloudFilter || environmentFilter,
   );
 
   const { data, isLoading, isError, error, isFetching, refetch } = useAllDbSyncups({
@@ -52,9 +51,11 @@ export default function DbSyncupPage() {
     domain: domainFilter,
     cloud: cloudFilter,
     environment: environmentFilter,
+    status: statusFilter === "all" ? undefined : statusFilter,
   });
 
-  const items = useMemo(() => data ?? [], [data]);
+  const items = useMemo(() => data?.items ?? [], [data?.items]);
+  const totalSyncups = data?.total ?? 0;
 
   const domains = useMemo(() => {
     const values = new Set<string>();
@@ -78,27 +79,9 @@ export default function DbSyncupPage() {
     return Array.from(values).sort();
   }, [applications]);
 
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      const matchesStatus =
-        statusFilter === "all" || normalizeDbSyncupStatus(item.prod_status) === statusFilter;
-      return matchesStatus;
-    });
-  }, [items, statusFilter]);
+  const filteredItems = items;
 
   // ── Summary counts (from filtered) ───────────────────────────────
-  const summary = useMemo(() => {
-    let inProgress = 0, completed = 0, failed = 0, pending = 0;
-    filteredItems.forEach((item) => {
-      const s = normalizeDbSyncupStatus(item.prod_status);
-      if (s === "Completed") completed += 1;
-      else if (s === "In Progress") inProgress += 1;
-      else if (s === "Failed") failed += 1;
-      else pending += 1;
-    });
-    return { total: filteredItems.length, inProgress, completed, failed, pending };
-  }, [filteredItems]);
-
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const pagedItems = filteredItems.slice(
@@ -115,7 +98,7 @@ export default function DbSyncupPage() {
 
   const nextSerialNumber =
     items.length > 0
-      ? Math.max(...items.map((i) => i.serial_number)) + 1
+      ? Math.max(...items.map((item) => item.serial_number ?? item.id)) + 1
       : 1;
 
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
@@ -144,7 +127,7 @@ export default function DbSyncupPage() {
   const handleDelete = async (item: DbSyncup) => {
     const confirmed = await confirm({
       title: "Delete DB syncup record",
-      message: `Delete DB syncup record #${item.serial_number}? This cannot be undone.`,
+      message: `Delete DB syncup record #${item.serial_number ?? item.id}? This cannot be undone.`,
       confirmLabel: "Delete",
       danger: true,
     });
@@ -241,14 +224,14 @@ export default function DbSyncupPage() {
       )}
 
       <DbSyncupSummaryCards
-        total={summary.total}
-        inProgress={summary.inProgress}
-        completed={summary.completed}
-        pending={summary.pending}
-        failed={summary.failed}
+        total={totalSyncups}
+        inProgress={data?.inProgressCount ?? 0}
+        completed={data?.completedCount ?? 0}
+        pending={data?.pendingCount ?? 0}
+        failed={data?.failedCount ?? 0}
       />
 
-      {items.length === 0 && !hasApiFilters ? (
+      {totalSyncups === 0 && !hasApiFilters ? (
         <div className="ods-card" style={{ padding: "3rem" }}>
           <EmptyState icon="🗄️" title="No DB syncup data" text="No DB syncup records found yet." />
         </div>
@@ -275,7 +258,7 @@ export default function DbSyncupPage() {
           <div className="ods-list-toolbar">
             <span className="ods-list-count">
               <strong style={{ color: "var(--ods-gray-900)" }}>{filteredItems.length}</strong>{" "}
-              of <strong style={{ color: "var(--ods-gray-900)" }}>{items.length}</strong> syncup record{items.length === 1 ? "" : "s"}
+              of <strong style={{ color: "var(--ods-gray-900)" }}>{totalSyncups}</strong> syncup record{totalSyncups === 1 ? "" : "s"}
             </span>
           </div>
 
@@ -283,7 +266,7 @@ export default function DbSyncupPage() {
             <DbSyncupTable
               items={pagedItems}
               deletingId={deleteMutation.isPending ? (deleteMutation.variables ?? null) : null}
-              onRowClick={(item) => navigate(`/app/db-syncups/${item.id}`)}
+              onRowClick={(item) => navigate(`/app/db-syncups/${item.id}?applicationId=${item.application_id}`)}
               onDelete={handleDelete}
             />
           </div>

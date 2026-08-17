@@ -18,6 +18,13 @@ function writeTo(key: string, value: string, remember: boolean): void {
   other.removeItem(key);
 }
 
+function isRemembered(): boolean {
+  return Boolean(
+    localStorage.getItem(ACCESS_TOKEN_KEY) ||
+    localStorage.getItem(REFRESH_TOKEN_KEY),
+  );
+}
+
 export const tokenService = {
   getAccessToken(): string | null {
     return readFromEither(ACCESS_TOKEN_KEY);
@@ -32,13 +39,24 @@ export const tokenService = {
     refreshToken?: string,
     options?: { remember?: boolean },
   ): void {
-    const remember = options?.remember ?? false;
+    // Login supplies an explicit preference. Token refresh does not, so keep
+    // using the storage selected at login instead of falling back to session.
+    const remember = options?.remember ?? isRemembered();
 
     writeTo(ACCESS_TOKEN_KEY, accessToken, remember);
 
     if (refreshToken) {
       writeTo(REFRESH_TOKEN_KEY, refreshToken, remember);
+    } else if (options?.remember !== undefined) {
+      // A fresh login without a refresh token must not reuse one left by a
+      // previous account or persistence mode.
+      sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
     }
+  },
+
+  isRemembered(): boolean {
+    return isRemembered();
   },
 
   clearTokens(): void {

@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import { Info } from "lucide-react";
 
-import { useUsersByRole } from "@/features/users/hooks/useUsersByRole";
+import { useUsersByRoles } from "@/features/users/hooks/useUsersByRole";
 
 import { DB_SYNCUP_PRIORITY_OPTIONS } from "../constants";
 
-const MIGRATION_INCHARGE_ROLE = "Migration Manager";
+const DB_VALIDATOR_ROLES = ["DB Validator", "DB Manager"];
 
 export interface DbSyncupDetailsFormValues {
   db_validation: string;
@@ -127,8 +127,8 @@ export default function DbSyncupDetailsForm({
   readOnly,
   environmentCount,
 }: DbSyncupDetailsFormProps) {
-  const dbManagersQuery = useUsersByRole(MIGRATION_INCHARGE_ROLE);
-  const dbManagers = dbManagersQuery.data ?? [];
+  const dbValidatorsQuery = useUsersByRoles(DB_VALIDATOR_ROLES);
+  const dbValidators = dbValidatorsQuery.data ?? [];
 
   return (
     <div className="ods-card">
@@ -154,7 +154,46 @@ export default function DbSyncupDetailsForm({
         </Section>
 
         <Section title="DB Details" tooltip="For DB Team to update">
-          <Field label="DB Validator" value={values.db_validation} readOnly={readOnly} onChange={(v) => onChange("db_validation", v)} />
+          <div>
+            <label style={labelStyle}>DB Validator</label>
+            {readOnly ? (
+              <div style={readOnlyBoxStyle()}>{values.db_validation || "NA"}</div>
+            ) : (
+              <select
+                className="form-select form-select-sm"
+                value={values.db_validation}
+                disabled={dbValidatorsQuery.isLoading}
+                onChange={(e) => onChange("db_validation", e.target.value)}
+              >
+                <option value="">Select DB validator...</option>
+                {values.db_validation &&
+                  !dbValidators.some((user) => {
+                    const name = `${user.first_name} ${user.last_name}`.trim() || user.email;
+                    return name === values.db_validation;
+                  }) && (
+                    <option value={values.db_validation}>{values.db_validation} (current)</option>
+                  )}
+                {dbValidators.map((user) => {
+                  const name = `${user.first_name} ${user.last_name}`.trim() || user.email;
+                  return (
+                    <option key={user.id} value={name}>
+                      {name} ({user.role?.name})
+                    </option>
+                  );
+                })}
+              </select>
+            )}
+            {!readOnly && dbValidatorsQuery.isError && (
+              <p style={{ ...helperTextStyle, color: "var(--ods-danger)" }}>
+                Unable to load DB Validator and DB Manager users.
+              </p>
+            )}
+            {!readOnly && !dbValidatorsQuery.isLoading && !dbValidatorsQuery.isError && dbValidators.length === 0 && (
+              <p style={helperTextStyle}>
+                No users with the DB Validator or DB Manager role were found.
+              </p>
+            )}
+          </div>
 
           <div>
             <label style={labelStyle}>Migration incharge</label>
@@ -164,26 +203,30 @@ export default function DbSyncupDetailsForm({
               <select
                 className="form-select form-select-sm"
                 value={values.migration_incharge}
+                disabled={dbValidatorsQuery.isLoading}
                 onChange={(e) => onChange("migration_incharge", e.target.value)}
               >
-                <option value="">Select DB manager...</option>
+                <option value="">Select migration in-charge...</option>
                 {values.migration_incharge &&
-                  !dbManagers.some((u) => `${u.first_name} ${u.last_name}`.trim() === values.migration_incharge) && (
+                  !dbValidators.some((user) => {
+                    const name = `${user.first_name} ${user.last_name}`.trim() || user.email;
+                    return name === values.migration_incharge;
+                  }) && (
                     <option value={values.migration_incharge}>{values.migration_incharge} (current)</option>
                   )}
-                {dbManagers.map((u) => {
-                  const name = `${u.first_name} ${u.last_name}`.trim() || u.email;
+                {dbValidators.map((user) => {
+                  const name = `${user.first_name} ${user.last_name}`.trim() || user.email;
                   return (
-                    <option key={u.id} value={name}>
-                      {name}
+                    <option key={user.id} value={name}>
+                      {name} ({user.role?.name})
                     </option>
                   );
                 })}
               </select>
             )}
-            {!readOnly && !dbManagersQuery.isLoading && dbManagers.length === 0 && (
+            {!readOnly && !dbValidatorsQuery.isLoading && !dbValidatorsQuery.isError && dbValidators.length === 0 && (
               <p style={helperTextStyle}>
-                No users with the Migration Manager role were found.
+                No users with the DB Validator or DB Manager role were found.
               </p>
             )}
           </div>

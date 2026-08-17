@@ -82,6 +82,7 @@ async function refreshAccessToken(): Promise<string> {
   tokenService.setTokens(
     response.data.access_token,
     response.data.refresh_token,
+    { remember: tokenService.isRemembered() },
   );
 
   return response.data.access_token;

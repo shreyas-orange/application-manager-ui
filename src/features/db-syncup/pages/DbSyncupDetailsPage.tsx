@@ -1,6 +1,6 @@
 // src/features/db-syncup/pages/DbSyncupDetailsPage.tsx
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Pencil, Save, X } from "lucide-react";
 
 import { EmptyState, PageHeader, PageLoader, Spinner } from "@/components/ui";
@@ -45,15 +45,20 @@ function buildEnvEdits(item: DbSyncup): Record<number, EnvEdit> {
 export default function DbSyncupDetailsPage() {
   const navigate = useNavigate();
   const params = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const dbSyncupId = Number(params.id);
+  const applicationIdParam = Number(searchParams.get("applicationId"));
+  const applicationId = Number.isFinite(applicationIdParam) && applicationIdParam > 0
+    ? applicationIdParam
+    : undefined;
 
-  const { data: items, isLoading, isError, error, refetch } = useAllDbSyncups();
+  const { data, isLoading, isError, error, refetch } = useAllDbSyncups({ applicationId });
   const updateMutation = useUpdateDbSyncup();
   const requestEnvMutation = useUpdateDbSyncup();
 
   const item = useMemo(
-    () => items?.find((i) => i.id === dbSyncupId) ?? null,
-    [items, dbSyncupId],
+    () => data?.items.find((i) => i.id === dbSyncupId) ?? null,
+    [data?.items, dbSyncupId],
   );
 
   const [editing, setEditing] = useState(false);
@@ -291,7 +296,7 @@ export default function DbSyncupDetailsPage() {
           </button>
         }
         title={item.application_name}
-        subtitle={`Serial #${item.serial_number}${item.carto_id ? ` · Carto: ${item.carto_id}` : ""}`}
+        subtitle={`Serial #${item.serial_number ?? item.id}${item.carto_id ? ` · Carto: ${item.carto_id}` : ""}`}
         actions={
           !editing ? (
             <button

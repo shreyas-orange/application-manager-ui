@@ -18,6 +18,9 @@ import { EmptyState, PageHeader, PageLoader, Spinner, Tabs } from "@/components/
 import RoadmapAnalytics from "@/features/roadmap/components/RoadmapAnalytics";
 import RoadmapSection  from "@/features/roadmap/components/RoadmapSection";
 import DbSyncupSection from "@/features/db-syncup/components/DbSyncupSection";
+import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
+import { getUserRole } from "@/features/auth/utils/get-user-role";
+import { isDbTeamRole } from "@/features/auth/utils/is-db-team-role";
 
 import { useApplication } from "../hooks/useApplication";
 import { useUpdateApplication } from "../hooks/useUpdateApplication";
@@ -112,6 +115,8 @@ export default function ApplicationDetailsPage() {
   const navigate      = useNavigate();
   const location      = useLocation();
   const params        = useParams<{ id: string }>();
+  const { data: currentUser } = useCurrentUser();
+  const isDbTeam = isDbTeamRole(getUserRole(currentUser));
 
   const applicationId = Number(params.id);
 
@@ -251,6 +256,7 @@ export default function ApplicationDetailsPage() {
         }
         actions={
           activeTab === "application" &&
+          !isDbTeam &&
           !editing && (
             <button
               type="button"

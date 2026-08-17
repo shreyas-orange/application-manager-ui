@@ -1,6 +1,8 @@
 import { type FormEvent } from "react";
 import { Search, X } from "lucide-react";
 
+import { DB_SYNCUP_STATUS_OPTIONS } from "../constants";
+
 interface DbSyncupToolbarProps {
   searchInput: string;
   onSearchInputChange: (value: string) => void;
@@ -63,10 +65,11 @@ export default function DbSyncupToolbar({
           onChange={(e) => onStatusFilterChange(e.target.value)}
         >
           <option value="all">All statuses</option>
-          <option value="In Progress">In progress</option>
-          <option value="Completed">Completed</option>
-          <option value="Pending">Pending</option>
-          <option value="Failed">Failed</option>
+          {DB_SYNCUP_STATUS_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
 
         <select

@@ -105,11 +105,12 @@ export default function DbSyncupEnvironmentsPanel({
                 <th style={{ minWidth: 120 }}>Environment</th>
                 <th style={{ minWidth: 160 }}>Status</th>
                 <th style={{ minWidth: 140 }}>Date of Request</th>
-                <th style={{ minWidth: 170 }}>Prod Second Load Cut Over</th>
+                <th style={{ minWidth: 170 }}>Time taken In Cut Over</th>
               </tr>
             </thead>
             <tbody>
               {environments.map((env) => {
+                const isProd = env.environment?.trim().toUpperCase() === "PROD";
                 const edit = envEdits[env.id] ?? {
                   status: env.request_status ?? "",
                   prodSecondLoadCutOver: env.prod_second_load_cut_over ?? "",
@@ -140,7 +141,9 @@ export default function DbSyncupEnvironmentsPanel({
                       {formatDate(env.date_of_request)}
                     </td>
                     <td>
-                      {readOnly ? (
+                      {!isProd ? (
+                        <span style={{ color: "var(--ods-gray-500)" }}>-</span>
+                      ) : readOnly ? (
                         <span style={{ color: "var(--ods-gray-700)" }}>{edit.prodSecondLoadCutOver || "NA"}</span>
                       ) : (
                         <input

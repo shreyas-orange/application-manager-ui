@@ -9,6 +9,7 @@ export interface DbSyncHistoryEntry {
   field_name: string;
   old_value: string;
   new_value: string;
+  message?: string | null;
   old_snapshot?: Record<string, unknown> | null;
   new_snapshot?: Record<string, unknown> | null;
   changed_by_user_id: number;

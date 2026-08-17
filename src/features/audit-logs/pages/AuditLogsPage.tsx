@@ -23,6 +23,10 @@ export default function AuditLogsPage() {
     useState("");
   const [search, setSearch] =
     useState("");
+  const [action, setAction] = useState("");
+  const [module, setModule] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   useEffect(() => {
     const timeoutId = window.setTimeout(
@@ -49,6 +53,10 @@ export default function AuditLogsPage() {
     page,
     pageSize: PAGE_SIZE,
     search,
+    action,
+    module,
+    fromDate,
+    toDate,
   });
 
   const auditLogs = data?.items ?? [];
@@ -77,11 +85,17 @@ export default function AuditLogsPage() {
     return date.toLocaleString();
   };
 
-  const clearSearch = () => {
+  const clearFilters = () => {
     setSearchInput("");
     setSearch("");
+    setAction("");
+    setModule("");
+    setFromDate("");
+    setToDate("");
     setPage(1);
   };
+
+  const hasFilters = Boolean(search || action || module || fromDate || toDate);
 
   const getActionBadgeClass = (action: string): string => {
     const a = action.trim().toLowerCase();
@@ -166,7 +180,7 @@ export default function AuditLogsPage() {
             {searchInput && (
               <button
                 type="button"
-                onClick={clearSearch}
+                onClick={() => { setSearchInput(""); setSearch(""); setPage(1); }}
                 aria-label="Clear search"
                 style={{
                   position:  "absolute",
@@ -186,6 +200,50 @@ export default function AuditLogsPage() {
               </button>
             )}
           </div>
+          <input
+            type="text"
+            className="form-control form-control-sm"
+            style={{ width: 150 }}
+            value={action}
+            placeholder="Action"
+            aria-label="Filter by action"
+            onChange={(event) => { setAction(event.target.value.trim()); setPage(1); }}
+          />
+          <input
+            type="text"
+            className="form-control form-control-sm"
+            style={{ width: 160 }}
+            value={module}
+            placeholder="Module"
+            aria-label="Filter by module"
+            onChange={(event) => { setModule(event.target.value.trim()); setPage(1); }}
+          />
+          <input
+            type="date"
+            className="form-control form-control-sm"
+            style={{ width: 150 }}
+            value={fromDate}
+            aria-label="From date"
+            max={toDate || undefined}
+            onChange={(event) => { setFromDate(event.target.value); setPage(1); }}
+          />
+          <input
+            type="date"
+            className="form-control form-control-sm"
+            style={{ width: 150 }}
+            value={toDate}
+            aria-label="To date"
+            min={fromDate || undefined}
+            onChange={(event) => { setToDate(event.target.value); setPage(1); }}
+          />
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-sm"
+            disabled={!hasFilters}
+            onClick={clearFilters}
+          >
+            Clear filters
+          </button>
         </div>
 
         {/* ── Result count ──────────────────────────────────── */}
@@ -217,7 +275,7 @@ export default function AuditLogsPage() {
                       <EmptyState
                         compact
                         icon="📋"
-                        text={search ? `No audit logs found for "${search}".` : "No audit logs found."}
+                        text={hasFilters ? "No audit logs match the selected filters." : "No audit logs found."}
                       />
                     </td>
                   </tr>

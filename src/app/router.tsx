@@ -9,6 +9,7 @@ import { lazyPage } from "./lazy-page";
 
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { RoleProtectedRoute } from "@/features/auth/components/RoleProtectedRoute";
+import { NonDbTeamRoute } from "@/features/auth/components/NonDbTeamRoute";
 
 // ─── Router ──────────────────────────────────────────────────────────────────
 export const router = createBrowserRouter([
@@ -79,8 +80,13 @@ export const router = createBrowserRouter([
                 element: lazyPage(() => import("@/features/applications/pages/ApplicationDetailsPage")),
               },
               {
-                path: "analytics",
-                element: lazyPage(() => import("@/features/applications/pages/AnalyticsPage")),
+                element: <NonDbTeamRoute />,
+                children: [
+                  {
+                    path: "analytics",
+                    element: lazyPage(() => import("@/features/applications/pages/AnalyticsPage")),
+                  },
+                ],
               },
               {
                 path: "db-syncups",

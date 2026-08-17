@@ -26,14 +26,32 @@ export interface GetDbSyncupsParams {
   domain?: string;
   cloud?: string;
   environment?: string;
+  status?: string;
+}
+
+export interface DbSyncupListResult {
+  items: DbSyncup[];
+  total: number;
+  inProgressCount: number;
+  failedCount: number;
+  completedCount: number;
+  pendingCount: number;
 }
 
 export async function getDbSyncups(
   params: GetDbSyncupsParams = {},
-): Promise<DbSyncup[]> {
+): Promise<DbSyncupListResult> {
   const response =
     await apiClient.get<
-      DbSyncup[] | { items?: DbSyncup[]; data?: DbSyncup[] }
+      DbSyncup[] | {
+        items?: DbSyncup[];
+        data?: DbSyncup[];
+        total?: number;
+        in_progress_count?: number;
+        failed_count?: number;
+        completed_count?: number;
+        pending_count?: number;
+      }
     >("/db-syncups", {
       params: {
         page: params.page ?? 1,
@@ -43,12 +61,30 @@ export async function getDbSyncups(
         domain: params.domain || undefined,
         cloud: params.cloud || undefined,
         environment: params.environment || undefined,
+        status: params.status || undefined,
       },
     });
 
-  return Array.isArray(response.data)
-    ? response.data
-    : (response.data?.items ?? response.data?.data ?? []);
+  if (Array.isArray(response.data)) {
+    return {
+      items: response.data,
+      total: response.data.length,
+      inProgressCount: 0,
+      failedCount: 0,
+      completedCount: 0,
+      pendingCount: 0,
+    };
+  }
+
+  const items = response.data?.items ?? response.data?.data ?? [];
+  return {
+    items,
+    total: typeof response.data?.total === "number" ? response.data.total : items.length,
+    inProgressCount: response.data?.in_progress_count ?? 0,
+    failedCount: response.data?.failed_count ?? 0,
+    completedCount: response.data?.completed_count ?? 0,
+    pendingCount: response.data?.pending_count ?? 0,
+  };
 }
 
 export async function createDbSyncup(
@@ -88,13 +124,9 @@ export interface GetDbSyncupHistoryParams {
   page?: number;
   pageSize?: number;
   dbSyncupId?: number | null;
-  applicationId?: number | null;
-  applicationName?: string | null;
-  cartoId?: string | null;
-  dxUid?: string | null;
-  mcpId?: string | null;
-  action?: string | null;
-  changedByUserId?: number | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  search?: string | null;
 }
 
 export async function getDbSyncupHistory(
@@ -108,13 +140,9 @@ export async function getDbSyncupHistory(
           page: params.page ?? 1,
           page_size: params.pageSize ?? 20,
           db_syncup_id: params.dbSyncupId ?? undefined,
-          application_id: params.applicationId ?? undefined,
-          application_name: params.applicationName ?? undefined,
-          carto_id: params.cartoId ?? undefined,
-          dx_uid: params.dxUid ?? undefined,
-          mcp_id: params.mcpId ?? undefined,
-          action: params.action ?? undefined,
-          changed_by_user_id: params.changedByUserId ?? undefined,
+          start_date: params.startDate ?? undefined,
+          end_date: params.endDate ?? undefined,
+          search: params.search ?? undefined,
         },
       },
     );

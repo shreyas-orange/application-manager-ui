@@ -19,6 +19,7 @@ import {
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { useLogout } from "@/features/auth/hooks/useLogout";
 import { getUserRole } from "@/features/auth/utils/get-user-role";
+import { isDbTeamRole } from "@/features/auth/utils/is-db-team-role";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface NavItem {
@@ -83,6 +84,7 @@ export function AppLayout() {
   // ── Current user (already cached by ProtectedRoute's query) ───────
   const { data: currentUser } = useCurrentUser();
   const role        = getUserRole(currentUser);
+  const isDbTeam    = isDbTeamRole(role);
   const userInitial = String(currentUser?.email ?? "U").charAt(0).toUpperCase();
 
   // ── Logout ───────────────────────────────────────────────────────
@@ -194,7 +196,9 @@ export function AppLayout() {
         {/* Nav links */}
         <nav>
           {NAV_ITEMS.filter(
-            (item) => !item.adminOnly || role === "admin"
+            (item) => isDbTeam
+              ? item.to === "/app/applications" || item.to === "/app/db-syncups"
+              : !item.adminOnly || role === "admin"
           ).map((item) => (
             <NavLink
               key={item.to}

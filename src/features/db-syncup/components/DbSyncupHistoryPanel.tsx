@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
+import { Search, X } from "lucide-react";
 
 import { EmptyState, PageLoader } from "@/components/ui";
 
@@ -11,12 +12,6 @@ import { useDbSyncupHistory } from "../hooks/useDbSyncupHistory";
 import type { DbSyncHistoryEntry } from "../types/history.types";
 
 const PAGE_SIZE = 20;
-
-const HISTORY_ACTION_OPTIONS: { value: string; label: string }[] = [
-  { value: "CREATED", label: "Created" },
-  { value: "UPDATED", label: "Updated" },
-  { value: "DELETED", label: "Deleted" },
-];
 
 function formatDateTime(value: string | undefined): string {
   if (!value) return "NA";
@@ -112,14 +107,13 @@ function HistoryRow({ entry }: { entry: DbSyncHistoryEntry }) {
         <span className={actionBadge(entry.action)}>{entry.action || "NA"}</span>
       </td>
       <td style={{ color: "var(--ods-gray-700)", textTransform: "capitalize" }}>{fieldName}</td>
-      <td style={valueCellStyle}>{displayValue(entry.old_value, entry.action)}</td>
-      <td style={valueCellStyle}>{displayValue(entry.new_value, entry.action)}</td>
       <td style={{ color: "var(--ods-gray-700)" }}>
         {entry.changed_by_full_name || entry.changed_by_name || entry.changed_by_email || "NA"}
       </td>
       <td style={{ color: "var(--ods-gray-500)", whiteSpace: "nowrap", fontSize: "var(--ods-font-size-xs)" }}>
         {formatDateTime(entry.created_at)}
       </td>
+      <td style={valueCellStyle}>{entry.message || "NA"}</td>
     </tr>
   );
 }
@@ -130,42 +124,31 @@ interface DbSyncupHistoryPanelProps {
 
 export default function DbSyncupHistoryPanel({ dbSyncupId }: DbSyncupHistoryPanelProps) {
   const [page, setPage] = useState(1);
-  const [action, setAction] = useState("");
-  const [changedByName, setChangedByName] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(1);
+    }, 400);
+    return () => window.clearTimeout(timeoutId);
+  }, [searchInput]);
 
   const { data, isLoading, isError, isFetching } = useDbSyncupHistory({
     dbSyncupId,
     page,
     pageSize: PAGE_SIZE,
-    action: action || null,
+    startDate: fromDate || null,
+    endDate: toDate || null,
+    search: search || null,
   });
 
   const items = useMemo(() => {
-    const nameQuery = changedByName.trim().toLowerCase();
-    const from = fromDate ? new Date(fromDate) : null;
-    // Include the entire "to" day rather than cutting off at midnight.
-    const to = toDate ? new Date(`${toDate}T23:59:59.999`) : null;
-
-    return (data?.items ?? []).filter((entry) => {
-      if (isScoreField(entry.field_name)) return false;
-
-      if (nameQuery) {
-        const name = `${entry.changed_by_full_name || ""} ${entry.changed_by_name || ""} ${entry.changed_by_email || ""}`.toLowerCase();
-        if (!name.includes(nameQuery)) return false;
-      }
-
-      if (from || to) {
-        const changedAt = entry.created_at ? new Date(entry.created_at) : null;
-        if (!changedAt || Number.isNaN(changedAt.getTime())) return false;
-        if (from && changedAt < from) return false;
-        if (to && changedAt > to) return false;
-      }
-
-      return true;
-    });
-  }, [data, changedByName, fromDate, toDate]);
+    return (data?.items ?? []).filter((entry) => !isScoreField(entry.field_name));
+  }, [data]);
 
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -175,7 +158,7 @@ export default function DbSyncupHistoryPanel({ dbSyncupId }: DbSyncupHistoryPane
     setPage(1);
   };
 
-  const hasActiveFilters = Boolean(action || changedByName || fromDate || toDate);
+  const hasActiveFilters = Boolean(search || fromDate || toDate);
 
   return (
     <div className="ods-card">
@@ -200,6 +183,7 @@ export default function DbSyncupHistoryPanel({ dbSyncupId }: DbSyncupHistoryPane
             type="date"
             className="form-control form-control-sm"
             value={fromDate}
+            max={toDate || undefined}
             onChange={(e) => handleFilterChange(setFromDate)(e.target.value)}
           />
         </div>
@@ -211,43 +195,60 @@ export default function DbSyncupHistoryPanel({ dbSyncupId }: DbSyncupHistoryPane
             type="date"
             className="form-control form-control-sm"
             value={toDate}
+            min={fromDate || undefined}
             onChange={(e) => handleFilterChange(setToDate)(e.target.value)}
           />
         </div>
-        <div>
+        <div style={{ flex: "1 1 360px", minWidth: 280 }}>
           <label style={{ display: "block", fontSize: "var(--ods-font-size-xs)", fontWeight: 600, color: "var(--ods-gray-600)", marginBottom: "0.25rem" }}>
-            Changed by
+            Search
           </label>
-          <input
-            type="text"
-            placeholder="Search name..."
-            className="form-control form-control-sm"
-            value={changedByName}
-            onChange={(e) => handleFilterChange(setChangedByName)(e.target.value)}
-          />
-        </div>
-        <div>
-          <label style={{ display: "block", fontSize: "var(--ods-font-size-xs)", fontWeight: 600, color: "var(--ods-gray-600)", marginBottom: "0.25rem" }}>
-            Change
-          </label>
-          <select
-            className="form-select form-select-sm"
-            value={action}
-            onChange={(e) => handleFilterChange(setAction)(e.target.value)}
-          >
-            <option value="">All</option>
-            {HISTORY_ACTION_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
+          <div className="ods-search" style={{ width: "100%" }}>
+            <Search className="ods-search-icon" size={15} />
+            <input
+              type="search"
+              placeholder="Search application, user, field, value or reason"
+              aria-label="Search DB syncup history"
+              className="form-control form-control-sm"
+              style={{ paddingRight: searchInput ? "2.25rem" : undefined }}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+            {searchInput && (
+              <button
+                type="button"
+                aria-label="Clear history search"
+                title="Clear search"
+                onClick={() => {
+                  setSearchInput("");
+                  setSearch("");
+                  setPage(1);
+                }}
+                style={{
+                  position: "absolute",
+                  right: "0.5rem",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  display: "flex",
+                  padding: "0.2rem",
+                  border: 0,
+                  background: "transparent",
+                  color: "var(--ods-gray-500)",
+                  cursor: "pointer",
+                }}
+              >
+                <X size={15} />
+              </button>
+            )}
+          </div>
         </div>
         {hasActiveFilters && (
           <button
             type="button"
             className="btn btn-outline-secondary btn-sm"
             onClick={() => {
-              setAction("");
-              setChangedByName("");
+              setSearchInput("");
+              setSearch("");
               setFromDate("");
               setToDate("");
               setPage(1);
@@ -275,10 +276,9 @@ export default function DbSyncupHistoryPanel({ dbSyncupId }: DbSyncupHistoryPane
                 <tr>
                   <th style={{ minWidth: 90 }}>Action</th>
                   <th style={{ minWidth: 120 }}>Field</th>
-                  <th style={{ minWidth: 160 }}>Old Value</th>
-                  <th style={{ minWidth: 160 }}>New Value</th>
                   <th style={{ minWidth: 140 }}>Changed By</th>
                   <th style={{ minWidth: 140 }}>Date</th>
+                  <th style={{ minWidth: 240 }}>Message</th>
                 </tr>
               </thead>
               <tbody>

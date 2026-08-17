@@ -14,6 +14,9 @@ import {
 
 import { EmptyState, PageHeader, PageLoader } from "@/components/ui";
 import { normalizeValue } from "@/lib/format";
+import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
+import { getUserRole } from "@/features/auth/utils/get-user-role";
+import { isDbTeamRole } from "@/features/auth/utils/is-db-team-role";
 
 import ApplicationCreateModal from "../components/ApplicationCreateModal";
 import ApplicationsSummaryCards from "../components/ApplicationsSummaryCards";
@@ -28,6 +31,8 @@ import type { Application } from "../types/application.types";
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function ApplicationsPage() {
   const navigate                  = useNavigate();
+  const { data: currentUser } = useCurrentUser();
+  const isDbTeam = isDbTeamRole(getUserRole(currentUser));
   const [searchInput, setSearchInput]   = useState("");
   const [search, setSearch]             = useState("");
   const [page, setPage]                 = useState(1);
@@ -160,18 +165,20 @@ export default function ApplicationsPage() {
                 {isFetching ? "Refreshing..." : "Refresh"}
               </button>
 
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => {
-                  setPageError("");
-                  setCreateOpen(true);
-                }}
-                style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}
-              >
-                <Plus size={16} />
-                Create Application
-              </button>
+              {!isDbTeam && (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setPageError("");
+                    setCreateOpen(true);
+                  }}
+                  style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}
+                >
+                  <Plus size={16} />
+                  Create Application
+                </button>
+              )}
             </>
           }
         />
@@ -284,7 +291,7 @@ export default function ApplicationsPage() {
 
       {/* ── Create application drawer ────────────────────────── */}
       <ApplicationCreateModal
-        isOpen={createOpen}
+        isOpen={!isDbTeam && createOpen}
         onClose={() => setCreateOpen(false)}
         onCreated={(msg) => {
           setMessage(msg);

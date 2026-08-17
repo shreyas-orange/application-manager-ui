@@ -38,7 +38,7 @@ export default function DbSyncupSection({
 
   const nextSerialNumber =
     items.length > 0
-      ? Math.max(...items.map((i) => i.serial_number)) + 1
+      ? Math.max(...items.map((item) => item.serial_number ?? item.id)) + 1
       : 1;
 
   const handleCreate = async (payload: CreateDbSyncupPayload) => {
@@ -51,7 +51,7 @@ export default function DbSyncupSection({
   const handleDelete = async (item: DbSyncup) => {
     const confirmed = await confirm({
       title: "Delete DB syncup record",
-      message: `Delete DB syncup record #${item.serial_number}? This cannot be undone.`,
+      message: `Delete DB syncup record #${item.serial_number ?? item.id}? This cannot be undone.`,
       confirmLabel: "Delete",
       danger: true,
     });
@@ -170,7 +170,7 @@ export default function DbSyncupSection({
             <DbSyncupTable
               items={items}
               deletingId={deleteMutation.isPending ? (deleteMutation.variables ?? null) : null}
-              onRowClick={(item) => navigate(`/app/db-syncups/${item.id}`)}
+              onRowClick={(item) => navigate(`/app/db-syncups/${item.id}?applicationId=${item.application_id}`)}
               onDelete={handleDelete}
             />
           </div>

@@ -132,6 +132,10 @@ export const router = createBrowserRouter([
                     element: lazyPage(() => import("@/features/dashboard/pages/DashboardPage")),
                   },
                   {
+                    path: "application-trash",
+                    element: lazyPage(() => import("@/features/applications/pages/ApplicationTrashPage")),
+                  },
+                  {
                     path: "users",
                     element: lazyPage(() => import("@/features/users/pages/UsersPage")),
                   },

@@ -26,10 +26,10 @@ export default function DbSyncupSummaryCards({
         marginBottom:        "1.5rem",
       }}
     >
-      <StatCard title="Total Syncups" value={total} description="All records" icon={<Database size={18} />} />
-      <StatCard title="In Progress" value={inProgress} description="Active syncups" icon={<Clock3 size={18} />} variant="warning" />
-      <StatCard title="Completed" value={completed} description="Completed syncups" icon={<CheckCircle size={18} />} variant="success" />
-      <StatCard title="Pending" value={pending} description="Pending syncups" icon={<Hourglass size={18} />} variant="info" />
+      <StatCard title="Total Databases" value={total} description="All records" icon={<Database size={18} />} />
+      <StatCard title="In Progress" value={inProgress} description="Active migrations" icon={<Clock3 size={18} />} variant="warning" />
+      <StatCard title="Completed" value={completed} description="Completed migrations" icon={<CheckCircle size={18} />} variant="success" />
+      <StatCard title="Requested / To-do Migrations" value={pending} description="Requested or awaiting action" icon={<Hourglass size={18} />} variant="info" />
       <StatCard title="Failed" value={failed} description="Rejected / cancelled" icon={<CircleX size={18} />} variant="danger" />
     </div>
   );

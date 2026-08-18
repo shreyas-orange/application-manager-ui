@@ -20,7 +20,7 @@ export default function DbSyncupTable({
   onDelete,
 }: DbSyncupTableProps) {
   const hasActions = Boolean(onDelete);
-  const colSpan = 9;
+  const colSpan = hasActions ? 10 : 9;
 
   return (
     <div className="ods-table-wrapper">
@@ -32,7 +32,8 @@ export default function DbSyncupTable({
             <th style={{ minWidth: 130 }}>Carto</th>
             <th style={{ minWidth: 140 }}>Domain</th>
             <th style={{ minWidth: 130 }}>Basiat</th>
-            <th style={{ minWidth: 140 }}>Hosting</th>
+            <th style={{ minWidth: 160 }}>Requested By</th>
+            <th style={{ minWidth: 160 }}>Assigned To</th>
             <th style={{ minWidth: 180 }}>Data Anonymization</th>
             <th style={{ minWidth: 140 }}>Application Priority</th>
             {hasActions && <th style={{ width: 50 }} />}
@@ -42,7 +43,7 @@ export default function DbSyncupTable({
           {items.length === 0 ? (
             <tr>
               <td colSpan={colSpan}>
-                <EmptyState compact icon="🗄️" text="No DB syncup records found." />
+                <EmptyState compact icon="🗄️" text="No database migration records found." />
               </td>
             </tr>
           ) : (
@@ -51,7 +52,7 @@ export default function DbSyncupTable({
                 key={item.id}
                 onClick={() => onRowClick?.(item)}
                 style={{ cursor: onRowClick ? "pointer" : undefined }}
-                title={onRowClick ? "Open syncup details" : undefined}
+                title={onRowClick ? "Open database migration details" : undefined}
               >
                 <td style={{ color: "var(--ods-gray-700)", fontWeight: 500 }}>
                   {item.application_name || "NA"}
@@ -69,7 +70,10 @@ export default function DbSyncupTable({
                   {item.basicat || "NA"}
                 </td>
                 <td style={{ color: "var(--ods-gray-700)" }}>
-                  {item.hosting || "NA"}
+                  {item.requests?.[0]?.requested_by_name || "NA"}
+                </td>
+                <td style={{ color: "var(--ods-gray-700)" }}>
+                  {item.requests?.[0]?.assigned_to_name || item.migration_incharge || "NA"}
                 </td>
                 <td style={{ color: "var(--ods-gray-700)" }}>
                   {item.data_anonymization_status || "NA"}
@@ -84,7 +88,7 @@ export default function DbSyncupTable({
                     <button
                       type="button"
                       className="ods-icon-btn danger"
-                      title="Delete syncup"
+                      title="Delete database migration"
                       disabled={deletingId === item.id}
                       onClick={(e) => {
                         e.stopPropagation();

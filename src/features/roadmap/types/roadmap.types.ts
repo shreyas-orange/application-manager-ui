@@ -5,6 +5,14 @@ export interface LookupField {
   display_order: number;
 }
 
+export interface RoadmapLookupOption {
+  id: number;
+  name: string;
+  display_name: string;
+  display_order: number;
+  is_active?: boolean;
+}
+
 export interface TeamMember {
   id: number;
   name: string;
@@ -90,7 +98,7 @@ export interface UpdateRoadmapItemPayload {
   section_name: string;
   activity_number: number;
   activity: string;
-  status: string;
+  status: string | null;
   planned_start_date: string | null;
   planned_end_date: string | null;
   actual_start_date: string | null;

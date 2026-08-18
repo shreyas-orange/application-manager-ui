@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { getAuditLogs } from "../api/audit-logs.api";
 
 interface UseAuditLogsParams {
@@ -41,5 +41,6 @@ export function useAuditLogs({
         fromDate,
         toDate,
       }),
+    placeholderData: keepPreviousData,
   });
 }

@@ -4,11 +4,10 @@ export const DB_SYNCUP_STATUS_OPTIONS: {
   value: string;
   label: string;
 }[] = [
-  { value: "REQUESTED",   label: "Requested" },
   { value: "IN_PROGRESS", label: "In Progress" },
   { value: "COMPLETED",   label: "Completed" },
-  { value: "REJECTED",    label: "Rejected" },
-  { value: "CANCELLED",   label: "Cancelled" },
+  { value: "REQUESTED",   label: "Requested" },
+  { value: "FAILED",      label: "Failed" },
 ];
 
 export const DB_SYNCUP_PRIORITY_OPTIONS: {

@@ -45,7 +45,7 @@ export default function DbSyncupEnvironmentAnalytics({ environments }: DbSyncupE
         <EmptyState
           icon="📊"
           title="No environments requested yet"
-          text="Use the panel below to request an environment for this syncup."
+          text="Use the panel below to request an environment for this database migration."
         />
       </div>
     );

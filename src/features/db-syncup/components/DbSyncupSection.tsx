@@ -45,13 +45,13 @@ export default function DbSyncupSection({
     setPageError("");
     setMessage("");
     await createMutation.mutateAsync(payload);
-    setMessage("DB syncup created successfully.");
+    setMessage("Database migration created successfully.");
   };
 
   const handleDelete = async (item: DbSyncup) => {
     const confirmed = await confirm({
-      title: "Delete DB syncup record",
-      message: `Delete DB syncup record #${item.serial_number ?? item.id}? This cannot be undone.`,
+      title: "Delete database migration",
+      message: `Delete database migration #${item.serial_number ?? item.id}? This cannot be undone.`,
       confirmLabel: "Delete",
       danger: true,
     });
@@ -62,21 +62,21 @@ export default function DbSyncupSection({
 
     try {
       await deleteMutation.mutateAsync(item.id);
-      setMessage("DB syncup deleted successfully.");
+      setMessage("Database migration deleted successfully.");
     } catch (err) {
       setPageError(getApiErrorMessage(err));
     }
   };
 
   if (isLoading) {
-    return <PageLoader compact label="Loading DB syncup..." />;
+    return <PageLoader compact label="Loading database migrations..." />;
   }
 
   if (isError) {
     return (
       <EmptyState
         icon="⚠️"
-        title="Unable to load DB syncup"
+        title="Unable to load database migrations"
         text={error instanceof Error ? error.message : "Something went wrong."}
         action={
           <button
@@ -106,7 +106,7 @@ export default function DbSyncupSection({
       >
         <span className="ods-list-count">
           <strong style={{ color: "var(--ods-gray-900)" }}>{items.length}</strong>{" "}
-          syncup record{items.length === 1 ? "" : "s"}
+          database migration record{items.length === 1 ? "" : "s"}
         </span>
 
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
@@ -137,7 +137,7 @@ export default function DbSyncupSection({
             style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
           >
             <Plus size={15} />
-            Add Syncup
+            Add Database Migration
           </button>
         </div>
       </div>
@@ -160,8 +160,8 @@ export default function DbSyncupSection({
         <div className="ods-card" style={{ padding: "3rem" }}>
           <EmptyState
             icon="🗄️"
-            title="No DB syncup data"
-            text="No DB syncup records found for this application yet."
+            title="No database migration data"
+            text="No database migration records found for this application yet."
           />
         </div>
       ) : (

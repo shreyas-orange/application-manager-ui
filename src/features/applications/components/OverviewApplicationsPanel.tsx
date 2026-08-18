@@ -2,9 +2,7 @@ import { type FormEvent } from "react";
 import { Search, X } from "lucide-react";
 
 import { EmptyState } from "@/components/ui";
-import { formatDate } from "@/lib/format";
-
-import { getCloudNames, getMigrationStatus, getStatusBadgeClass } from "../utils/status";
+import { getCloudNames, getMigrationStatus, getOwnerByType, getStatusBadgeClass } from "../utils/status";
 import type { Application } from "../types/application.types";
 
 interface OverviewApplicationsPanelProps {
@@ -48,6 +46,9 @@ export default function OverviewApplicationsPanel({
   totalPages,
   onPageChange,
 }: OverviewApplicationsPanelProps) {
+  const getOwnerName = (app: Application, ownerType: string) =>
+    getOwnerByType(app, ownerType)?.owner_name || "NA";
+
   return (
     <div className="ods-card">
       {/* Toolbar: search + filters */}
@@ -114,18 +115,22 @@ export default function OverviewApplicationsPanel({
               <tr>
                 <th>Application</th>
                 <th>Domain</th>
-                <th>Cloud</th>
                 <th>DevOps Owner</th>
+                <th>DOMs</th>
+                <th>Cloud</th>
                 <th>Migration</th>
                 <th>Progress</th>
-                <th>Assessment</th>
-                <th>Created</th>
+                <th>NS Migration</th>
+                <th>Nexus</th>
+                <th>Security (RootId) PROD</th>
+                <th>Security (Net Pol) PROD</th>
+                <th>Sov Type</th>
               </tr>
             </thead>
             <tbody>
               {applications.length === 0 ? (
                 <tr>
-                  <td colSpan={8}>
+                  <td colSpan={12}>
                     <EmptyState
                       compact
                       icon="📋"
@@ -137,9 +142,6 @@ export default function OverviewApplicationsPanel({
                 applications.map((app) => {
                   const migStatus = getMigrationStatus(app);
                   const progress  = app.migration?.migration_progress ?? 0;
-                  const owners    = app.owners ?? [];
-                  const getOwner  = (type: string) => owners.find((o) => o.owner_type?.toLowerCase() === type.toLowerCase());
-
                   return (
                     <tr key={app.id}>
                       <td>
@@ -150,15 +152,19 @@ export default function OverviewApplicationsPanel({
                           <span style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-500)" }}>
                             Carto: {app.carto_id || "NA"}
                           </span>
+                          <span style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-400)" }}>
+                            Basicat: {app.basicat || "NA"}
+                          </span>
                         </div>
                       </td>
                       <td style={{ color: "var(--ods-gray-700)" }}>{app.confirmed_domain || app.domain || "NA"}</td>
+                      <td style={{ color: "var(--ods-gray-600)" }}>{getOwnerName(app, "DevOps")}</td>
+                      <td style={{ color: "var(--ods-gray-600)" }}>{getOwnerName(app, "Application Manager")}</td>
                       <td>
                         <span style={{ fontSize: "var(--ods-font-size-xs)", background: "var(--ods-gray-100)", color: "var(--ods-gray-700)", padding: "0.2rem 0.5rem", border: "1px solid var(--ods-gray-300)", whiteSpace: "nowrap" }}>
                           {getCloudNames(app)}
                         </span>
                       </td>
-                      <td style={{ color: "var(--ods-gray-600)" }}>{getOwner("DevOps")?.owner_name || "NA"}</td>
                       <td>
                         <span
                           className={getStatusBadgeClass(migStatus)}
@@ -175,10 +181,22 @@ export default function OverviewApplicationsPanel({
                           </div>
                         </div>
                       </td>
-                      <td style={{ color: "var(--ods-gray-600)" }}>{app.meta_data?.assessment_status || "NA"}</td>
-                      <td style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-500)", whiteSpace: "nowrap" }}>
-                        {formatDate(app.created_at)}
+                      <td style={{ minWidth: 140 }}>
+                        {app.migration?.ns_migration_progress ? (
+                          <span
+                            style={{ display: "block", fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-700)", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                            title={app.migration.ns_migration_progress}
+                          >
+                            {app.migration.ns_migration_progress.split("\n").map((value) => value.trim()).filter(Boolean).length} ns migrated
+                          </span>
+                        ) : (
+                          <span style={{ color: "var(--ods-gray-400)" }}>NA</span>
+                        )}
                       </td>
+                      <td style={{ color: "var(--ods-gray-600)" }}>{app.security?.nexus_status || "NA"}</td>
+                      <td style={{ color: "var(--ods-gray-600)" }}>{app.security?.security_prod_status || "NA"}</td>
+                      <td style={{ color: "var(--ods-gray-600)" }}>{app.security?.network_policy_status || "NA"}</td>
+                      <td style={{ color: "var(--ods-gray-600)" }}>{app.sov_type || "NA"}</td>
                     </tr>
                   );
                 })

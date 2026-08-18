@@ -312,7 +312,7 @@ export default function DbSyncupEnvironmentsPanel({
         <div className="ods-card-footer" style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
           {availableEnvTypes.length === 0 ? (
             <p style={{ margin: 0, fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-500)" }}>
-              All environments have already been requested for this syncup.
+              All environments have already been requested for this database migration.
             </p>
           ) : (
             <>

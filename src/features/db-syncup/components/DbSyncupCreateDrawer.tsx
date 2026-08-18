@@ -269,7 +269,7 @@ export default function DbSyncupCreateDrawer({
       <aside className="ods-drawer open" onMouseDown={(e) => e.stopPropagation()}>
         <div className="ods-drawer-header">
           <div>
-            <div className="ods-drawer-title">Add DB Syncup</div>
+            <div className="ods-drawer-title">Add Database Migration</div>
             <div style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-400)", marginTop: "0.15rem" }}>
               New record · Serial #{nextSerialNumber}
             </div>
@@ -380,7 +380,7 @@ export default function DbSyncupCreateDrawer({
             </DrawerSection>
 
             <p style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-500)", margin: "0 0 1rem" }}>
-              Environments can be requested from the syncup's details page after it's created.
+              Environments can be requested from the database migration details page after it is created.
             </p>
 
             {error && (
@@ -396,7 +396,7 @@ export default function DbSyncupCreateDrawer({
             Cancel
           </button>
           <button type="submit" className="btn btn-primary" disabled={saving} onClick={(e) => void handleSubmit(e)}>
-            {saving ? "Saving..." : "Add syncup"}
+            {saving ? "Saving..." : "Add Database Migration"}
           </button>
         </div>
       </aside>

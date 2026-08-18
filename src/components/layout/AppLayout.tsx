@@ -48,6 +48,13 @@ const NAV_ITEMS: NavItem[] = [
     icon:  <AppWindow size={18} />,
   },
   {
+    to: "/app/my-applications",
+    label: "My Applications",
+    description: "View applications assigned to your manager account.",
+    icon: <UserCog size={18} />,
+    allowedRoles: ["manager"],
+  },
+  {
     to: "/app/application-trash",
     label: "Trash",
     description: "Review deleted applications and restore them.",
@@ -62,16 +69,9 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     to:    "/app/db-syncups",
-    label: "DB Syncup",
+    label: "Database Migrations",
     description: "Manage database synchronization records and environments.",
     icon:  <Database size={18} />,
-  },
-  {
-    to: "/app/db-environment-requests",
-    label: "DB Sync Requests",
-    description: "Review and validate requested database environments.",
-    icon: <Database size={18} />,
-    allowedRoles: ["admin", "manager", "db validator"],
   },
   {
     to:    "/app/uploads",
@@ -151,9 +151,9 @@ export function AppLayout() {
 
         {/* Brand */}
         <NavLink to="/app/applications" className="ods-navbar-brand">
-          <div className="ods-brand-icon">AM</div>
+          <div className="ods-brand-icon">DM</div>
           {!sidebarCollapsed && (
-            <span>Application Manager</span>
+            <span>DOMs</span>
           )}
         </NavLink>
 
@@ -233,6 +233,7 @@ export function AppLayout() {
             (item) => role === "manager"
               ? [
                   "/app/applications",
+                  "/app/my-applications",
                   "/app/db-syncups",
                   "/app/db-environment-requests",
                 ].includes(item.to)

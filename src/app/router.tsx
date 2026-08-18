@@ -80,6 +80,15 @@ export const router = createBrowserRouter([
                 element: lazyPage(() => import("@/features/applications/pages/ApplicationDetailsPage")),
               },
               {
+                element: <RoleProtectedRoute allowedRoles={["manager"]} />,
+                children: [
+                  {
+                    path: "my-applications",
+                    element: lazyPage(() => import("@/features/applications/pages/MyApplicationsPage")),
+                  },
+                ],
+              },
+              {
                 element: <NonDbTeamRoute />,
                 children: [
                   {

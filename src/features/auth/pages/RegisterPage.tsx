@@ -78,7 +78,7 @@ export default function RegisterPage() {
               lineHeight: 1.2,
             }}
           >
-            Application Manager
+            DOMs
           </div>
           <div
             style={{
@@ -110,7 +110,7 @@ export default function RegisterPage() {
             margin:   0,
           }}
         >
-          Register to access Application Manager.
+          Register to access DOMs.
         </p>
       </div>
 

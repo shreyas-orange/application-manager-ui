@@ -44,7 +44,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "analytics",   label: "Analytics (roadmap)" },
   { id: "roadmap",     label: "Roadmap" },
   { id: "application", label: "Application" },
-  { id: "db-syncup",   label: "DB Syncup" },
+  { id: "db-syncup",   label: "Database Migrations" },
 ];
 
 function buildUpdatePayload(values: ApplicationEditFormValues): UpdateApplicationPayload {

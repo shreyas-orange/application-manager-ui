@@ -86,10 +86,10 @@ export default function DbSyncupDetailsPage() {
     return (
       <EmptyState
         icon="⚠️"
-        title="DB syncup record not found"
+        title="Database migration record not found"
         action={
           <button type="button" className="btn btn-primary mt-3" onClick={() => navigate("/app/db-syncups")}>
-            Back to DB Syncup
+            Back to Database Migrations
           </button>
         }
       />
@@ -97,14 +97,14 @@ export default function DbSyncupDetailsPage() {
   }
 
   if (isLoading) {
-    return <PageLoader label="Loading DB syncup..." />;
+    return <PageLoader label="Loading database migration..." />;
   }
 
   if (isError) {
     return (
       <EmptyState
         icon="⚠️"
-        title="Unable to load DB syncup"
+        title="Unable to load database migration"
         text={error instanceof Error ? error.message : "Something went wrong."}
         action={
           <button type="button" className="btn btn-primary mt-3" onClick={() => { void refetch(); }}>
@@ -119,11 +119,11 @@ export default function DbSyncupDetailsPage() {
     return (
       <EmptyState
         icon="⚠️"
-        title="DB syncup record not found"
+        title="Database migration record not found"
         text="This record may have been deleted."
         action={
           <button type="button" className="btn btn-primary mt-3" onClick={() => navigate("/app/db-syncups")}>
-            Back to DB Syncup
+            Back to Database Migrations
           </button>
         }
       />

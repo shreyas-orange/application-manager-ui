@@ -45,6 +45,10 @@ export default function DbSyncupPage() {
     search || statusFilter !== "all" || domainFilter || cloudFilter || environmentFilter,
   );
 
+  // Keep dashboard cards based on the complete worklist. The table query below
+  // can then be filtered without changing the numbers shown on the cards.
+  const summaryQuery = useAllDbSyncups({ pageSize: 1 });
+
   const { data, isLoading, isError, error, isFetching, refetch } = useAllDbSyncups({
     pageSize: 100,
     search,
@@ -55,7 +59,8 @@ export default function DbSyncupPage() {
   });
 
   const items = useMemo(() => data?.items ?? [], [data?.items]);
-  const totalSyncups = data?.total ?? 0;
+  const filteredTotal = data?.total ?? 0;
+  const totalSyncups = summaryQuery.data?.total ?? filteredTotal;
 
   const domains = useMemo(() => {
     const values = new Set<string>();
@@ -121,13 +126,13 @@ export default function DbSyncupPage() {
     setPageError("");
     setMessage("");
     await createMutation.mutateAsync(payload);
-    setMessage("DB syncup created successfully.");
+    setMessage("Database migration created successfully.");
   };
 
   const handleDelete = async (item: DbSyncup) => {
     const confirmed = await confirm({
-      title: "Delete DB syncup record",
-      message: `Delete DB syncup record #${item.serial_number ?? item.id}? This cannot be undone.`,
+      title: "Delete database migration",
+      message: `Delete database migration #${item.serial_number ?? item.id}? This cannot be undone.`,
       confirmLabel: "Delete",
       danger: true,
     });
@@ -138,22 +143,22 @@ export default function DbSyncupPage() {
 
     try {
       await deleteMutation.mutateAsync(item.id);
-      setMessage("DB syncup deleted successfully.");
+      setMessage("Database migration deleted successfully.");
     } catch (err) {
       setPageError(getApiErrorMessage(err));
     }
   };
 
   if (isLoading) {
-    return <PageLoader label="Loading DB syncup..." />;
+    return <PageLoader label="Loading database migrations..." />;
   }
 
   if (isError) {
     return (
       <EmptyState
         icon="⚠️"
-        title="Unable to load DB syncup"
-        text={error instanceof Error ? error.message : "Something went wrong while loading DB syncup."}
+        title="Unable to load database migrations"
+        text={error instanceof Error ? error.message : "Something went wrong while loading database migrations."}
         action={
           <button
             type="button"
@@ -172,8 +177,8 @@ export default function DbSyncupPage() {
   return (
     <div>
       <PageHeader
-        title="DB Syncup"
-        subtitle="View, create and manage database syncup records across applications."
+        title="Database Migrations"
+        subtitle="View, create and manage database migration records across applications."
         actions={
           <>
             <button
@@ -204,7 +209,7 @@ export default function DbSyncupPage() {
               style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}
             >
               <Plus size={16} />
-              Add Syncup
+              Add Database Migration
             </button>
           </>
         }
@@ -225,15 +230,15 @@ export default function DbSyncupPage() {
 
       <DbSyncupSummaryCards
         total={totalSyncups}
-        inProgress={data?.inProgressCount ?? 0}
-        completed={data?.completedCount ?? 0}
-        pending={data?.pendingCount ?? 0}
-        failed={data?.failedCount ?? 0}
+        inProgress={summaryQuery.data?.inProgressCount ?? 0}
+        completed={summaryQuery.data?.completedCount ?? 0}
+        pending={summaryQuery.data?.pendingCount ?? 0}
+        failed={summaryQuery.data?.failedCount ?? 0}
       />
 
       {totalSyncups === 0 && !hasApiFilters ? (
         <div className="ods-card" style={{ padding: "3rem" }}>
-          <EmptyState icon="🗄️" title="No DB syncup data" text="No DB syncup records found yet." />
+          <EmptyState icon="🗄️" title="No database migration data" text="No database migration records found yet." />
         </div>
       ) : (
         <div className="ods-card">
@@ -258,7 +263,7 @@ export default function DbSyncupPage() {
           <div className="ods-list-toolbar">
             <span className="ods-list-count">
               <strong style={{ color: "var(--ods-gray-900)" }}>{filteredItems.length}</strong>{" "}
-              of <strong style={{ color: "var(--ods-gray-900)" }}>{totalSyncups}</strong> syncup record{totalSyncups === 1 ? "" : "s"}
+              of <strong style={{ color: "var(--ods-gray-900)" }}>{filteredTotal}</strong> matching database migration record{filteredTotal === 1 ? "" : "s"}
             </span>
           </div>
 

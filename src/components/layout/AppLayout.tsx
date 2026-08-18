@@ -26,6 +26,7 @@ import { isDbTeamRole } from "@/features/auth/utils/is-db-team-role";
 interface NavItem {
   to:       string;
   label:    string;
+  description: string;
   icon:     React.ReactNode;
   adminOnly?: boolean;
   allowedRoles?: string[];
@@ -36,55 +37,65 @@ const NAV_ITEMS: NavItem[] = [
   {
     to:        "/app/dashboard",
     label:     "Dashboard",
+    description: "View application, migration, upload, and audit summaries.",
     icon:      <LayoutDashboard size={18} />,
     adminOnly: true,
   },
   {
     to:    "/app/applications",
     label: "Application List",
+    description: "Browse and manage all registered applications.",
     icon:  <AppWindow size={18} />,
   },
   {
     to: "/app/application-trash",
     label: "Trash",
+    description: "Review deleted applications and restore them.",
     icon: <Trash2 size={18} />,
     adminOnly: true,
   },
   {
     to:    "/app/analytics",
     label: "Analytics",
+    description: "Explore migration and cloud analytics.",
     icon:  <BarChart3 size={18} />,
   },
   {
     to:    "/app/db-syncups",
     label: "DB Syncup",
+    description: "Manage database synchronization records and environments.",
     icon:  <Database size={18} />,
   },
   {
     to: "/app/db-environment-requests",
     label: "DB Sync Requests",
+    description: "Review and validate requested database environments.",
     icon: <Database size={18} />,
     allowedRoles: ["admin", "manager", "db validator"],
   },
   {
     to:    "/app/uploads",
     label: "Upload Files",
+    description: "Upload and manage application source files.",
     icon:  <Upload size={18} />,
   },
   {
     to:        "/app/users",
     label:     "Users",
+    description: "Manage users, roles, and access permissions.",
     icon:      <Users size={18} />,
     adminOnly: true,
   },
   {
     to:    "/app/audit-logs",
     label: "Audit Logs",
+    description: "Track user actions and system activity.",
     icon:  <ScrollText size={18} />,
   },
   {
     to:    "/app/cloud",
     label: "Cloud",
+    description: "Configure cloud providers and deployment targets.",
     icon:  <Cloud size={18} />,
   },
 ];
@@ -110,6 +121,15 @@ export function AppLayout() {
   // ── Nav link class helper ────────────────────────────────────────
   const navClass = ({ isActive }: { isActive: boolean }) =>
     `ods-nav-link${isActive ? " active" : ""}`;
+
+  const addTableTooltip = (event: React.MouseEvent<HTMLElement>) => {
+    const target = event.target as HTMLElement;
+    const cell = target.closest("th, td") as HTMLTableCellElement | null;
+    if (!cell || cell.title) return;
+
+    const text = cell.textContent?.replace(/\s+/g, " ").trim();
+    if (text) cell.title = text;
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--ods-gray-100)" }}>
@@ -224,10 +244,15 @@ export function AppLayout() {
               key={item.to}
               to={item.to}
               className={navClass}
-              title={sidebarCollapsed ? item.label : undefined}
+              title={sidebarCollapsed ? `${item.label}: ${item.description}` : undefined}
+              aria-label={item.label}
             >
               <span className="ods-nav-icon">{item.icon}</span>
               <span className="ods-nav-label">{item.label}</span>
+              <span className="ods-nav-tooltip" role="tooltip">
+                <strong>{item.label}</strong>
+                <span>{item.description}</span>
+              </span>
             </NavLink>
           ))}
         </nav>
@@ -348,7 +373,7 @@ export function AppLayout() {
       <div
         className={`ods-main-content${sidebarCollapsed ? " sidebar-collapsed" : ""}`}
       >
-        <main>
+        <main onMouseOver={addTableTooltip}>
           <Outlet />
         </main>
       </div>

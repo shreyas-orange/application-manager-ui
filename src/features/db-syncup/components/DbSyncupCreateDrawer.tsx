@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { X } from "lucide-react";
 
 import type { Application } from "@/features/applications/types/application.types";
+import { useApplication } from "@/features/applications/hooks/useApplication";
 import { useUsersByRoles } from "@/features/users/hooks/useUsersByRole";
 import { getApiErrorMessage } from "@/lib/api-error";
 
@@ -83,12 +84,14 @@ function DrawerInput({
   onChange,
   type = "text",
   fullWidth = false,
+  readOnly = false,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   type?: string;
   fullWidth?: boolean;
+  readOnly?: boolean;
 }) {
   return (
     <div style={fullWidth ? { gridColumn: "1 / -1" } : undefined}>
@@ -99,6 +102,8 @@ function DrawerInput({
         type={type}
         className="form-control form-control-sm"
         value={value}
+        readOnly={readOnly}
+        style={readOnly ? { background: "var(--ods-gray-100)" } : undefined}
         onChange={(e) => onChange(e.target.value)}
       />
     </div>
@@ -153,6 +158,8 @@ export default function DbSyncupCreateDrawer({
   const dbSyncupUsers = dbSyncupUsersQuery.data ?? [];
 
   const targetApplication = selectedApp ?? application;
+  const selectedApplicationId = targetApplication?.id ?? 0;
+  const applicationDetailsQuery = useApplication(selectedApplicationId);
 
   const applyApplication = (app: Application) => {
     setForm((prev) => ({
@@ -193,6 +200,11 @@ export default function DbSyncupCreateDrawer({
     setForm(empty);
   }, [isOpen, application]);
 
+  useEffect(() => {
+    if (!isOpen || !applicationDetailsQuery.data) return;
+    applyApplication(applicationDetailsQuery.data);
+  }, [isOpen, applicationDetailsQuery.data]);
+
   if (!isOpen) return null;
 
   const updateField = (field: keyof FormState, value: string) =>
@@ -215,7 +227,6 @@ export default function DbSyncupCreateDrawer({
       carto_id: form.carto_id,
       basicat: form.basicat,
       domain: form.domain,
-      dx_uid: form.dx_uid,
       mcp_id: form.mcp_id,
       hosting: form.hosting,
       reason: form.reason,
@@ -287,7 +298,12 @@ export default function DbSyncupCreateDrawer({
               <DrawerInput label="Carto ID" value={form.carto_id} onChange={(v) => updateField("carto_id", v)} />
               <DrawerInput label="Basicat" value={form.basicat} onChange={(v) => updateField("basicat", v)} />
               <DrawerInput label="Domain" value={form.domain} onChange={(v) => updateField("domain", v)} />
-              <DrawerInput label="DX-uid" value={form.dx_uid} onChange={(v) => updateField("dx_uid", v)} />
+              <DrawerInput
+                label="DX-uid"
+                value={applicationDetailsQuery.isFetching ? "Loading..." : form.dx_uid}
+                onChange={() => undefined}
+                readOnly
+              />
               <DrawerInput label="MCP-id" value={form.mcp_id} onChange={(v) => updateField("mcp_id", v)} />
               <DrawerInput label="Hosting" value={form.hosting} onChange={(v) => updateField("hosting", v)} />
               <DrawerInput label="Reason" value={form.reason} onChange={(v) => updateField("reason", v)} />

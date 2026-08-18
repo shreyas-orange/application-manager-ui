@@ -90,7 +90,7 @@ export interface CreateDbSyncupPayload {
   reason: string;
   data_anonymization_status: string;
   domain: string;
-  dx_uid: string;
+  dx_uid?: string;
   mcp_id: string;
   remarks: string;
   environment_count: number;

@@ -26,8 +26,11 @@ export interface SharePointSyncResponse {
 }
 
 interface ApplicationDetailsApiResponse {
-  application: Partial<Application> & Pick<Application, "id" | "application_name">;
-  meta_data: Application["meta_data"];
+  application: Partial<Application> & Pick<Application, "id" | "application_name"> & {
+    metadata?: Application["meta_data"];
+  };
+  meta_data?: Application["meta_data"];
+  metadata?: Application["meta_data"];
   migration: (Application["migration"] & {
     assessment_status?: string | null;
     data_anonymization_status?: string | null;
@@ -50,13 +53,19 @@ function normalizeApplicationDetails(
   raw: ApplicationDetailsApiResponse,
 ): Application {
   const migration = raw.migration;
-  const metaData = raw.meta_data
+  const sourceMetaData =
+    raw.meta_data ??
+    raw.metadata ??
+    raw.application.meta_data ??
+    raw.application.metadata ??
+    null;
+  const metaData = sourceMetaData
     ? {
-        ...raw.meta_data,
+        ...sourceMetaData,
         assessment_status:
-          raw.meta_data.assessment_status ?? migration?.assessment_status ?? null,
+          sourceMetaData.assessment_status ?? migration?.assessment_status ?? null,
         data_anonymization_status:
-          raw.meta_data.data_anonymization_status ??
+          sourceMetaData.data_anonymization_status ??
           migration?.data_anonymization_status ??
           null,
       }

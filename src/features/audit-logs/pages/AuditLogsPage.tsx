@@ -23,7 +23,9 @@ export default function AuditLogsPage() {
     useState("");
   const [search, setSearch] =
     useState("");
+  const [actionInput, setActionInput] = useState("");
   const [action, setAction] = useState("");
+  const [moduleInput, setModuleInput] = useState("");
   const [module, setModule] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -32,6 +34,8 @@ export default function AuditLogsPage() {
     const timeoutId = window.setTimeout(
       () => {
         setSearch(searchInput.trim());
+        setAction(actionInput.trim());
+        setModule(moduleInput.trim());
         setPage(1);
       },
       400,
@@ -40,7 +44,7 @@ export default function AuditLogsPage() {
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [searchInput]);
+  }, [searchInput, actionInput, moduleInput]);
 
   const {
     data,
@@ -88,7 +92,9 @@ export default function AuditLogsPage() {
   const clearFilters = () => {
     setSearchInput("");
     setSearch("");
+    setActionInput("");
     setAction("");
+    setModuleInput("");
     setModule("");
     setFromDate("");
     setToDate("");
@@ -204,19 +210,19 @@ export default function AuditLogsPage() {
             type="text"
             className="form-control form-control-sm"
             style={{ width: 150 }}
-            value={action}
+            value={actionInput}
             placeholder="Action"
             aria-label="Filter by action"
-            onChange={(event) => { setAction(event.target.value.trim()); setPage(1); }}
+            onChange={(event) => setActionInput(event.target.value)}
           />
           <input
             type="text"
             className="form-control form-control-sm"
             style={{ width: 160 }}
-            value={module}
+            value={moduleInput}
             placeholder="Module"
             aria-label="Filter by module"
-            onChange={(event) => { setModule(event.target.value.trim()); setPage(1); }}
+            onChange={(event) => setModuleInput(event.target.value)}
           />
           <input
             type="date"

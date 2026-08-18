@@ -56,7 +56,11 @@ export default function DashboardPage() {
   const cloudDistribution    = data?.cloud_distribution    ?? [];
   const applicationsByDomain = data?.applications_by_domain ?? [];
   const recentUploads        = data?.recent_uploads        ?? [];
-  const recentAuditLogs      = data?.recent_audit_logs     ?? [];
+  const recentAuditLogs      = [...(data?.recent_audit_logs ?? [])]
+    .sort((left, right) => (
+      new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+    ))
+    .slice(0, 5);
 
   // ── Render ───────────────────────────────────────────────────────
   return (

@@ -51,12 +51,6 @@ const NAV_ITEMS: NavItem[] = [
     adminOnly: true,
   },
   {
-    to: "/app/my-applications",
-    label: "My Applications",
-    icon: <UserCog size={18} />,
-    allowedRoles: ["manager"],
-  },
-  {
     to:    "/app/analytics",
     label: "Analytics",
     icon:  <BarChart3 size={18} />,
@@ -219,7 +213,6 @@ export function AppLayout() {
             (item) => role === "manager"
               ? [
                   "/app/applications",
-                  "/app/my-applications",
                   "/app/db-syncups",
                   "/app/db-environment-requests",
                 ].includes(item.to)

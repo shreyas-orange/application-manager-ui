@@ -63,21 +63,23 @@ export default function DbEnvironmentWorklistPage() {
       />
 
       <div className="ods-card" style={{ marginBottom: "1rem", padding: "1rem" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "0.75rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", alignItems: "center" }}>
           <div><strong style={{ fontSize: "1.5rem" }}>{data?.pie_chart.total ?? 0}</strong><div>Total</div></div>
           <div><strong style={{ fontSize: "1.5rem", color: "#FF7900" }}>{data?.pie_chart.requested ?? 0}</strong><div>Requested</div></div>
           <div><strong style={{ fontSize: "1.5rem", color: "#FFC107" }}>{data?.pie_chart.pending ?? 0}</strong><div>Pending</div></div>
           <div><strong style={{ fontSize: "1.5rem", color: "#198754" }}>{data?.pie_chart.completed ?? 0}</strong><div>Completed</div></div>
-          <div style={{ minWidth: 260 }}>
-            <ResponsiveContainer width="100%" height={115}>
-              <PieChart>
-                <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={28} outerRadius={48}>
-                  {chartData.map((entry) => <Cell key={entry.name} fill={entry.fill} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", columnGap: "1rem", rowGap: "0.4rem" }}>
+          <div style={{ minWidth: 300, gridColumn: "span 2", display: "flex", alignItems: "center", justifyContent: "center", gap: "1rem" }}>
+            <div style={{ width: 145, height: 130, flexShrink: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={28} outerRadius={48}>
+                    {chartData.map((entry) => <Cell key={entry.name} fill={entry.fill} />)}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.5rem" }}>
               {chartData.map((entry) => (
                 <span key={entry.name} style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", whiteSpace: "nowrap", fontSize: "var(--ods-font-size-xs)" }}>
                   <span style={{ width: 11, height: 11, background: entry.fill, display: "inline-block" }} />

@@ -24,12 +24,32 @@ import ApplicationCreateModal from "../components/ApplicationCreateModal";
 import ApplicationsSummaryCards from "../components/ApplicationsSummaryCards";
 import ApplicationsToolbar from "../components/ApplicationsToolbar";
 import ApplicationsTable from "../components/ApplicationsTable";
-import { useApplications } from "../hooks/useApplications";
+import { useAllApplications } from "../hooks/useAllApplications";
 import { useApplicationDomains } from "../hooks/useApplicationDomains";
 import { useSharePointSync } from "../hooks/useSharePointSync";
-import { normalizeStatus } from "../utils/status";
+import { getMigrationStatus } from "../utils/status";
 import { sanitizeDomainName } from "../utils/domain";
 import type { Application } from "../types/application.types";
+
+type SummaryStatus = "in-progress" | "completed" | "pending" | "failed" | "other";
+
+function getSummaryStatus(app: Application): SummaryStatus {
+  const status = normalizeValue(getMigrationStatus(app))
+    .replace(/\s*\/\s*/g, "/")
+    .replace(/\s+/g, " ");
+
+  if ([
+    "in progress",
+    "inprogress",
+    "in_progress",
+    "in progress/on track",
+    "in progress/at risk",
+  ].includes(status)) return "in-progress";
+  if (["completed", "complete", "done"].includes(status)) return "completed";
+  if (["failed", "failure"].includes(status)) return "failed";
+  if (status === "pending") return "pending";
+  return "other";
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function ApplicationsPage() {
@@ -51,9 +71,7 @@ export default function ApplicationsPage() {
   const pageSize = 10;
 
   const { data, isLoading, isError, error, isFetching, refetch } =
-    useApplications({
-      page,
-      pageSize,
+    useAllApplications({
       search,
       cloud: cloudFilter === "all" ? undefined : cloudFilter,
       domain: domainFilter === "all" ? undefined : domainFilter,
@@ -63,7 +81,6 @@ export default function ApplicationsPage() {
 
   const applications = useMemo(() => data?.items ?? [], [data]);
   const total        = data?.total  ?? applications.length;
-  const totalPages   = Math.max(1, Math.ceil(total / pageSize));
 
   // ── Derived domain list ──────────────────────────────────────────
   const domains = useMemo(
@@ -78,27 +95,42 @@ export default function ApplicationsPage() {
   const filteredApplications = useMemo(() => {
     return applications.filter((app) => {
       const selectedStatus = normalizeValue(statusFilter);
-      const statuses = [
-        app.application_status,
-        app.migration?.migration_status,
-      ].map(normalizeValue);
-      const matchesStatus =
-        statusFilter === "all" || statuses.includes(selectedStatus);
+      const summaryFilter: Partial<Record<string, SummaryStatus>> = {
+        "in progress": "in-progress",
+        completed: "completed",
+        pending: "pending",
+        failed: "failed",
+      };
+      const matchesStatus = statusFilter === "all" || (
+        summaryFilter[selectedStatus]
+          ? getSummaryStatus(app) === summaryFilter[selectedStatus]
+          : normalizeValue(getMigrationStatus(app)) === selectedStatus
+      );
       return matchesStatus;
     });
   }, [applications, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredApplications.length / pageSize));
+  const visibleApplications = useMemo(
+    () => filteredApplications.slice((page - 1) * pageSize, page * pageSize),
+    [filteredApplications, page],
+  );
 
   // ── Summary counts ───────────────────────────────────────────────
   const summary = useMemo(() => {
     let inProgress = 0, completed = 0, failed = 0, pending = 0;
     applications.forEach((app) => {
-      const s = normalizeStatus(
-        app.migration?.migration_status || app.application_status || "Pending",
-      );
-      if (s === "Completed") completed += 1;
-      else if (s === "In Progress") inProgress += 1;
-      else if (s === "Failed") failed += 1;
-      else pending += 1;
+      const status = getSummaryStatus(app);
+
+      if (status === "in-progress") {
+        inProgress += 1;
+      } else if (status === "completed") {
+        completed += 1;
+      } else if (status === "failed") {
+        failed += 1;
+      } else if (status === "pending") {
+        pending += 1;
+      }
     });
     return { total, inProgress, completed, failed, pending };
   }, [applications, total]);
@@ -281,7 +313,7 @@ export default function ApplicationsPage() {
           </div>
 
           <div className="ods-card-body" style={{ padding: 0 }}>
-            <ApplicationsTable applications={filteredApplications} onOpen={handleOpenApp} />
+            <ApplicationsTable applications={visibleApplications} onOpen={handleOpenApp} />
           </div>
 
           {/* ── Pagination ────────────────────────────────────── */}
@@ -315,7 +347,7 @@ export default function ApplicationsPage() {
               <button
                 type="button"
                 className="btn btn-outline-secondary btn-sm"
-                disabled={page >= totalPages || applications.length === 0}
+                disabled={page >= totalPages || filteredApplications.length === 0}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
                 Next

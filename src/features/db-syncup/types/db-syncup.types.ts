@@ -123,18 +123,22 @@ export interface DbSyncEnvironmentUpdate {
   request_status?: string;
   priority?: string;
   remarks?: string;
+  date_of_request?: string | null;
   prod_second_load_cut_over?: string;
 }
 
 export interface DbSyncRequestUpdate {
   id?: number;
+  requested_by_user_id?: number | null;
   assigned_to_user_id?: number | null;
-  application_priority?: string;
   remarks?: string;
   environments?: DbSyncEnvironmentUpdate[];
 }
 
 export interface UpdateDbSyncupPayload {
+  application_id?: number;
+  uploaded_file_id?: number | null;
+  serial_number?: number | null;
   application_name?: string;
   carto_id?: string;
   basicat?: string;
@@ -146,17 +150,19 @@ export interface UpdateDbSyncupPayload {
   data_anonymization_status?: string;
   db_validation?: string;
   migration_incharge?: string;
-  date_of_request?: string;
+  date_of_request?: string | null;
   environment_count?: number;
   remarks?: string;
   dev_status?: string;
+  demo_status?: string;
   qa_status?: string;
   uat_am_status?: string;
   pprod_perf_status?: string;
   mnt_e_status?: string;
+  bench_status?: string;
+  staging_status?: string;
+  int_status?: string;
   prod_status?: string;
-  environment_priority?: string;
-  application_priority?: string;
   time_taken_in_prod?: string;
   request?: DbSyncRequestUpdate;
 }

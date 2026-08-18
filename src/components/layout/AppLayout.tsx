@@ -14,6 +14,7 @@ import {
   BarChart3,
   Database,
   UserCog,
+  Trash2,
 } from "lucide-react";
 
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
@@ -42,6 +43,12 @@ const NAV_ITEMS: NavItem[] = [
     to:    "/app/applications",
     label: "Application List",
     icon:  <AppWindow size={18} />,
+  },
+  {
+    to: "/app/application-trash",
+    label: "Trash",
+    icon: <Trash2 size={18} />,
+    adminOnly: true,
   },
   {
     to: "/app/my-applications",

@@ -221,7 +221,7 @@ export default function ApplicationEditFormFields({ readOnly }: ApplicationEditF
     <>
       <Section title="Application Information">
         <Field label="Application name" name="application_name" readOnly={readOnly} />
-        <Field label="Carto ID" name="carto_id" readOnly={readOnly} />
+        <Field label="Carto ID" name="carto_id" readOnly />
         <Field label="Basicat" name="basicat" readOnly={readOnly} />
         <Field label="Domain" name="domain" readOnly={readOnly} />
         <Field label="Confirmed domain" name="confirmed_domain" readOnly={readOnly} />

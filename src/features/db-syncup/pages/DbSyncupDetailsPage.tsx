@@ -22,7 +22,8 @@ import type {
 function buildDetailsForm(item: DbSyncup): DbSyncupDetailsFormValues {
   return {
     db_validation: item.db_validation || "",
-    migration_incharge: item.migration_incharge || "",
+    migration_incharge: item.requests?.[0]?.assigned_to_name || item.migration_incharge || "",
+    assigned_to_user_id: item.requests?.[0]?.assigned_to_user_id ?? null,
     date_of_request: item.date_of_request?.slice(0, 10) || "",
     time_taken_in_prod: item.time_taken_in_prod || "",
     remarks: item.remarks || "",
@@ -194,16 +195,12 @@ export default function DbSyncupDetailsPage() {
 
     diffField("db_validation", item.db_validation);
     diffField("migration_incharge", item.migration_incharge);
-    diffField("date_of_request", item.date_of_request?.slice(0, 10) ?? "");
     diffField("time_taken_in_prod", item.time_taken_in_prod);
     diffField("remarks", item.remarks);
 
-    const originalApplicationPriority = request?.application_priority ?? "";
-    if (detailsForm.application_priority !== originalApplicationPriority) {
-      // Sent both places — the syncup-level field and the request-level one —
-      // since the read shape has it on the request but the update payload also
-      // accepts it at the top level; harmless if the backend only honors one.
-      payload.application_priority = detailsForm.application_priority;
+    const originalRequestDate = item.date_of_request?.slice(0, 10) ?? "";
+    if (detailsForm.date_of_request !== originalRequestDate) {
+      payload.date_of_request = detailsForm.date_of_request || null;
     }
 
     const environmentUpdates: DbSyncEnvironmentUpdate[] = environments
@@ -227,13 +224,14 @@ export default function DbSyncupDetailsPage() {
       })
       .filter((update): update is DbSyncEnvironmentUpdate => update !== null);
 
-    const applicationPriorityChanged = detailsForm.application_priority !== originalApplicationPriority;
+    const assignmentChanged = Boolean(request) &&
+      detailsForm.assigned_to_user_id !== (request?.assigned_to_user_id ?? null);
 
-    if (request && (environmentUpdates.length > 0 || applicationPriorityChanged)) {
+    if (request && (environmentUpdates.length > 0 || assignmentChanged)) {
       payload.request = {
         id: request.id,
         ...(environmentUpdates.length > 0 ? { environments: environmentUpdates } : {}),
-        ...(applicationPriorityChanged ? { application_priority: detailsForm.application_priority } : {}),
+        ...(assignmentChanged ? { assigned_to_user_id: detailsForm.assigned_to_user_id } : {}),
       };
     }
 

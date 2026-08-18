@@ -11,10 +11,11 @@ import {
   ArrowLeft,
   Pencil,
   Save,
+  Trash2,
   X,
 } from "lucide-react";
 
-import { EmptyState, PageHeader, PageLoader, Spinner, Tabs } from "@/components/ui";
+import { EmptyState, PageHeader, PageLoader, Spinner, Tabs, useConfirmDialog } from "@/components/ui";
 import RoadmapAnalytics from "@/features/roadmap/components/RoadmapAnalytics";
 import RoadmapSection  from "@/features/roadmap/components/RoadmapSection";
 import DbSyncupSection from "@/features/db-syncup/components/DbSyncupSection";
@@ -24,6 +25,7 @@ import { isDbTeamRole } from "@/features/auth/utils/is-db-team-role";
 
 import { useApplication } from "../hooks/useApplication";
 import { useUpdateApplication } from "../hooks/useUpdateApplication";
+import { useDeleteApplication } from "../hooks/useDeleteApplication";
 import { populateApplicationForm } from "../utils/populate-application-form";
 import {
   applicationEditSchema,
@@ -49,7 +51,6 @@ function buildUpdatePayload(values: ApplicationEditFormValues): UpdateApplicatio
   return {
     application: {
       application_name:    values.application_name    || null,
-      carto_id:            values.carto_id            || null,
       basicat:             values.basicat             || null,
       priority:            values.priority            || null,
       confirmed_domain:    values.confirmed_domain    || null,
@@ -119,7 +120,10 @@ export default function ApplicationDetailsPage() {
   const location      = useLocation();
   const params        = useParams<{ id: string }>();
   const { data: currentUser } = useCurrentUser();
-  const isDbTeam = isDbTeamRole(getUserRole(currentUser));
+  const role = getUserRole(currentUser);
+  const isDbTeam = isDbTeamRole(role);
+  const isAdmin = role === "admin";
+  const { confirm, dialog } = useConfirmDialog();
 
   const applicationId = Number(params.id);
 
@@ -137,6 +141,7 @@ export default function ApplicationDetailsPage() {
   const application = applicationQuery.data ?? null;
 
   const updateMutation = useUpdateApplication();
+  const deleteMutation = useDeleteApplication();
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("analytics");
 
@@ -236,6 +241,23 @@ export default function ApplicationDetailsPage() {
     }
   };
 
+  const handleDelete = async () => {
+    const confirmed = await confirm({
+      title: "Move application to trash",
+      message: `Are you sure you want to move ${application.application_name} to trash?`,
+      confirmLabel: "Move to Trash",
+      danger: true,
+    });
+    if (!confirmed) return;
+
+    try {
+      await deleteMutation.mutateAsync(applicationId);
+      navigate("/app/applications", { replace: true });
+    } catch {
+      // The mutation error is displayed on this page.
+    }
+  };
+
   return (
     <div>
       <PageHeader
@@ -257,22 +279,42 @@ export default function ApplicationDetailsPage() {
             {application.carto_id ? ` · Carto: ${application.carto_id}` : ""}
           </>
         }
-        actions={
-          activeTab === "application" &&
-          !isDbTeam &&
-          !editing && (
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => setEditing(true)}
-              style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
-            >
-              <Pencil size={15} />
-              Edit
-            </button>
-          )
-        }
+        actions={(
+          <>
+            {activeTab === "application" && !isDbTeam && !editing && (
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => setEditing(true)}
+                style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+              >
+                <Pencil size={15} />
+                Edit
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                type="button"
+                className="btn btn-danger"
+                disabled={deleteMutation.isPending}
+                onClick={() => { void handleDelete(); }}
+                style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+              >
+                <Trash2 size={15} />
+                {deleteMutation.isPending ? "Moving..." : "Move to Trash"}
+              </button>
+            )}
+          </>
+        )}
       />
+
+      {deleteMutation.isError && (
+        <div className="ods-form-message error" style={{ marginBottom: "1rem" }}>
+          {deleteMutation.error instanceof Error
+            ? deleteMutation.error.message
+            : "Unable to delete application."}
+        </div>
+      )}
 
       <Tabs items={TABS} active={activeTab} onChange={setActiveTab} />
 
@@ -366,6 +408,7 @@ export default function ApplicationDetailsPage() {
           )}
         </FormProvider>
       )}
+      {dialog}
     </div>
   );
 }

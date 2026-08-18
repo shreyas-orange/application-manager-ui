@@ -108,7 +108,7 @@ export default function DbEnvironmentWorklistPage() {
           <button type="button" className="btn btn-outline-secondary btn-sm" onClick={clearFilters}><X size={13} /> Clear</button>
         </div>
 
-        <div className="ods-table-wrapper"><table className="ods-table"><thead><tr><th>Application</th><th>Carto ID</th><th>Domain</th><th>Cloud</th><th>Environment</th><th>Status</th><th>Priority</th><th>Requested</th><th>Requested by</th><th>Assigned to</th><th>Remarks</th></tr></thead><tbody>
+        <div className="ods-table-wrapper"><table className="ods-table"><thead><tr><th>Application</th><th>Carto ID</th><th>Domain</th><th>Cloud</th><th>Environment</th><th>Status</th><th>Priority</th><th>Requested</th><th>Requested by</th><th>Migration Manager</th><th>Remarks</th></tr></thead><tbody>
           {(data?.items ?? []).length === 0 ? <tr><td colSpan={11}><EmptyState compact text="No environment requests found." /></td></tr> : data?.items.map((item) => (
             <tr
               key={item.environment_id}

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   getApplications,
   getPublicApplications,
+  type GetApplicationsParams,
 } from "../api/applications.api";
 import type { ApplicationsResponse } from "../types/application.types";
 
@@ -29,11 +30,13 @@ async function loadAllApplicationPages(
   };
 }
 
-export function useAllApplications() {
+export function useAllApplications(
+  params: Pick<GetApplicationsParams, "search" | "cloud" | "domain"> = {},
+) {
   return useQuery({
-    queryKey: ["applications", "all"],
+    queryKey: ["applications", "all", params.search, params.cloud, params.domain],
     queryFn: () => loadAllApplicationPages(
-      (page, pageSize) => getApplications({ page, pageSize }),
+      (page, pageSize) => getApplications({ ...params, page, pageSize }),
     ),
   });
 }

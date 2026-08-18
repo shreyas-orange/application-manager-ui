@@ -20,7 +20,7 @@ export default function DbSyncupTable({
   onDelete,
 }: DbSyncupTableProps) {
   const hasActions = Boolean(onDelete);
-  const colSpan = 9;
+  const colSpan = hasActions ? 10 : 9;
 
   return (
     <div className="ods-table-wrapper">
@@ -35,6 +35,7 @@ export default function DbSyncupTable({
             <th style={{ minWidth: 140 }}>Hosting</th>
             <th style={{ minWidth: 180 }}>Data Anonymization</th>
             <th style={{ minWidth: 140 }}>Application Priority</th>
+            <th style={{ minWidth: 160 }}>Migration Manager</th>
             {hasActions && <th style={{ width: 50 }} />}
           </tr>
         </thead>
@@ -78,6 +79,9 @@ export default function DbSyncupTable({
                   <span className={getPriorityBadgeClass(item.requests?.[0]?.application_priority)}>
                     {item.requests?.[0]?.application_priority || "NA"}
                   </span>
+                </td>
+                <td style={{ color: "var(--ods-gray-700)" }}>
+                  {item.requests?.[0]?.assigned_to_name || item.migration_incharge || "NA"}
                 </td>
                 {hasActions && (
                   <td>

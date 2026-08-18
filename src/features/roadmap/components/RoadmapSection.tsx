@@ -1,27 +1,64 @@
 // src/features/roadmap/components/RoadmapSection.tsx
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
+
+import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
+import { getUserRole } from "@/features/auth/utils/get-user-role";
+import { useConfirmDialog } from "@/components/ui";
 
 import RoadmapEditDrawer from "./RoadmapEditDrawer";
 import RoadmapImportButton from "./RoadmapImportButton";
 import RoadmapTable from "./RoadmapTable";
 import {
   useCreateRoadmapItem,
+  useCreateRoadmapLookup,
+  useDeleteRoadmapItem,
   useRoadmapDetails,
+  useRoadmapLookups,
   useUpdateRoadmapItem,
 } from "../hooks/useRoadmap";
 import type { RoadmapItem } from "../types/roadmap.types";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function RoadmapSection({ appId }: { appId: number }) {
-  const { data, isLoading, isError, error, refetch } = useRoadmapDetails(appId);
+  const { data: currentUser } = useCurrentUser();
+  const canDelete = ["admin", "manager"].includes(getUserRole(currentUser));
+  const { confirm, dialog } = useConfirmDialog();
+  const { data, isLoading, isError, error, isFetching, refetch } = useRoadmapDetails(appId);
   const updateMutation = useUpdateRoadmapItem(appId);
   const createMutation = useCreateRoadmapItem(appId);
+  const phasesQuery = useRoadmapLookups("phases");
+  const environmentsQuery = useRoadmapLookups("environments");
+  const createPhase = useCreateRoadmapLookup("phases");
+  const createEnvironment = useCreateRoadmapLookup("environments");
+  const deleteMutation = useDeleteRoadmapItem(appId);
 
   const [editingItem, setEditingItem] = useState<RoadmapItem | null>(null);
   const [creating, setCreating] = useState(false);
+  const [importError, setImportError] = useState("");
 
   const items = data?.items ?? [];
+
+  const phaseOptions = phasesQuery.data ?? [];
+  const environmentOptions = environmentsQuery.data ?? [];
+
+  const resolveLookup = async (
+    kind: "phases" | "environments",
+    value: string,
+  ): Promise<number> => {
+    const normalized = value.trim().toLowerCase();
+    const options = kind === "phases" ? phaseOptions : environmentOptions;
+    const existing = options.find((option) =>
+      option.name.trim().toLowerCase() === normalized ||
+      option.display_name.trim().toLowerCase() === normalized
+    );
+    if (existing) return existing.id;
+
+    const created = kind === "phases"
+      ? await createPhase.mutateAsync(value.trim())
+      : await createEnvironment.mutateAsync(value.trim());
+    return created.id;
+  };
 
   const nextDisplayOrder =
     items.length > 0
@@ -37,6 +74,17 @@ export default function RoadmapSection({ appId }: { appId: number }) {
     } else {
       await createMutation.mutateAsync({ payload });
     }
+  };
+
+  const handleDelete = async (item: RoadmapItem) => {
+    const confirmed = await confirm({
+      title: "Delete roadmap activity",
+      message: `Are you sure you want to delete activity ${item.activity_number || item.display_order}: ${item.activity}?`,
+      confirmLabel: "Delete",
+      danger: true,
+    });
+    if (!confirmed) return;
+    await deleteMutation.mutateAsync(item.id);
   };
 
   if (isLoading) {
@@ -85,11 +133,25 @@ export default function RoadmapSection({ appId }: { appId: number }) {
         style={{
           display: "flex",
           justifyContent: "flex-end",
+          alignItems: "flex-start",
           gap: "0.5rem",
           marginBottom: "1rem",
           flexWrap: "wrap",
         }}
       >
+        <button
+          type="button"
+          className="btn btn-outline-secondary btn-sm"
+          disabled={isFetching}
+          onClick={() => { void refetch(); }}
+          style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+        >
+          <RefreshCw
+            size={15}
+            style={{ animation: isFetching ? "ods-spin 0.7s linear infinite" : "none" }}
+          />
+          {isFetching ? "Refreshing..." : "Refresh"}
+        </button>
         <button
           type="button"
           className="btn btn-primary btn-sm"
@@ -104,9 +166,30 @@ export default function RoadmapSection({ appId }: { appId: number }) {
           replaceExisting={items.length > 0}
           label={items.length > 0 ? "Replace Roadmap" : "Upload Roadmap"}
           className="btn btn-outline-secondary btn-sm"
-          onSuccess={() => { void refetch(); }}
+          onSuccess={() => {
+            setImportError("");
+            void refetch();
+          }}
+          onErrorMessage={setImportError}
         />
       </div>
+
+      {importError && (
+        <div
+          className="ods-form-message error"
+          role="alert"
+          aria-live="assertive"
+          style={{
+            maxWidth: 620,
+            margin: "-0.5rem 0 1rem auto",
+            padding: "0.4rem 0.55rem",
+            fontSize: "var(--ods-font-size-xs)",
+            lineHeight: 1.3,
+          }}
+        >
+          {importError}
+        </div>
+      )}
 
       {/* ── Table / empty state ───────────────────────────────── */}
       {items.length === 0 ? (
@@ -120,7 +203,12 @@ export default function RoadmapSection({ appId }: { appId: number }) {
           </div>
         </div>
       ) : (
-        <RoadmapTable items={items} onEdit={setEditingItem} />
+        <RoadmapTable
+          items={items}
+          onEdit={setEditingItem}
+          onDelete={canDelete ? (item) => { void handleDelete(item); } : undefined}
+          deletingItemId={deleteMutation.isPending ? deleteMutation.variables : null}
+        />
       )}
 
       {/* ── Edit / Create drawer ─────────────────────────────── */}
@@ -129,12 +217,16 @@ export default function RoadmapSection({ appId }: { appId: number }) {
         isOpen={editingItem !== null || creating}
         mode={editingItem ? "edit" : "create"}
         nextDisplayOrder={nextDisplayOrder}
+        phaseOptions={phaseOptions}
+        environmentOptions={environmentOptions}
+        onResolveLookup={resolveLookup}
         onClose={() => {
           setEditingItem(null);
           setCreating(false);
         }}
         onSave={handleSave}
       />
+      {dialog}
     </div>
   );
 }

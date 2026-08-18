@@ -6,8 +6,47 @@ import type {
   RoadmapApiItem,
   RoadmapItem,
   RoadmapResponse,
+  RoadmapLookupOption,
   UpdateRoadmapItemPayload,
 } from "../types/roadmap.types";
+
+type RoadmapLookupKind = "phases" | "environments";
+
+function lookupItems(
+  data: RoadmapLookupOption[] | { items?: RoadmapLookupOption[]; data?: RoadmapLookupOption[] },
+): RoadmapLookupOption[] {
+  if (Array.isArray(data)) return data;
+  return data.items ?? data.data ?? [];
+}
+
+export async function getRoadmapLookups(
+  kind: RoadmapLookupKind,
+  search = "",
+): Promise<RoadmapLookupOption[]> {
+  const response = await apiClient.get<
+    RoadmapLookupOption[] | { items?: RoadmapLookupOption[]; data?: RoadmapLookupOption[] }
+  >(`/roadmap/${kind}`, {
+    params: { is_active: true, search: search || undefined },
+  });
+  return lookupItems(response.data);
+}
+
+export async function createRoadmapLookup(
+  kind: RoadmapLookupKind,
+  value: string,
+): Promise<RoadmapLookupOption> {
+  const name = value.trim();
+  const response = await apiClient.post<RoadmapLookupOption>(
+    `/roadmap/${kind}`,
+    {
+      name,
+      display_name: name,
+      display_order: 0,
+      is_active: true,
+    },
+  );
+  return response.data;
+}
 
 function lookupName(val: LookupField | null): string {
   if (!val) return "";
@@ -78,6 +117,15 @@ export async function updateRoadmapItem(
   return normalizeItem(item);
 }
 
+export async function deleteRoadmapItem(
+  applicationId: number,
+  itemId: number,
+): Promise<void> {
+  await apiClient.delete(
+    `/roadmap/applications/${applicationId}/roadmap-details/${itemId}`,
+  );
+}
+
 export async function importRoadmap(
   applicationId: number,
   file: File,
@@ -96,12 +144,16 @@ export async function createRoadmapItem(
   applicationId: number,
   payload: UpdateRoadmapItemPayload,
 ): Promise<RoadmapItem> {
-  const response = await apiClient.post<
-    RoadmapApiItem | { roadmap_details: RoadmapApiItem[] }
-  >(`/roadmap/applications/${applicationId}/roadmap-details`, payload);
-  const data = response.data;
-  const item = "roadmap_details" in data
-    ? data.roadmap_details[0]
-    : data;
+  const response = await apiClient.post<RoadmapApiResponse>(
+    `/roadmap/applications/${applicationId}/roadmap-create`,
+    { roadmap_details: [payload] },
+  );
+  const details = response.data.roadmap_details;
+  const item = details[details.length - 1];
+
+  if (!item) {
+    throw new Error("The roadmap item was created but was not returned by the API.");
+  }
+
   return normalizeItem(item);
 }

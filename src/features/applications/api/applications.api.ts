@@ -5,6 +5,8 @@ import type {
   Application,
   ApplicationsApiResponse,
   ApplicationsResponse,
+  ApplicationTrashResponse,
+  TrashedApplication,
   CreateApplicationPayload,
   UpdateApplicationPayload,
 } from "../types/application.types";
@@ -217,4 +219,61 @@ export async function getApplication(
     );
 
   return normalizeApplicationDetails(response.data);
+}
+
+export async function deleteApplication(applicationId: number): Promise<void> {
+  await apiClient.delete(`/application/${applicationId}`);
+}
+
+interface NestedTrashedApplication {
+  application: TrashedApplication;
+  deleted_at?: string | null;
+  deleted_by_user_id?: number | null;
+  deleted_by_name?: string | null;
+}
+
+type TrashApiItem = TrashedApplication | NestedTrashedApplication;
+
+interface ApplicationTrashApiResponse {
+  items?: TrashApiItem[];
+  data?: TrashApiItem[];
+  total: number;
+  page: number;
+  page_size?: number;
+  size?: number;
+  total_pages?: number;
+}
+
+export async function getApplicationTrash({
+  page = 1,
+  pageSize = 10,
+  search = "",
+}: Pick<GetApplicationsParams, "page" | "pageSize" | "search"> = {}): Promise<ApplicationTrashResponse> {
+  const response = await apiClient.get<ApplicationTrashApiResponse>(
+    "/application/trash",
+    { params: { page, page_size: pageSize, search: search || undefined } },
+  );
+  const resolvedPageSize = response.data.page_size ?? response.data.size ?? pageSize;
+  const rawItems = response.data.items ?? response.data.data ?? [];
+  const items = rawItems.map((item): TrashedApplication => {
+    if ("application" in item) {
+      return {
+        ...item.application,
+        deleted_at: item.deleted_at ?? item.application.deleted_at ?? null,
+      };
+    }
+    return item;
+  });
+
+  return {
+    page: response.data.page,
+    pageSize: resolvedPageSize,
+    total: response.data.total,
+    totalPages: response.data.total_pages ?? Math.ceil(response.data.total / resolvedPageSize),
+    items,
+  };
+}
+
+export async function restoreApplication(applicationId: number): Promise<void> {
+  await apiClient.patch(`/application/trash/${applicationId}/restore`);
 }

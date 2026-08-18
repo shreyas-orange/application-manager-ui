@@ -3,13 +3,12 @@ import { Info } from "lucide-react";
 
 import { useUsersByRoles } from "@/features/users/hooks/useUsersByRole";
 
-import { DB_SYNCUP_PRIORITY_OPTIONS } from "../constants";
-
 const DB_VALIDATOR_ROLES = ["DB Validator", "DB Manager"];
 
 export interface DbSyncupDetailsFormValues {
   db_validation: string;
   migration_incharge: string;
+  assigned_to_user_id: number | null;
   date_of_request: string;
   time_taken_in_prod: string;
   remarks: string;
@@ -136,20 +135,7 @@ export default function DbSyncupDetailsForm({
         <Section title="Priority" tooltip="For Application Team to update">
           <div>
             <label style={labelStyle}>Application priority</label>
-            {readOnly ? (
-              <div style={readOnlyBoxStyle()}>{values.application_priority || "NA"}</div>
-            ) : (
-              <select
-                className="form-select form-select-sm"
-                value={values.application_priority}
-                onChange={(e) => onChange("application_priority", e.target.value)}
-              >
-                <option value="">NA</option>
-                {DB_SYNCUP_PRIORITY_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            )}
+            <div style={readOnlyBoxStyle()}>{values.application_priority || "NA"}</div>
           </div>
         </Section>
 
@@ -202,9 +188,18 @@ export default function DbSyncupDetailsForm({
             ) : (
               <select
                 className="form-select form-select-sm"
-                value={values.migration_incharge}
+                value={values.assigned_to_user_id != null
+                  ? String(values.assigned_to_user_id)
+                  : values.migration_incharge}
                 disabled={dbValidatorsQuery.isLoading}
-                onChange={(e) => onChange("migration_incharge", e.target.value)}
+                onChange={(e) => {
+                  const user = dbValidators.find((item) => String(item.id) === e.target.value);
+                  const name = user
+                    ? `${user.first_name} ${user.last_name}`.trim() || user.email
+                    : "";
+                  onChange("migration_incharge", name);
+                  onChange("assigned_to_user_id", user?.id ?? null);
+                }}
               >
                 <option value="">Select migration in-charge...</option>
                 {values.migration_incharge &&
@@ -217,7 +212,7 @@ export default function DbSyncupDetailsForm({
                 {dbValidators.map((user) => {
                   const name = `${user.first_name} ${user.last_name}`.trim() || user.email;
                   return (
-                    <option key={user.id} value={name}>
+                    <option key={user.id} value={String(user.id)}>
                       {name} ({user.role?.name})
                     </option>
                   );

@@ -6,7 +6,10 @@ import {
 
 import {
   createRoadmapItem,
+  createRoadmapLookup,
+  deleteRoadmapItem,
   getRoadmapDetails,
+  getRoadmapLookups,
   importRoadmap,
   updateRoadmapItem,
 } from "../api/roadmap.api";
@@ -19,7 +22,26 @@ export const roadmapKeys = {
   all: ["roadmap"] as const,
   details: (appId: number) =>
     [...roadmapKeys.all, "details", appId] as const,
+  lookups: (kind: "phases" | "environments") =>
+    [...roadmapKeys.all, "lookups", kind] as const,
 };
+
+export function useRoadmapLookups(kind: "phases" | "environments") {
+  return useQuery({
+    queryKey: roadmapKeys.lookups(kind),
+    queryFn: () => getRoadmapLookups(kind),
+  });
+}
+
+export function useCreateRoadmapLookup(kind: "phases" | "environments") {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (value: string) => createRoadmapLookup(kind, value),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: roadmapKeys.lookups(kind) });
+    },
+  });
+}
 
 export function useRoadmapDetails(appId: number) {
   return useQuery({
@@ -43,6 +65,22 @@ export function useUpdateRoadmapItem(appId: number) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: roadmapKeys.details(appId),
+      });
+    },
+  });
+}
+
+export function useDeleteRoadmapItem(appId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (itemId: number) => deleteRoadmapItem(appId, itemId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: roadmapKeys.details(appId),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["applications"],
       });
     },
   });

@@ -1,5 +1,5 @@
 import { Fragment, useMemo, useState } from "react";
-import { Pencil, ChevronDown, ChevronRight } from "lucide-react";
+import { Pencil, ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 
 import type { RoadmapItem, RoadmapStatus } from "../types/roadmap.types";
 
@@ -62,6 +62,8 @@ function StatusBadge({ status }: { status: RoadmapStatus }) {
 interface RoadmapTableProps {
   items: RoadmapItem[];
   onEdit: (item: RoadmapItem) => void;
+  onDelete?: (item: RoadmapItem) => void;
+  deletingItemId?: number | null;
 }
 
 interface PhaseGroup {
@@ -69,7 +71,12 @@ interface PhaseGroup {
   items: RoadmapItem[];
 }
 
-export default function RoadmapTable({ items, onEdit }: RoadmapTableProps) {
+export default function RoadmapTable({
+  items,
+  onEdit,
+  onDelete,
+  deletingItemId,
+}: RoadmapTableProps) {
   const [filters, setFilters] = useState<Filters>({
     phase: "",
     environment: "",
@@ -441,18 +448,36 @@ export default function RoadmapTable({ items, onEdit }: RoadmapTableProps) {
                             >
                               {item.assigned_resources || "NA"}
                             </td>
-                            <td style={{ padding: "0.625rem 0.5rem" }}>
-                              <button
-                                type="button"
-                                className="ods-icon-btn"
-                                title="Edit item"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onEdit(item);
-                                }}
-                              >
-                                <Pencil size={14} />
-                              </button>
+                            <td style={{ padding: "0.625rem 0.5rem", whiteSpace: "nowrap" }}>
+                              <div style={{ display: "flex", gap: "0.25rem" }}>
+                                <button
+                                  type="button"
+                                  className="ods-icon-btn"
+                                  title="Edit item"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEdit(item);
+                                  }}
+                                >
+                                  <Pencil size={14} />
+                                </button>
+                                {onDelete && (
+                                  <button
+                                    type="button"
+                                    className="ods-icon-btn"
+                                    title="Delete roadmap activity"
+                                    aria-label={`Delete activity ${item.activity_number || item.display_order}`}
+                                    disabled={deletingItemId === item.id}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onDelete(item);
+                                    }}
+                                    style={{ color: "var(--ods-danger)" }}
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );

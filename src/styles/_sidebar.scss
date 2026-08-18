@@ -68,12 +68,42 @@
       transition: opacity var(--ods-transition);
     }
 
+    .ods-nav-tooltip {
+      position: absolute;
+      z-index: 20;
+      left: 3.25rem;
+      right: 0.5rem;
+      top: calc(100% - 0.2rem);
+      display: none;
+      flex-direction: column;
+      gap: 0.15rem;
+      padding: 0.5rem 0.6rem;
+      color: var(--ods-gray-200);
+      background: var(--ods-gray-800);
+      border: 1px solid var(--ods-gray-700);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      white-space: normal;
+      line-height: 1.3;
+
+      strong {
+        color: var(--ods-orange);
+        font-size: var(--ods-font-size-xs);
+      }
+
+      span {
+        color: var(--ods-gray-300);
+        font-size: 0.7rem;
+        font-weight: var(--ods-font-weight-normal);
+      }
+    }
+
     &:hover {
       background:  rgba(255, 121, 0, 0.1);
       color:       var(--ods-orange);
       border-left-color: var(--ods-orange);
 
       .ods-nav-icon { opacity: 1; }
+      .ods-nav-tooltip { display: flex; }
     }
 
     &.active {
@@ -85,6 +115,8 @@
       .ods-nav-icon { opacity: 1; }
     }
   }
+
+  &.collapsed .ods-nav-tooltip { display: none !important; }
 
   // ── Bottom user section ────────────────────────────────────────
   .ods-sidebar-footer {

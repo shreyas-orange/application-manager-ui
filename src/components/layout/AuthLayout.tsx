@@ -44,12 +44,12 @@ export function AuthLayout() {
                 flexShrink:      0,
               }}
             >
-              AM
+              DM
             </div>
 
             <div>
               <div className="ods-auth-logo">
-                Application Manager
+                DOMs
               </div>
               <div className="ods-auth-tagline">
                 Admin Portal

@@ -208,7 +208,7 @@ export default function DbSyncupHistoryPanel({ dbSyncupId }: DbSyncupHistoryPane
             <input
               type="search"
               placeholder="Search application, user, field, value or reason"
-              aria-label="Search DB syncup history"
+              aria-label="Search database migration history"
               className="form-control form-control-sm"
               style={{ paddingRight: searchInput ? "2.25rem" : undefined }}
               value={searchInput}
@@ -267,7 +267,7 @@ export default function DbSyncupHistoryPanel({ dbSyncupId }: DbSyncupHistoryPane
         ) : items.length === 0 ? (
           <EmptyState
             icon="🗄️"
-            text={hasActiveFilters ? "No changes match the selected filters." : "No changes recorded for this DB syncup yet."}
+            text={hasActiveFilters ? "No changes match the selected filters." : "No changes recorded for this database migration yet."}
           />
         ) : (
           <div className="ods-table-wrapper">

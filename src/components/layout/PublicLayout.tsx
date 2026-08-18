@@ -39,10 +39,10 @@ export function PublicLayout() {
               fontSize:        "0.8rem",
             }}
           >
-            AM
+            DM
           </div>
           <span style={{ color: "var(--ods-white)", fontWeight: 700, fontSize: "1rem" }}>
-            Application Manager
+            DOMs
           </span>
         </Link>
 

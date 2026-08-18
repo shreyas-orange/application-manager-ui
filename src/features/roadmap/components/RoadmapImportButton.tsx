@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
 import { Upload } from "lucide-react";
 
+import { getApiErrorMessage } from "@/lib/api-error";
+
 import { useImportRoadmap } from "../hooks/useRoadmap";
 
 interface RoadmapImportButtonProps {
@@ -9,6 +11,19 @@ interface RoadmapImportButtonProps {
   label?: string;
   className?: string;
   onSuccess?: () => void;
+  onErrorMessage?: (message: string) => void;
+}
+
+function compactRoadmapError(message: string): string {
+  const worksheets = Array.from(
+    message.matchAll(/Worksheet '([^']+)' is missing required roadmap columns:\s*([^.]*)\.?/gi),
+  );
+
+  if (worksheets.length === 0) return message;
+
+  return `Missing columns — ${worksheets
+    .map((match) => `${match[1]}: ${match[2].trim()}`)
+    .join("; ")}`;
 }
 
 export default function RoadmapImportButton({
@@ -17,6 +32,7 @@ export default function RoadmapImportButton({
   label = "Upload Roadmap",
   className = "btn btn-outline-secondary btn-sm",
   onSuccess,
+  onErrorMessage,
 }: RoadmapImportButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -31,6 +47,13 @@ export default function RoadmapImportButton({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    onErrorMessage?.("");
+    if (!/\.(xlsx|xlsm)$/i.test(file.name)) {
+      onErrorMessage?.("Invalid roadmap file. Only .xlsx and .xlsm files are allowed.");
+      e.target.value = "";
+      return;
+    }
+
     setSelectedFile(file);
 
     importMutation.mutate(
@@ -43,7 +66,8 @@ export default function RoadmapImportButton({
           }
           onSuccess?.();
         },
-        onError: () => {
+        onError: (error) => {
+          onErrorMessage?.(compactRoadmapError(getApiErrorMessage(error)));
           setSelectedFile(null);
           if (fileInputRef.current) {
             fileInputRef.current.value = "";
@@ -60,7 +84,7 @@ export default function RoadmapImportButton({
       <input
         ref={fileInputRef}
         type="file"
-        accept=".csv,.xls,.xlsx"
+        accept=".xlsx,.xlsm"
         style={{ display: "none" }}
         onChange={handleFileChange}
       />

@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { getApiErrorMessage } from "@/lib/api-error";
 
 import type {
+  RoadmapLookupOption,
   RoadmapItem,
   UpdateRoadmapItemPayload,
 } from "../types/roadmap.types";
@@ -13,6 +14,12 @@ interface RoadmapEditDrawerProps {
   isOpen: boolean;
   mode?: "edit" | "create";
   nextDisplayOrder?: number;
+  phaseOptions?: RoadmapLookupOption[];
+  environmentOptions?: RoadmapLookupOption[];
+  onResolveLookup: (
+    kind: "phases" | "environments",
+    value: string,
+  ) => Promise<number>;
   onClose: () => void;
   onSave: (
     payload: UpdateRoadmapItemPayload,
@@ -215,11 +222,61 @@ function DrawerSelect({
   );
 }
 
+function DrawerLookupInput({
+  id,
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: RoadmapLookupOption[];
+}) {
+  return (
+    <div>
+      <label htmlFor={id} style={{ display: "block", fontSize: "var(--ods-font-size-xs)", fontWeight: 600, color: "var(--ods-gray-600)", marginBottom: "0.25rem" }}>
+        {label}
+      </label>
+      <input
+        id={id}
+        type="text"
+        list={`${id}-options`}
+        className="form-control form-control-sm"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={`Select or create ${label.toLowerCase()}`}
+      />
+      <datalist id={`${id}-options`}>
+        {options.map((option) => (
+          <option key={option.id} value={option.display_name || option.name} />
+        ))}
+      </datalist>
+      {options.length === 0 && (
+        <div
+          style={{
+            marginTop: "0.3rem",
+            color: "var(--ods-orange-dark, #c85a00)",
+            fontSize: "var(--ods-font-size-xs)",
+          }}
+        >
+          No {label.toLowerCase()}s found. Type a name to create one.
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function RoadmapEditDrawer({
   item,
   isOpen,
   mode = "edit",
   nextDisplayOrder = 1,
+  phaseOptions = [],
+  environmentOptions = [],
+  onResolveLookup,
   onClose,
   onSave,
 }: RoadmapEditDrawerProps) {
@@ -263,14 +320,25 @@ export default function RoadmapEditDrawer({
     setError("");
 
     try {
+      if (!form.phase.trim()) throw new Error("Phase is required.");
+      if (!form.environment.trim()) throw new Error("Environment is required.");
+      if (!form.activity.trim()) {
+        throw new Error("Activity description is required.");
+      }
+
+      const [phaseId, environmentId] = await Promise.all([
+        onResolveLookup("phases", form.phase),
+        onResolveLookup("environments", form.environment),
+      ]);
+
       const payload: UpdateRoadmapItemPayload = {
-        phase_id: item?.phase_id ?? 0,
-        environment_id: item?.environment_id ?? 0,
+        phase_id: phaseId,
+        environment_id: environmentId,
         section_name: form.section_name,
         activity_number:
           Number(form.activity_number) || item?.display_order || nextDisplayOrder,
-        activity: form.activity,
-        status: form.status,
+        activity: form.activity.trim(),
+        status: form.status || null,
         planned_start_date: form.planned_start_date || null,
         planned_end_date: form.planned_end_date || null,
         actual_start_date: form.actual_start_date || null,
@@ -330,15 +398,19 @@ export default function RoadmapEditDrawer({
         <div className="ods-drawer-body">
           <form onSubmit={handleSubmit}>
             <DrawerSection title="Classification">
-              <DrawerInput
+              <DrawerLookupInput
+                id="roadmap-phase"
                 label="Phase"
                 value={form.phase}
                 onChange={(v) => updateField("phase", v)}
+                options={phaseOptions}
               />
-              <DrawerInput
+              <DrawerLookupInput
+                id="roadmap-environment"
                 label="Environment"
                 value={form.environment}
                 onChange={(v) => updateField("environment", v)}
+                options={environmentOptions}
               />
               <DrawerInput
                 label="Section"

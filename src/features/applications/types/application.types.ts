@@ -129,6 +129,25 @@ export interface ApplicationsResponse {
   items:    Application[];
 }
 
+export interface TrashedApplication {
+  id: number;
+  application_name: string | null;
+  carto_id: string | null;
+  basicat: string | null;
+  domain: string | null;
+  confirmed_domain: string | null;
+  application_status: string | null;
+  deleted_at?: string | null;
+}
+
+export interface ApplicationTrashResponse {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  items: TrashedApplication[];
+}
+
 // ─── Payload Types ────────────────────────────────────────────────────────────
 
 export interface CreateApplicationPayload {

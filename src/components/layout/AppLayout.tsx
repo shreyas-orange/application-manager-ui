@@ -19,6 +19,7 @@ import {
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { useLogout } from "@/features/auth/hooks/useLogout";
 import { getUserRole } from "@/features/auth/utils/get-user-role";
+import { isDbTeamRole } from "@/features/auth/utils/is-db-team-role";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface NavItem {
@@ -26,6 +27,7 @@ interface NavItem {
   label:    string;
   icon:     React.ReactNode;
   adminOnly?: boolean;
+  allowedRoles?: string[];
 }
 
 // ─── Nav Items Config ─────────────────────────────────────────────────────────
@@ -38,8 +40,14 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     to:    "/app/applications",
-    label: "Applications",
+    label: "Application List",
     icon:  <AppWindow size={18} />,
+  },
+  {
+    to: "/app/my-applications",
+    label: "My Applications",
+    icon: <UserCog size={18} />,
+    allowedRoles: ["manager"],
   },
   {
     to:    "/app/analytics",
@@ -50,6 +58,12 @@ const NAV_ITEMS: NavItem[] = [
     to:    "/app/db-syncups",
     label: "DB Syncup",
     icon:  <Database size={18} />,
+  },
+  {
+    to: "/app/db-environment-requests",
+    label: "DB Sync Requests",
+    icon: <Database size={18} />,
+    allowedRoles: ["admin", "manager", "db validator"],
   },
   {
     to:    "/app/uploads",
@@ -83,6 +97,7 @@ export function AppLayout() {
   // ── Current user (already cached by ProtectedRoute's query) ───────
   const { data: currentUser } = useCurrentUser();
   const role        = getUserRole(currentUser);
+  const isDbTeam    = isDbTeamRole(role);
   const userInitial = String(currentUser?.email ?? "U").charAt(0).toUpperCase();
 
   // ── Logout ───────────────────────────────────────────────────────
@@ -144,7 +159,7 @@ export function AppLayout() {
                   {currentUser?.email ?? "Current User"}
                 </strong>
                 <span style={{ textTransform: "capitalize" }}>
-                  {currentUser?.role ?? "User"}
+                  {role || "User"}
                 </span>
               </div>
 
@@ -194,7 +209,16 @@ export function AppLayout() {
         {/* Nav links */}
         <nav>
           {NAV_ITEMS.filter(
-            (item) => !item.adminOnly || role === "admin"
+            (item) => role === "manager"
+              ? [
+                  "/app/applications",
+                  "/app/my-applications",
+                  "/app/db-syncups",
+                  "/app/db-environment-requests",
+                ].includes(item.to)
+              : isDbTeam
+              ? item.to === "/app/applications" || item.to === "/app/db-syncups" || item.allowedRoles?.includes(role)
+              : (!item.adminOnly || role === "admin") && (!item.allowedRoles || item.allowedRoles.includes(role))
           ).map((item) => (
             <NavLink
               key={item.to}
@@ -267,7 +291,7 @@ export function AppLayout() {
                     textTransform: "capitalize",
                   }}
                 >
-                  {currentUser?.role ?? "User"}
+                  {role || "User"}
                 </div>
               </div>
             </div>

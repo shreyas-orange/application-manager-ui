@@ -56,11 +56,16 @@ export default function ApplicationsToolbar({
           value={statusFilter}
           onChange={(e) => onStatusFilterChange(e.target.value)}
         >
-          <option value="all">All statuses</option>
-          <option value="In progress">In progress</option>
-          <option value="Completed">Completed</option>
-          <option value="Pending">Pending</option>
-          <option value="Failed">Failed</option>
+          <option value="all">ALL STATUSES</option>
+          <option value="IN PROGRESS">IN PROGRESS</option>
+          <option value="COMPLETED">COMPLETED</option>
+          <option value="PENDING">PENDING</option>
+          <option value="FAILED">FAILED</option>
+          <option value="ONHOLD">ONHOLD</option>
+          <option value="IN PROGRESS/ ON TRACK">IN PROGRESS/ ON TRACK</option>
+          <option value="IN PROGRESS/ AT RISK">IN PROGRESS/ AT RISK</option>
+          <option value="PRODUCTION">PRODUCTION</option>
+          <option value="DECOMMISSIONED">DECOMMISSIONED</option>
         </select>
 
         <select
@@ -81,9 +86,9 @@ export default function ApplicationsToolbar({
           value={cloudFilter}
           onChange={(e) => onCloudFilterChange(e.target.value)}
         >
-          <option value="">All clouds</option>
+          <option value="all">All clouds</option>
           <option value="Azure">Azure</option>
-          <option value="Blue">Blue</option>
+          <option value="Bleu">Bleu Cloud</option>
         </select>
 
         <button

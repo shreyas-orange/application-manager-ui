@@ -18,6 +18,9 @@ import { EmptyState, PageHeader, PageLoader, Spinner, Tabs } from "@/components/
 import RoadmapAnalytics from "@/features/roadmap/components/RoadmapAnalytics";
 import RoadmapSection  from "@/features/roadmap/components/RoadmapSection";
 import DbSyncupSection from "@/features/db-syncup/components/DbSyncupSection";
+import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
+import { getUserRole } from "@/features/auth/utils/get-user-role";
+import { isDbTeamRole } from "@/features/auth/utils/is-db-team-role";
 
 import { useApplication } from "../hooks/useApplication";
 import { useUpdateApplication } from "../hooks/useUpdateApplication";
@@ -55,6 +58,9 @@ function buildUpdatePayload(values: ApplicationEditFormValues): UpdateApplicatio
       portfolio:           values.portfolio           || null,
       business_importance: values.business_importance || null,
       sov_type:            values.sov_type            || null,
+      ns_migration_status_azure_count: values.ns_migration_status_azure_count,
+      ns_to_migrate_bleu_environment_names: values.ns_to_migrate_bleu_environment_names || null,
+      ns_migration_status_bleu_count: values.ns_migration_status_bleu_count,
     },
     migration: {
       migration_status:   values.migration_status  || null,
@@ -63,27 +69,39 @@ function buildUpdatePayload(values: ApplicationEditFormValues): UpdateApplicatio
       hosting_location:   values.hosting_location   || null,
       cloud_squad:        values.cloud_squad         || null,
       cluster:             values.cluster             || null,
+      initiated:           values.initiated           || null,
       tentative_start:    values.tentative_start     || null,
       tentative_end:      values.tentative_end       || null,
       confirmed_end:      values.confirmed_end       || null,
       go_live:            values.go_live             || null,
+      total_ns:            values.total_ns,
+      ns_migration_progress: values.ns_migration_progress || null,
+      assessment_status:  values.migration_assessment_status         || null,
+      data_anonymization_status: values.migration_data_anonymization_status || null,
+      ns_backup_creation: values.ns_backup_creation || null,
+      ns_migration_status: values.ns_migration_status || null,
     },
     meta_data: {
+      dx_uid:                    values.dx_uid                    || null,
+      mcp_id:                    values.mcp_id                    || null,
       wave:                      values.wave                      || null,
       gate:                      values.gate                      || null,
       assessment_status:         values.assessment_status         || null,
       data_anonymization_status: values.data_anonymization_status || null,
     },
     security: {
+      benchmark_status:       values.benchmark_status       || null,
       nexus_status:           values.nexus_status           || null,
       rooted_status:          values.rooted_status          || null,
       network_policy_status:  values.network_policy_status  || null,
       security_prod_status:   values.security_prod_status   || null,
+      security_prod_date:     values.security_prod_date     || null,
     },
     remark: {
-      remark:          values.remark          || null,
-      remarks_imp:     values.remarks_imp     || null,
-      source_comments: values.source_comments || null,
+      remark:           values.remark           || null,
+      remarks_imp:      values.remarks_imp      || null,
+      source_comments:  values.source_comments  || null,
+      archived_remarks: values.archived_remarks || null,
     },
     owners: [
       { owner_type: "QA",                  owner_name: values.qa_owner_name      || null, owner_email: values.qa_owner_email      || null },
@@ -91,6 +109,7 @@ function buildUpdatePayload(values: ApplicationEditFormValues): UpdateApplicatio
       { owner_type: "PM",                  owner_name: values.pm_owner_name      || null, owner_email: values.pm_owner_email      || null },
       { owner_type: "Application Manager", owner_name: values.manager_owner_name || null, owner_email: values.manager_owner_email || null },
     ],
+    cloud_ids: values.cloud_ids,
   };
 }
 
@@ -99,6 +118,8 @@ export default function ApplicationDetailsPage() {
   const navigate      = useNavigate();
   const location      = useLocation();
   const params        = useParams<{ id: string }>();
+  const { data: currentUser } = useCurrentUser();
+  const isDbTeam = isDbTeamRole(getUserRole(currentUser));
 
   const applicationId = Number(params.id);
 
@@ -206,7 +227,7 @@ export default function ApplicationDetailsPage() {
   const onSubmit = async (values: ApplicationEditFormValues) => {
     try {
       await updateMutation.mutateAsync({
-        applicationId: application.id,
+        applicationId,
         payload: buildUpdatePayload(values),
       });
       setEditing(false);
@@ -232,13 +253,14 @@ export default function ApplicationDetailsPage() {
         title={application.application_name}
         subtitle={
           <>
-            Application ID: {application.id}
+            Application ID: {applicationId}
             {application.carto_id ? ` · Carto: ${application.carto_id}` : ""}
           </>
         }
         actions={
           activeTab === "application" &&
-          (!editing ? (
+          !isDbTeam &&
+          !editing && (
             <button
               type="button"
               className="btn btn-primary"
@@ -248,18 +270,7 @@ export default function ApplicationDetailsPage() {
               <Pencil size={15} />
               Edit
             </button>
-          ) : (
-            <button
-              type="button"
-              className="btn btn-outline-secondary"
-              disabled={updateMutation.isPending}
-              onClick={cancelEditing}
-              style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
-            >
-              <X size={15} />
-              Cancel
-            </button>
-          ))
+          )
         }
       />
 
@@ -267,17 +278,17 @@ export default function ApplicationDetailsPage() {
 
       {/* ── Tab: Analytics (roadmap) ─────────────────────────────── */}
       {activeTab === "analytics" && (
-        <RoadmapAnalytics appId={application.id} />
+        <RoadmapAnalytics appId={applicationId} />
       )}
 
       {/* ── Tab: Roadmap ─────────────────────────────────────────── */}
       {activeTab === "roadmap" && (
-        <RoadmapSection appId={application.id} />
+        <RoadmapSection appId={applicationId} />
       )}
 
       {/* ── Tab: DB Syncup ───────────────────────────────────────── */}
       {activeTab === "db-syncup" && (
-        <DbSyncupSection application={application} />
+        <DbSyncupSection application={application} applicationId={applicationId} />
       )}
 
       {/* ── Tab: Application ─────────────────────────────────────── */}
@@ -291,47 +302,68 @@ export default function ApplicationDetailsPage() {
             </div>
           )}
 
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form>
             <div className="ods-card">
               <div className="ods-card-body">
-                <ApplicationEditFormFields readOnly={!editing} />
+                <ApplicationEditFormFields readOnly />
               </div>
-
-              {editing && (
-                <div
-                  className="ods-card-footer"
-                  style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}
-                >
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary"
-                    disabled={updateMutation.isPending}
-                    onClick={cancelEditing}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={updateMutation.isPending}
-                    style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
-                  >
-                    {updateMutation.isPending ? (
-                      <>
-                        <Spinner size={16} />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save size={15} />
-                        Save changes
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
             </div>
           </form>
+
+          {editing && (
+            <>
+              <div className="ods-drawer-overlay" onMouseDown={cancelEditing} />
+              <aside
+                className="ods-drawer open ods-drawer--wide"
+                onMouseDown={(event) => event.stopPropagation()}
+              >
+                <div className="ods-drawer-header">
+                  <div>
+                    <div className="ods-drawer-title">Edit Application</div>
+                    <div style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-400)", marginTop: "0.15rem" }}>
+                      {application.application_name}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="ods-drawer-close"
+                    onClick={cancelEditing}
+                    aria-label="Close edit application drawer"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <form onSubmit={form.handleSubmit(onSubmit)} style={{ display: "contents" }}>
+                  <div className="ods-drawer-body">
+                    <ApplicationEditFormFields readOnly={false} />
+                  </div>
+                  <div className="ods-drawer-footer">
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      disabled={updateMutation.isPending}
+                      onClick={cancelEditing}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={updateMutation.isPending}
+                      style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+                    >
+                      {updateMutation.isPending ? (
+                        <><Spinner size={16} />Saving...</>
+                      ) : (
+                        <><Save size={15} />Save changes</>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </aside>
+            </>
+          )}
         </FormProvider>
       )}
     </div>

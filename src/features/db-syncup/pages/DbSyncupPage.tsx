@@ -1,53 +1,36 @@
 import { type FormEvent, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, RefreshCw } from "lucide-react";
 
 import { useAllApplications } from "@/features/applications/hooks/useAllApplications";
+import { sanitizeDomainName } from "@/features/applications/utils/domain";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { normalizeValue } from "@/lib/format";
 import { EmptyState, PageHeader, PageLoader, useConfirmDialog } from "@/components/ui";
 
-import DbSyncupEditDrawer from "../components/DbSyncupEditDrawer";
-import DbSyncupHistoryModal from "../components/DbSyncupHistoryModal";
+import DbSyncupCreateDrawer from "../components/DbSyncupCreateDrawer";
 import DbSyncupTable from "../components/DbSyncupTable";
 import DbSyncupSummaryCards from "../components/DbSyncupSummaryCards";
 import DbSyncupToolbar from "../components/DbSyncupToolbar";
-import { normalizeDbSyncupStatus } from "../constants";
 import {
   useAllDbSyncups,
   useCreateDbSyncup,
   useDeleteDbSyncup,
-  useUpdateDbSyncup,
 } from "../hooks/useDbSyncup";
-import type {
-  CreateDbSyncupPayload,
-  DbSyncup,
-  UpdateDbSyncupPayload,
-} from "../types/db-syncup.types";
+import type { CreateDbSyncupPayload, DbSyncup } from "../types/db-syncup.types";
 
 const PAGE_SIZE = 10;
 
 export default function DbSyncupPage() {
+  const navigate = useNavigate();
   const { confirm, dialog } = useConfirmDialog();
-
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    isFetching,
-    refetch,
-  } = useAllDbSyncups();
 
   const applicationsQuery = useAllApplications();
   const applications = applicationsQuery.data?.items ?? [];
   const createMutation = useCreateDbSyncup();
-  const updateMutation = useUpdateDbSyncup();
   const deleteMutation = useDeleteDbSyncup();
 
   const [page, setPage] = useState(1);
-  const [editingItem, setEditingItem] = useState<DbSyncup | null>(null);
   const [creating, setCreating] = useState(false);
-  const [historyItem, setHistoryItem] = useState<DbSyncup | null>(null);
   const [message, setMessage] = useState("");
   const [pageError, setPageError] = useState("");
 
@@ -55,57 +38,50 @@ export default function DbSyncupPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [domainFilter, setDomainFilter] = useState("all");
-  const [hostingFilter, setHostingFilter] = useState("all");
+  const [domainFilter, setDomainFilter] = useState("");
+  const [cloudFilter, setCloudFilter] = useState("");
+  const [environmentFilter, setEnvironmentFilter] = useState("");
+  const hasApiFilters = Boolean(
+    search || statusFilter !== "all" || domainFilter || cloudFilter || environmentFilter,
+  );
 
-  const items = useMemo(() => data ?? [], [data]);
+  const { data, isLoading, isError, error, isFetching, refetch } = useAllDbSyncups({
+    pageSize: 100,
+    search,
+    domain: domainFilter,
+    cloud: cloudFilter,
+    environment: environmentFilter,
+    status: statusFilter === "all" ? undefined : statusFilter,
+  });
+
+  const items = useMemo(() => data?.items ?? [], [data?.items]);
+  const totalSyncups = data?.total ?? 0;
 
   const domains = useMemo(() => {
     const values = new Set<string>();
-    items.forEach((item) => {
-      if (item.domain) values.add(item.domain);
+    applications.forEach((application) => {
+      const domain = sanitizeDomainName(
+        application.confirmed_domain || application.domain,
+      );
+      if (domain) values.add(domain);
     });
     return Array.from(values).sort();
-  }, [items]);
+  }, [applications]);
 
-  const hostingOptions = useMemo(() => {
+  const cloudOptions = useMemo(() => {
     const values = new Set<string>();
-    items.forEach((item) => {
-      if (item.hosting) values.add(item.hosting);
+    applications.forEach((application) => {
+      application.cloud_mappings.forEach((mapping) => {
+        const cloud = mapping.cloud?.name?.trim();
+        if (cloud) values.add(cloud);
+      });
     });
     return Array.from(values).sort();
-  }, [items]);
+  }, [applications]);
 
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      const matchesSearch =
-        !search ||
-        normalizeValue(item.application_name).includes(normalizeValue(search)) ||
-        normalizeValue(item.carto_id).includes(normalizeValue(search)) ||
-        normalizeValue(item.domain).includes(normalizeValue(search));
-      const matchesStatus =
-        statusFilter === "all" || normalizeDbSyncupStatus(item.prod_status) === statusFilter;
-      const matchesDomain =
-        domainFilter === "all" || normalizeValue(item.domain) === normalizeValue(domainFilter);
-      const matchesHosting =
-        hostingFilter === "all" || normalizeValue(item.hosting) === normalizeValue(hostingFilter);
-      return matchesSearch && matchesStatus && matchesDomain && matchesHosting;
-    });
-  }, [items, search, statusFilter, domainFilter, hostingFilter]);
+  const filteredItems = items;
 
   // ── Summary counts (from filtered) ───────────────────────────────
-  const summary = useMemo(() => {
-    let inProgress = 0, completed = 0, failed = 0, pending = 0;
-    filteredItems.forEach((item) => {
-      const s = normalizeDbSyncupStatus(item.prod_status);
-      if (s === "Completed") completed += 1;
-      else if (s === "In Progress") inProgress += 1;
-      else if (s === "Failed") failed += 1;
-      else pending += 1;
-    });
-    return { total: filteredItems.length, inProgress, completed, failed, pending };
-  }, [filteredItems]);
-
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const pagedItems = filteredItems.slice(
@@ -120,14 +96,9 @@ export default function DbSyncupPage() {
     (app) => !syncedApplicationIds.has(app.id),
   );
 
-  const editingApplication =
-    editingItem
-      ? applications.find((app) => app.id === editingItem.application_id) ?? null
-      : null;
-
   const nextSerialNumber =
     items.length > 0
-      ? Math.max(...items.map((i) => i.serial_number)) + 1
+      ? Math.max(...items.map((item) => item.serial_number ?? item.id)) + 1
       : 1;
 
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
@@ -140,34 +111,23 @@ export default function DbSyncupPage() {
     setSearchInput("");
     setSearch("");
     setStatusFilter("all");
-    setDomainFilter("all");
-    setHostingFilter("all");
+    setDomainFilter("");
+    setCloudFilter("");
+    setEnvironmentFilter("");
     setPage(1);
   };
 
-  const handleSave = async (
-    payload: CreateDbSyncupPayload | UpdateDbSyncupPayload,
-    syncupId?: number,
-  ) => {
+  const handleCreate = async (payload: CreateDbSyncupPayload) => {
     setPageError("");
     setMessage("");
-
-    if (syncupId != null) {
-      await updateMutation.mutateAsync({
-        syncupId,
-        payload: payload as UpdateDbSyncupPayload,
-      });
-      setMessage("DB syncup updated successfully.");
-    } else {
-      await createMutation.mutateAsync(payload as CreateDbSyncupPayload);
-      setMessage("DB syncup created successfully.");
-    }
+    await createMutation.mutateAsync(payload);
+    setMessage("DB syncup created successfully.");
   };
 
   const handleDelete = async (item: DbSyncup) => {
     const confirmed = await confirm({
       title: "Delete DB syncup record",
-      message: `Delete DB syncup record #${item.serial_number}? This cannot be undone.`,
+      message: `Delete DB syncup record #${item.serial_number ?? item.id}? This cannot be undone.`,
       confirmLabel: "Delete",
       danger: true,
     });
@@ -238,7 +198,6 @@ export default function DbSyncupPage() {
               type="button"
               className="btn btn-primary"
               onClick={() => {
-                setEditingItem(null);
                 setPageError("");
                 setCreating(true);
               }}
@@ -265,14 +224,14 @@ export default function DbSyncupPage() {
       )}
 
       <DbSyncupSummaryCards
-        total={summary.total}
-        inProgress={summary.inProgress}
-        completed={summary.completed}
-        pending={summary.pending}
-        failed={summary.failed}
+        total={totalSyncups}
+        inProgress={data?.inProgressCount ?? 0}
+        completed={data?.completedCount ?? 0}
+        pending={data?.pendingCount ?? 0}
+        failed={data?.failedCount ?? 0}
       />
 
-      {items.length === 0 ? (
+      {totalSyncups === 0 && !hasApiFilters ? (
         <div className="ods-card" style={{ padding: "3rem" }}>
           <EmptyState icon="🗄️" title="No DB syncup data" text="No DB syncup records found yet." />
         </div>
@@ -287,9 +246,11 @@ export default function DbSyncupPage() {
             domainFilter={domainFilter}
             onDomainFilterChange={(value) => { setDomainFilter(value); setPage(1); }}
             domains={domains}
-            hostingFilter={hostingFilter}
-            onHostingFilterChange={(value) => { setHostingFilter(value); setPage(1); }}
-            hostingOptions={hostingOptions}
+            cloudFilter={cloudFilter}
+            onCloudFilterChange={(value) => { setCloudFilter(value); setPage(1); }}
+            cloudOptions={cloudOptions}
+            environmentFilter={environmentFilter}
+            onEnvironmentFilterChange={(value) => { setEnvironmentFilter(value); setPage(1); }}
             onClearFilters={handleClearFilters}
           />
 
@@ -297,7 +258,7 @@ export default function DbSyncupPage() {
           <div className="ods-list-toolbar">
             <span className="ods-list-count">
               <strong style={{ color: "var(--ods-gray-900)" }}>{filteredItems.length}</strong>{" "}
-              of <strong style={{ color: "var(--ods-gray-900)" }}>{items.length}</strong> syncup record{items.length === 1 ? "" : "s"}
+              of <strong style={{ color: "var(--ods-gray-900)" }}>{totalSyncups}</strong> syncup record{totalSyncups === 1 ? "" : "s"}
             </span>
           </div>
 
@@ -305,13 +266,8 @@ export default function DbSyncupPage() {
             <DbSyncupTable
               items={pagedItems}
               deletingId={deleteMutation.isPending ? (deleteMutation.variables ?? null) : null}
-              onRowClick={(item) => {
-                setCreating(false);
-                setPageError("");
-                setEditingItem(item);
-              }}
+              onRowClick={(item) => navigate(`/app/db-syncups/${item.id}?applicationId=${item.application_id}`)}
               onDelete={handleDelete}
-              onHistory={(item) => setHistoryItem(item)}
             />
           </div>
 
@@ -347,26 +303,14 @@ export default function DbSyncupPage() {
         </div>
       )}
 
-      {/* ── Edit / Create drawer ────────────────────────────── */}
-      <DbSyncupEditDrawer
-        application={editingApplication}
-        item={editingItem}
-        isOpen={editingItem !== null || creating}
+      {/* ── Create drawer ────────────────────────────────────── */}
+      <DbSyncupCreateDrawer
+        application={null}
+        isOpen={creating}
         nextSerialNumber={nextSerialNumber}
-        wide={editingItem !== null}
         applications={availableApplications}
-        onClose={() => {
-          setEditingItem(null);
-          setCreating(false);
-        }}
-        onSave={handleSave}
-      />
-
-      {/* ── History modal ───────────────────────────────────── */}
-      <DbSyncupHistoryModal
-        syncup={historyItem}
-        isOpen={historyItem !== null}
-        onClose={() => setHistoryItem(null)}
+        onClose={() => setCreating(false)}
+        onSave={handleCreate}
       />
 
       {dialog}

@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+const nullableCount = z.preprocess(
+  (value) => value === "" || value == null ? null : Number(value),
+  z.number().nullable(),
+);
+
 // No format rules are enforced server-side beyond "these are free-text
 // operational fields" — this schema exists to give the form one consistent
 // validation/typing mechanism (RHF + zod), not to add new restrictions.
@@ -15,6 +20,9 @@ export const applicationEditSchema = z.object({
   priority: z.string(),
   sov_type: z.string(),
   out_of_scope: z.boolean(),
+  ns_migration_status_azure_count: nullableCount,
+  ns_to_migrate_bleu_environment_names: z.string(),
+  ns_migration_status_bleu_count: nullableCount,
 
   qa_owner_name: z.string(),
   qa_owner_email: z.string(),
@@ -31,24 +39,38 @@ export const applicationEditSchema = z.object({
   cloud_squad: z.string(),
   cluster: z.string(),
   strategy: z.string(),
+  initiated: z.string(),
   tentative_start: z.string(),
   tentative_end: z.string(),
   confirmed_end: z.string(),
   go_live: z.string(),
+  total_ns: z.coerce.number(),
+  ns_migration_progress: z.string(),
+  migration_assessment_status: z.string(),
+  migration_data_anonymization_status: z.string(),
+  ns_backup_creation: z.string(),
+  ns_migration_status: z.string(),
 
+  dx_uid: z.string(),
+  mcp_id: z.string(),
   assessment_status: z.string(),
   wave: z.string(),
   gate: z.string(),
   data_anonymization_status: z.string(),
 
+  benchmark_status: z.string(),
   nexus_status: z.string(),
   rooted_status: z.string(),
   network_policy_status: z.string(),
   security_prod_status: z.string(),
+  security_prod_date: z.string(),
 
   remark: z.string(),
   remarks_imp: z.string(),
   source_comments: z.string(),
+  archived_remarks: z.string(),
+
+  cloud_ids: z.array(z.number()),
 });
 
 // migration_progress is coerced from the <input type="number">'s string

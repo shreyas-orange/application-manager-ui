@@ -82,6 +82,7 @@ async function refreshAccessToken(): Promise<string> {
   tokenService.setTokens(
     response.data.access_token,
     response.data.refresh_token,
+    { remember: tokenService.isRemembered() },
   );
 
   return response.data.access_token;
@@ -108,6 +109,12 @@ apiClient.interceptors.response.use(
       ) ||
       originalRequest?.url?.includes(
         "/auth/refresh",
+      ) ||
+      originalRequest?.url?.includes(
+        "/auth/forgot-password",
+      ) ||
+      originalRequest?.url?.includes(
+        "/auth/reset-password",
       );
 
     if (

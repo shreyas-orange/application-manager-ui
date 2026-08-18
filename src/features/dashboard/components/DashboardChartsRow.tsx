@@ -1,6 +1,7 @@
+import { useState } from "react";
+
 import {
   Cell,
-  Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -44,6 +45,11 @@ function normalizeMigrationStatus(status: string | null | undefined): string {
   return status.trim();
 }
 
+function isVisibleMigrationStatus(status: string | null | undefined): boolean {
+  const value = status?.trim() ?? "";
+  return !/^#?n\/?a:?$/i.test(value) && !/^\d+$/.test(value);
+}
+
 function migrationColor(name: string, index: number): string {
   return MIGRATION_COLORS[name] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length];
 }
@@ -51,9 +57,12 @@ function migrationColor(name: string, index: number): string {
 interface CountListProps {
   items: { label: string; count: number }[];
   emptyText: string;
+  initialVisibleCount?: number;
 }
 
-function CountList({ items, emptyText }: CountListProps) {
+function CountList({ items, emptyText, initialVisibleCount }: CountListProps) {
+  const [showAll, setShowAll] = useState(false);
+
   if (items.length === 0) {
     return (
       <p style={{ color: "var(--ods-gray-500)", fontSize: "var(--ods-font-size-sm)", textAlign: "center", padding: "2rem 0" }}>
@@ -62,9 +71,14 @@ function CountList({ items, emptyText }: CountListProps) {
     );
   }
 
+  const hasMore = initialVisibleCount !== undefined && items.length > initialVisibleCount;
+  const visibleItems = hasMore && !showAll
+    ? items.slice(0, initialVisibleCount)
+    : items;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-      {items.map((item, index) => (
+      {visibleItems.map((item, index) => (
         <div
           key={`${item.label}-${index}`}
           style={{
@@ -84,6 +98,17 @@ function CountList({ items, emptyText }: CountListProps) {
           </strong>
         </div>
       ))}
+      {hasMore && (
+        <button
+          type="button"
+          className="btn btn-outline-secondary btn-sm"
+          aria-expanded={showAll}
+          onClick={() => setShowAll((current) => !current)}
+          style={{ alignSelf: "center", marginTop: "0.25rem" }}
+        >
+          {showAll ? "View less" : `View more (${items.length - initialVisibleCount})`}
+        </button>
+      )}
     </div>
   );
 }
@@ -99,10 +124,20 @@ export default function DashboardChartsRow({
   cloudDistribution,
   applicationsByDomain,
 }: DashboardChartsRowProps) {
-  const migrationChartData = migrationStatus.map((item) => ({
-    name:  normalizeMigrationStatus(item.status),
-    value: item.count,
-  }));
+  const migrationChartData = Array.from(
+    migrationStatus.reduce((totals, item) => {
+      if (!isVisibleMigrationStatus(item.status)) return totals;
+
+      const name = normalizeMigrationStatus(item.status);
+      totals.set(name, (totals.get(name) ?? 0) + item.count);
+      return totals;
+    }, new Map<string, number>()),
+    ([name, value]) => ({ name, value }),
+  ).sort((a, b) => b.value - a.value);
+
+  const domainItems = applicationsByDomain
+    .map((item) => ({ label: item.domain?.trim() ?? "", count: item.count }))
+    .filter((item) => item.label.length > 0 && !/^\d+$/.test(item.label));
 
   return (
     <div
@@ -124,30 +159,69 @@ export default function DashboardChartsRow({
               No migration data found.
             </p>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={migrationChartData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="43%"
-                  innerRadius={40}
-                  outerRadius={68}
-                  paddingAngle={2}
-                  label={({ name, value }) => `${name}: ${value}`}
-                >
-                  {migrationChartData.map((item, index) => (
-                    <Cell key={`${item.name}-${index}`} fill={migrationColor(item.name, index)} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value) => [Number(value), "Applications"]}
-                  contentStyle={{ border: "1px solid var(--ods-gray-300)", borderRadius: 0, fontSize: "0.8rem" }}
-                />
-                <Legend wrapperStyle={{ fontSize: "0.75rem" }} />
-              </PieChart>
-            </ResponsiveContainer>
+            <>
+              <ResponsiveContainer width="100%" height={170}>
+                <PieChart>
+                  <Pie
+                    data={migrationChartData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={48}
+                    outerRadius={76}
+                    paddingAngle={2}
+                  >
+                    {migrationChartData.map((item, index) => (
+                      <Cell key={item.name} fill={migrationColor(item.name, index)} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value) => [Number(value), "Applications"]}
+                    contentStyle={{ border: "1px solid var(--ods-gray-300)", borderRadius: 0, fontSize: "0.8rem" }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div
+                aria-label="Migration status legend"
+                style={{
+                  display:             "grid",
+                  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                  gap:                 "0.4rem 0.75rem",
+                  marginTop:           "0.5rem",
+                }}
+              >
+                {migrationChartData.map((item, index) => (
+                  <div
+                    key={item.name}
+                    title={`${item.name}: ${item.value}`}
+                    style={{ display: "flex", alignItems: "center", gap: "0.4rem", minWidth: 0 }}
+                  >
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        width:      10,
+                        height:     10,
+                        flexShrink: 0,
+                        background: migrationColor(item.name, index),
+                      }}
+                    />
+                    <span
+                      style={{
+                        minWidth:     0,
+                        overflow:     "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace:   "nowrap",
+                        color:        "var(--ods-gray-700)",
+                        fontSize:     "0.75rem",
+                      }}
+                    >
+                      {item.name}: <strong>{item.value}</strong>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -172,8 +246,9 @@ export default function DashboardChartsRow({
         </div>
         <div className="ods-card-body">
           <CountList
-            items={applicationsByDomain.map((item) => ({ label: item.domain, count: item.count }))}
+            items={domainItems}
             emptyText="No domain data found."
+            initialVisibleCount={5}
           />
         </div>
       </div>

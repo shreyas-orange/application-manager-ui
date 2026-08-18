@@ -6,12 +6,20 @@ interface GetAuditLogsParams {
   page: number;
   pageSize: number;
   search?: string;
+  action?: string;
+  module?: string;
+  fromDate?: string;
+  toDate?: string;
 }
 
 export async function getAuditLogs({
   page,
   pageSize,
   search,
+  action,
+  module,
+  fromDate,
+  toDate,
 }: GetAuditLogsParams): Promise<AuditLogsResponse> {
   const response = await apiClient.get<AuditLogsResponse>(
     "/audit-logs",
@@ -20,6 +28,10 @@ export async function getAuditLogs({
         page,
         size: pageSize,
         search: search || undefined,
+        action: action || undefined,
+        module: module || undefined,
+        from_date: fromDate || undefined,
+        to_date: toDate || undefined,
       },
     }
   );

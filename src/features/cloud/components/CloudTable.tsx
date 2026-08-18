@@ -43,7 +43,6 @@ export default function CloudTable({
             <th>#</th>
             <th>Name</th>
             <th>Provider</th>
-            <th>Region</th>
             <th>Status</th>
             <th>Created</th>
             <th>Actions</th>
@@ -53,7 +52,7 @@ export default function CloudTable({
         <tbody>
           {items.length === 0 ? (
             <tr>
-              <td colSpan={7}>
+              <td colSpan={6}>
                 <div className="ods-empty-state" style={{ padding: "2rem" }}>
                   <span className="ods-empty-icon">☁️</span>
                   <p className="ods-empty-text">
@@ -79,10 +78,6 @@ export default function CloudTable({
                   <span className="ods-role-badge">
                     {cloud.provider}
                   </span>
-                </td>
-
-                <td style={{ color: "var(--ods-gray-600)" }}>
-                  {cloud.region || "—"}
                 </td>
 
                 <td>

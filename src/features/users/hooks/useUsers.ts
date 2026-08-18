@@ -18,6 +18,8 @@ export function useUsers(
         page: params.page,
         pageSize: params.pageSize,
         search: params.search,
+        sortBy: params.sortBy,
+        sortOrder: params.sortOrder,
       },
     ],
 

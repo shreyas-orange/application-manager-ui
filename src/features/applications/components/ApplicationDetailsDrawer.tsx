@@ -28,6 +28,9 @@ interface FormState {
   priority:                   string;
   sov_type:                   string;
   out_of_scope:               boolean;
+  ns_migration_status_azure_count: string;
+  ns_to_migrate_bleu_environment_names: string;
+  ns_migration_status_bleu_count: string;
   qa_owner_name:              string;
   qa_owner_email:             string;
   devops_owner_name:          string;
@@ -68,6 +71,9 @@ const EMPTY_FORM: FormState = {
   priority:                  "",
   sov_type:                  "",
   out_of_scope:              false,
+  ns_migration_status_azure_count: "",
+  ns_to_migrate_bleu_environment_names: "",
+  ns_migration_status_bleu_count: "",
   qa_owner_name:             "",
   qa_owner_email:            "",
   devops_owner_name:         "",
@@ -187,6 +193,44 @@ function DrawerInput({
   );
 }
 
+function DrawerSelect({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div>
+      <label
+        style={{
+          display: "block",
+          fontSize: "var(--ods-font-size-xs)",
+          fontWeight: 600,
+          color: "var(--ods-gray-600)",
+          marginBottom: "0.25rem",
+        }}
+      >
+        {label}
+      </label>
+      <select
+        className="form-select form-select-sm"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        <option value="">Select migration status</option>
+        {options.map((option) => (
+          <option key={option} value={option}>{option}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 function DrawerTextarea({
   label,
   value,
@@ -251,6 +295,9 @@ export default function ApplicationDetailsDrawer({
       priority:                  application.priority                  ?? "",
       sov_type:                  application.sov_type                  ?? "",
       out_of_scope:              application.out_of_scope              ?? false,
+      ns_migration_status_azure_count: application.ns_migration_status_azure_count?.toString() ?? "",
+      ns_to_migrate_bleu_environment_names: application.ns_to_migrate_bleu_environment_names ?? "",
+      ns_migration_status_bleu_count: application.ns_migration_status_bleu_count?.toString() ?? "",
       qa_owner_name:             qa?.owner_name                        ?? "",
       qa_owner_email:            qa?.owner_email                       ?? "",
       devops_owner_name:         devops?.owner_name                    ?? "",
@@ -304,6 +351,9 @@ export default function ApplicationDetailsDrawer({
         portfolio:           form.portfolio           || null,
         business_importance: form.business_importance || null,
         sov_type:            form.sov_type            || null,
+        ns_migration_status_azure_count: form.ns_migration_status_azure_count === "" ? null : Number(form.ns_migration_status_azure_count),
+        ns_to_migrate_bleu_environment_names: form.ns_to_migrate_bleu_environment_names || null,
+        ns_migration_status_bleu_count: form.ns_migration_status_bleu_count === "" ? null : Number(form.ns_migration_status_bleu_count),
       },
       migration: {
         migration_status:   form.migration_status  || null,
@@ -488,7 +538,22 @@ export default function ApplicationDetailsDrawer({
           </DrawerSection>
 
           <DrawerSection title="Migration">
-            <DrawerInput label="Migration status"   value={form.migration_status}   onChange={(v) => updateField("migration_status", v)} />
+            <DrawerSelect
+              label="Migration status"
+              value={form.migration_status}
+              options={[
+                "IN PROGRESS",
+                "COMPLETED",
+                "PENDING",
+                "FAILED",
+                "ONHOLD",
+                "IN PROGRESS/ ON TRACK",
+                "IN PROGRESS/ AT RISK",
+                "PRODUCTION",
+                "DECOMMISSIONED",
+              ]}
+              onChange={(value) => updateField("migration_status", value)}
+            />
             <DrawerInput label="Progress (%)"       value={form.migration_progress} onChange={(v) => updateField("migration_progress", Number(v))} type="number" />
             <DrawerInput label="Hosting location"   value={form.hosting_location}   onChange={(v) => updateField("hosting_location", v)} />
             <DrawerInput label="Cloud squad"        value={form.cloud_squad}        onChange={(v) => updateField("cloud_squad", v)} />
@@ -498,6 +563,9 @@ export default function ApplicationDetailsDrawer({
             <DrawerInput label="Tentative end"      value={form.tentative_end}      onChange={(v) => updateField("tentative_end", v)} type="date" />
             <DrawerInput label="Confirmed end"      value={form.confirmed_end}      onChange={(v) => updateField("confirmed_end", v)} type="date" />
             <DrawerInput label="Go live"            value={form.go_live}            onChange={(v) => updateField("go_live", v)} type="date" />
+            <DrawerInput label="NS migration status Azure count" value={form.ns_migration_status_azure_count} onChange={(v) => updateField("ns_migration_status_azure_count", v)} type="number" />
+            <DrawerInput label="NS to migrate BLEU environment names" value={form.ns_to_migrate_bleu_environment_names} onChange={(v) => updateField("ns_to_migrate_bleu_environment_names", v)} />
+            <DrawerInput label="NS migration status BLEU count" value={form.ns_migration_status_bleu_count} onChange={(v) => updateField("ns_migration_status_bleu_count", v)} type="number" />
           </DrawerSection>
 
           <DrawerSection title="Security">

@@ -1,11 +1,10 @@
 // src/features/applications/pages/AnalyticsPage.tsx
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { EmptyState, PageHeader, PageLoader } from "@/components/ui";
-import { formatMonthYear, getMonthKey } from "@/lib/format";
+import { formatMonthYear } from "@/lib/format";
 
-import { useAllApplications } from "../hooks/useAllApplications";
-import { getCloudPrimary, getMigrationStatus, normalizeStatus } from "../utils/status";
+import { useApplicationAnalytics } from "../hooks/useApplicationAnalytics";
 import MonthlyMigrationCard from "../components/MonthlyMigrationCard";
 import StatusBreakdownCard from "../components/StatusBreakdownCard";
 import NamespaceAnalyticsCard from "../components/NamespaceAnalyticsCard";
@@ -13,84 +12,34 @@ import NamespaceAnalyticsCard from "../components/NamespaceAnalyticsCard";
 // ─── Colors ───────────────────────────────────────────────────────────────────
 const CLOUD_COLORS: Record<string, string> = {
   Azure: "#0078D4",
-  Blue:  "#0052CC",
+  Bleu:  "#0052CC",
 };
 
-type CloudChoice = "Azure" | "Blue";
+type CloudChoice = "Azure" | "Bleu";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function AnalyticsPage() {
-  const { data, isLoading, isError, error } = useAllApplications();
-  const applications = useMemo(() => data?.items ?? [], [data]);
   const [activeCloud, setActiveCloud] = useState<CloudChoice>("Azure");
+  const { data, isLoading, isError, error } = useApplicationAnalytics(activeCloud);
 
   // ── Filtered apps for active cloud ─────────────────────────────
-  const cloudApps = useMemo(
-    () => applications.filter((a) => getCloudPrimary(a) === activeCloud),
-    [applications, activeCloud],
-  );
+  const monthlyData = (data?.monthly_migrations ?? []).map((item) => ({
+    ...item,
+    monthLabel: formatMonthYear(item.month),
+  }));
+  const statusData = data?.status_breakdown ?? [];
 
   // ── Monthly migration data ─────────────────────────────────────
-  const monthlyData = useMemo(() => {
-    const buckets: Record<string, number> = {};
-
-    cloudApps.forEach((app) => {
-      const key =
-        getMonthKey(app.migration?.tentative_start) ??
-        getMonthKey(app.migration?.confirmed_end) ??
-        getMonthKey(app.created_at);
-      if (!key) return;
-      buckets[key] = (buckets[key] ?? 0) + 1;
-    });
-
-    return Object.entries(buckets)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([month, count]) => ({
-        month,
-        monthLabel: formatMonthYear(month),
-        count,
-      }));
-  }, [cloudApps]);
-
   // ── Status breakdown ───────────────────────────────────────────
-  const statusData = useMemo(() => {
-    const counts: Record<string, number> = {};
-    cloudApps.forEach((app) => {
-      const s = normalizeStatus(getMigrationStatus(app));
-      counts[s] = (counts[s] ?? 0) + 1;
-    });
-    return Object.entries(counts).map(([name, value]) => ({ name, value }));
-  }, [cloudApps]);
-
   const cloudColor = CLOUD_COLORS[activeCloud];
 
   // ── Namespace migration analytics ──────────────────────────
-  const nsAnalytics = useMemo(() => {
-    let totalNs = 0;
-    let migrated = 0;
-    let inProgress = 0;
-    let decommissioned = 0;
-
-    cloudApps.forEach((app) => {
-      const mig = app.migration;
-      if (!mig) return;
-
-      totalNs += mig.total_ns ?? 0;
-      decommissioned += mig.ns_decommissioned ?? 0;
-
-      if (mig.ns_migrated != null) {
-        migrated += mig.ns_migrated;
-        inProgress += mig.ns_in_progress ?? 0;
-      } else {
-        const doneCount = mig.ns_migration_progress
-          ?.split("\n").map((s) => s.trim()).filter(Boolean).length ?? 0;
-        migrated += doneCount;
-        inProgress += Math.max(0, (mig.total_ns ?? 0) - doneCount);
-      }
-    });
-
-    return { total_namespaces: totalNs, migrated, in_progress: inProgress, decommissioned };
-  }, [cloudApps]);
+  const nsAnalytics = data?.namespace_summary ?? {
+    total_namespaces: 0,
+    migrated: 0,
+    in_progress: 0,
+    decommissioned: 0,
+  };
 
   // ── Loading / Error ────────────────────────────────────────────
   if (isLoading) {
@@ -112,7 +61,7 @@ export default function AnalyticsPage() {
     <div>
       <PageHeader
         title="Analytics"
-        subtitle={`${activeCloud} migration overview — ${cloudApps.length} applications`}
+        subtitle={`${activeCloud} migration overview — ${data?.total_applications ?? 0} applications`}
         actions={
           <div
             style={{
@@ -121,7 +70,7 @@ export default function AnalyticsPage() {
               overflow:     "hidden",
             }}
           >
-            {(["Azure", "Blue"] as CloudChoice[]).map((cloud) => (
+            {(["Azure", "Bleu"] as CloudChoice[]).map((cloud) => (
               <button
                 key={cloud}
                 type="button"
@@ -155,7 +104,7 @@ export default function AnalyticsPage() {
         }}
       >
         <div className="ods-stat-card" style={{ borderTopColor: cloudColor }}>
-          <div className="ods-stat-value" style={{ color: cloudColor }}>{cloudApps.length}</div>
+          <div className="ods-stat-value" style={{ color: cloudColor }}>{data?.total_applications ?? 0}</div>
           <div className="ods-stat-label">{activeCloud} Applications</div>
         </div>
         <div className="ods-stat-card success">

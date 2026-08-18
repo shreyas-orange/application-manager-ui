@@ -1,6 +1,8 @@
 import { type FormEvent } from "react";
 import { Search, X } from "lucide-react";
 
+import { DB_SYNCUP_STATUS_OPTIONS } from "../constants";
+
 interface DbSyncupToolbarProps {
   searchInput: string;
   onSearchInputChange: (value: string) => void;
@@ -10,9 +12,11 @@ interface DbSyncupToolbarProps {
   domainFilter: string;
   onDomainFilterChange: (value: string) => void;
   domains: string[];
-  hostingFilter: string;
-  onHostingFilterChange: (value: string) => void;
-  hostingOptions: string[];
+  cloudFilter: string;
+  onCloudFilterChange: (value: string) => void;
+  cloudOptions: string[];
+  environmentFilter: string;
+  onEnvironmentFilterChange: (value: string) => void;
   onClearFilters: () => void;
 }
 
@@ -25,9 +29,11 @@ export default function DbSyncupToolbar({
   domainFilter,
   onDomainFilterChange,
   domains,
-  hostingFilter,
-  onHostingFilterChange,
-  hostingOptions,
+  cloudFilter,
+  onCloudFilterChange,
+  cloudOptions,
+  environmentFilter,
+  onEnvironmentFilterChange,
   onClearFilters,
 }: DbSyncupToolbarProps) {
   return (
@@ -59,10 +65,11 @@ export default function DbSyncupToolbar({
           onChange={(e) => onStatusFilterChange(e.target.value)}
         >
           <option value="all">All statuses</option>
-          <option value="In Progress">In progress</option>
-          <option value="Completed">Completed</option>
-          <option value="Pending">Pending</option>
-          <option value="Failed">Failed</option>
+          {DB_SYNCUP_STATUS_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
 
         <select
@@ -71,22 +78,31 @@ export default function DbSyncupToolbar({
           value={domainFilter}
           onChange={(e) => onDomainFilterChange(e.target.value)}
         >
-          <option value="all">All domains</option>
-          {domains.map((d) => (
-            <option key={d} value={d}>{d}</option>
+          <option value="">All domains</option>
+          {domains.map((domain) => (
+            <option key={domain} value={domain}>{domain}</option>
           ))}
         </select>
 
         <select
           className="form-select form-select-sm"
           style={{ width: "auto" }}
-          value={hostingFilter}
-          onChange={(e) => onHostingFilterChange(e.target.value)}
+          value={cloudFilter}
+          onChange={(e) => onCloudFilterChange(e.target.value)}
         >
-          <option value="all">All hosting</option>
-          {hostingOptions.map((h) => (
-            <option key={h} value={h}>{h}</option>
+          <option value="">All clouds</option>
+          {cloudOptions.map((cloud) => (
+            <option key={cloud} value={cloud}>{cloud}</option>
           ))}
+        </select>
+
+        <select className="form-select form-select-sm" style={{ width: "auto" }} value={environmentFilter} onChange={(e) => onEnvironmentFilterChange(e.target.value)}>
+          <option value="">All environments</option>
+          <option value="DEV">Dev</option><option value="DEMO">Demo</option>
+          <option value="QA">QA</option><option value="UAT_AM">UAT / AM</option>
+          <option value="PPROD_PERF">PP / Perf</option><option value="MNT_E">MNT / E</option>
+          <option value="BENCH">Bench</option><option value="STAGING">Staging</option>
+          <option value="INT">Int</option><option value="PROD">Prod</option>
         </select>
 
         <button

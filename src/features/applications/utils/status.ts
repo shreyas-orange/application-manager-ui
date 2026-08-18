@@ -8,6 +8,13 @@ const COMPLETED_VALUES = ["completed", "complete", "done", "production"];
 const IN_PROGRESS_VALUES = ["in progress", "in_progress", "ongoing", "started"];
 const FAILED_VALUES = ["failed", "failure", "cancelled"];
 
+function isInProgressStatus(value: string): boolean {
+  return IN_PROGRESS_VALUES.includes(value) ||
+    value === "inprogress" ||
+    value.startsWith("in progress/") ||
+    value.startsWith("in progress /");
+}
+
 export function getMigrationStatus(app: Application): string {
   return app.migration?.migration_status || app.application_status || "Pending";
 }
@@ -16,7 +23,7 @@ export function normalizeStatus(status: string): NormalizedStatus {
   const value = normalizeValue(status);
 
   if (COMPLETED_VALUES.includes(value)) return "Completed";
-  if (IN_PROGRESS_VALUES.includes(value)) return "In Progress";
+  if (isInProgressStatus(value)) return "In Progress";
   if (FAILED_VALUES.includes(value)) return "Failed";
   return "Pending";
 }
@@ -26,7 +33,7 @@ export function getStatusBadgeClass(status: string | null | undefined): string {
 
   if (COMPLETED_VALUES.includes(value)) return "ods-badge ods-badge-success";
   if (FAILED_VALUES.includes(value)) return "ods-badge ods-badge-danger";
-  if (IN_PROGRESS_VALUES.includes(value)) return "ods-badge ods-badge-warning";
+  if (isInProgressStatus(value)) return "ods-badge ods-badge-warning";
   return "ods-badge ods-badge-neutral";
 }
 
@@ -36,7 +43,7 @@ export function getCloudNames(app: Application): string {
       ?.map((mapping) => mapping.cloud?.name?.trim())
       .filter((name): name is string => Boolean(name)) ?? [];
 
-  return names.length > 0 ? names.join(", ") : "—";
+  return names.length > 0 ? names.join(", ") : "NA";
 }
 
 export function getCloudPrimary(app: Application): "Azure" | "Blue" | "Other" {

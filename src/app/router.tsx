@@ -9,6 +9,7 @@ import { lazyPage } from "./lazy-page";
 
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { RoleProtectedRoute } from "@/features/auth/components/RoleProtectedRoute";
+import { NonDbTeamRoute } from "@/features/auth/components/NonDbTeamRoute";
 
 // ─── Router ──────────────────────────────────────────────────────────────────
 export const router = createBrowserRouter([
@@ -79,12 +80,39 @@ export const router = createBrowserRouter([
                 element: lazyPage(() => import("@/features/applications/pages/ApplicationDetailsPage")),
               },
               {
-                path: "analytics",
-                element: lazyPage(() => import("@/features/applications/pages/AnalyticsPage")),
+                element: <RoleProtectedRoute allowedRoles={["manager"]} />,
+                children: [
+                  {
+                    path: "my-applications",
+                    element: lazyPage(() => import("@/features/applications/pages/MyApplicationsPage")),
+                  },
+                ],
+              },
+              {
+                element: <NonDbTeamRoute />,
+                children: [
+                  {
+                    path: "analytics",
+                    element: lazyPage(() => import("@/features/applications/pages/AnalyticsPage")),
+                  },
+                ],
               },
               {
                 path: "db-syncups",
                 element: lazyPage(() => import("@/features/db-syncup/pages/DbSyncupPage")),
+              },
+              {
+                path: "db-syncups/:id",
+                element: lazyPage(() => import("@/features/db-syncup/pages/DbSyncupDetailsPage")),
+              },
+              {
+                element: <RoleProtectedRoute allowedRoles={["admin", "manager", "db validator"]} />,
+                children: [
+                  {
+                    path: "db-environment-requests",
+                    element: lazyPage(() => import("@/features/db-syncup/pages/DbEnvironmentWorklistPage")),
+                  },
+                ],
               },
               {
                 path: "forbidden",

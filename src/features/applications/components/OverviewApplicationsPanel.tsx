@@ -148,18 +148,25 @@ export default function OverviewApplicationsPanel({
                             {app.application_name}
                           </strong>
                           <span style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-500)" }}>
-                            Carto: {app.carto_id || "—"}
+                            Carto: {app.carto_id || "NA"}
                           </span>
                         </div>
                       </td>
-                      <td style={{ color: "var(--ods-gray-700)" }}>{app.confirmed_domain || app.domain || "—"}</td>
+                      <td style={{ color: "var(--ods-gray-700)" }}>{app.confirmed_domain || app.domain || "NA"}</td>
                       <td>
                         <span style={{ fontSize: "var(--ods-font-size-xs)", background: "var(--ods-gray-100)", color: "var(--ods-gray-700)", padding: "0.2rem 0.5rem", border: "1px solid var(--ods-gray-300)", whiteSpace: "nowrap" }}>
                           {getCloudNames(app)}
                         </span>
                       </td>
-                      <td style={{ color: "var(--ods-gray-600)" }}>{getOwner("DevOps")?.owner_name || "—"}</td>
-                      <td><span className={getStatusBadgeClass(migStatus)}>{migStatus}</span></td>
+                      <td style={{ color: "var(--ods-gray-600)" }}>{getOwner("DevOps")?.owner_name || "NA"}</td>
+                      <td>
+                        <span
+                          className={getStatusBadgeClass(migStatus)}
+                          style={{ textTransform: "none" }}
+                        >
+                          {migStatus}
+                        </span>
+                      </td>
                       <td style={{ minWidth: 90 }}>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                           <span style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-600)", textAlign: "right" }}>{progress}%</span>
@@ -168,7 +175,7 @@ export default function OverviewApplicationsPanel({
                           </div>
                         </div>
                       </td>
-                      <td style={{ color: "var(--ods-gray-600)" }}>{app.meta_data?.assessment_status || "—"}</td>
+                      <td style={{ color: "var(--ods-gray-600)" }}>{app.meta_data?.assessment_status || "NA"}</td>
                       <td style={{ fontSize: "var(--ods-font-size-xs)", color: "var(--ods-gray-500)", whiteSpace: "nowrap" }}>
                         {formatDate(app.created_at)}
                       </td>

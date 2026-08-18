@@ -6,6 +6,17 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [react()],
 
+  // Keep local password-reset links on the frontend development origin.
+  server: {
+    port: 5173,
+    strictPort: true,
+  },
+
+  preview: {
+    port: 5173,
+    strictPort: true,
+  },
+
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

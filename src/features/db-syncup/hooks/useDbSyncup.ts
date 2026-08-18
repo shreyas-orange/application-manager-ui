@@ -9,7 +9,9 @@ import {
   deleteDbSyncup,
   getDbSyncups,
   getDbSyncupsByApplication,
+  type GetDbSyncupsParams,
   updateDbSyncup,
+  updateDbSyncupEnvironmentStatus,
 } from "../api/db-syncup.api";
 
 import type {
@@ -27,13 +29,14 @@ export function useDbSyncups(applicationId: number) {
   return useQuery({
     queryKey: dbSyncupKeys.byApplication(applicationId),
     queryFn: () => getDbSyncupsByApplication(applicationId),
+    enabled: Number.isFinite(applicationId) && applicationId > 0,
   });
 }
 
-export function useAllDbSyncups() {
+export function useAllDbSyncups(params: GetDbSyncupsParams = {}) {
   return useQuery({
-    queryKey: dbSyncupKeys.all,
-    queryFn: () => getDbSyncups(),
+    queryKey: [...dbSyncupKeys.all, "list", params] as const,
+    queryFn: () => getDbSyncups(params),
   });
 }
 
@@ -68,6 +71,25 @@ export function useUpdateDbSyncup() {
       await queryClient.invalidateQueries({
         queryKey: dbSyncupKeys.all,
       });
+    },
+  });
+}
+
+export function useUpdateDbSyncupEnvironmentStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      syncupId,
+      environmentId,
+      requestStatus,
+    }: {
+      syncupId: number;
+      environmentId: number;
+      requestStatus: string;
+    }) => updateDbSyncupEnvironmentStatus(syncupId, environmentId, requestStatus),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: dbSyncupKeys.all });
     },
   });
 }

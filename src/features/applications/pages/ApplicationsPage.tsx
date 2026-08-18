@@ -8,24 +8,35 @@ import {
   useNavigate,
 } from "react-router-dom";
 import {
+  CloudDownload,
   Plus,
   RefreshCw,
 } from "lucide-react";
 
 import { EmptyState, PageHeader, PageLoader } from "@/components/ui";
 import { normalizeValue } from "@/lib/format";
+import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
+import { getUserRole } from "@/features/auth/utils/get-user-role";
+import { isDbTeamRole } from "@/features/auth/utils/is-db-team-role";
+import { getApiErrorMessage } from "@/lib/api-error";
 
 import ApplicationCreateModal from "../components/ApplicationCreateModal";
 import ApplicationsSummaryCards from "../components/ApplicationsSummaryCards";
 import ApplicationsToolbar from "../components/ApplicationsToolbar";
 import ApplicationsTable from "../components/ApplicationsTable";
 import { useApplications } from "../hooks/useApplications";
-import { getMigrationStatus } from "../utils/status";
+import { useApplicationDomains } from "../hooks/useApplicationDomains";
+import { useSharePointSync } from "../hooks/useSharePointSync";
+import { normalizeStatus } from "../utils/status";
+import { sanitizeDomainName } from "../utils/domain";
 import type { Application } from "../types/application.types";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function ApplicationsPage() {
   const navigate                  = useNavigate();
+  const { data: currentUser } = useCurrentUser();
+  const isDbTeam = isDbTeamRole(getUserRole(currentUser));
+  const isAdmin = getUserRole(currentUser) === "admin";
   const [searchInput, setSearchInput]   = useState("");
   const [search, setSearch]             = useState("");
   const [page, setPage]                 = useState(1);
@@ -35,54 +46,59 @@ export default function ApplicationsPage() {
   const [createOpen, setCreateOpen]     = useState(false);
   const [message, setMessage]           = useState("");
   const [pageError, setPageError]       = useState("");
+  const sharePointSync = useSharePointSync();
 
   const pageSize = 10;
 
   const { data, isLoading, isError, error, isFetching, refetch } =
-    useApplications({ page, pageSize, search });
+    useApplications({
+      page,
+      pageSize,
+      search,
+      cloud: cloudFilter === "all" ? undefined : cloudFilter,
+      domain: domainFilter === "all" ? undefined : domainFilter,
+    });
+
+  const { data: domainData } = useApplicationDomains();
 
   const applications = useMemo(() => data?.items ?? [], [data]);
   const total        = data?.total  ?? applications.length;
   const totalPages   = Math.max(1, Math.ceil(total / pageSize));
 
   // ── Derived domain list ──────────────────────────────────────────
-  const domains = useMemo(() => {
-    const values = new Set<string>();
-    applications.forEach((app) => {
-      const domain = app.confirmed_domain || app.domain;
-      if (domain) values.add(domain);
-    });
-    return Array.from(values).sort();
-  }, [applications]);
+  const domains = useMemo(
+    () => (domainData ?? []).flatMap((domain) => {
+      const value = sanitizeDomainName(domain);
+      return value ? [value] : [];
+    }),
+    [domainData],
+  );
 
   // ── Filtered list ────────────────────────────────────────────────
   const filteredApplications = useMemo(() => {
     return applications.filter((app) => {
-      const status = normalizeValue(getMigrationStatus(app));
-      const domain = normalizeValue(app.confirmed_domain || app.domain);
-      const cloudNames = app.cloud_mappings
-        ?.map((m) => m.cloud?.name)
-        .filter((n): n is string => Boolean(n))
-        .map((n) => normalizeValue(n)) ?? [];
+      const selectedStatus = normalizeValue(statusFilter);
+      const statuses = [
+        app.application_status,
+        app.migration?.migration_status,
+      ].map(normalizeValue);
       const matchesStatus =
-        statusFilter === "all" || status === normalizeValue(statusFilter);
-      const matchesDomain =
-        domainFilter === "all" || domain === normalizeValue(domainFilter);
-      const matchesCloud =
-        cloudFilter === "all" || cloudNames.includes(normalizeValue(cloudFilter));
-      return matchesStatus && matchesDomain && matchesCloud;
+        statusFilter === "all" || statuses.includes(selectedStatus);
+      return matchesStatus;
     });
-  }, [applications, statusFilter, domainFilter, cloudFilter]);
+  }, [applications, statusFilter]);
 
   // ── Summary counts ───────────────────────────────────────────────
   const summary = useMemo(() => {
     let inProgress = 0, completed = 0, failed = 0, pending = 0;
     applications.forEach((app) => {
-      const s = normalizeValue(app.migration?.migration_status);
-      if (["completed", "complete", "done"].includes(s))          completed  += 1;
-      else if (["in progress", "in_progress", "ongoing"].includes(s)) inProgress += 1;
-      else if (["failed", "failure", "cancelled"].includes(s))    failed     += 1;
-      else                                                         pending    += 1;
+      const s = normalizeStatus(
+        app.migration?.migration_status || app.application_status || "Pending",
+      );
+      if (s === "Completed") completed += 1;
+      else if (s === "In Progress") inProgress += 1;
+      else if (s === "Failed") failed += 1;
+      else pending += 1;
     });
     return { total, inProgress, completed, failed, pending };
   }, [applications, total]);
@@ -105,6 +121,19 @@ export default function ApplicationsPage() {
 
   const handleOpenApp = (app: Application) => {
     navigate(`/app/applications/${app.id}`, { state: { application: app } });
+  };
+
+  const handleSharePointSync = async () => {
+    setMessage("");
+    setPageError("");
+
+    try {
+      const result = await sharePointSync.mutateAsync();
+      setMessage(result.message || result.detail || "SharePoint synchronization completed successfully.");
+      setPage(1);
+    } catch (syncError) {
+      setPageError(getApiErrorMessage(syncError));
+    }
   };
 
   // ── Loading ──────────────────────────────────────────────────────
@@ -142,6 +171,19 @@ export default function ApplicationsPage() {
           subtitle="Manage applications, migrations and owners."
           actions={
             <>
+              {isAdmin && (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={sharePointSync.isPending}
+                  onClick={() => { void handleSharePointSync(); }}
+                  style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+                >
+                  <CloudDownload size={15} />
+                  {sharePointSync.isPending ? "Syncing SharePoint..." : "Sync SharePoint"}
+                </button>
+              )}
+
               <button
                 type="button"
                 className="btn btn-outline-secondary"
@@ -160,18 +202,20 @@ export default function ApplicationsPage() {
                 {isFetching ? "Refreshing..." : "Refresh"}
               </button>
 
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => {
-                  setPageError("");
-                  setCreateOpen(true);
-                }}
-                style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}
-              >
-                <Plus size={16} />
-                Create Application
-              </button>
+              {!isDbTeam && (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setPageError("");
+                    setCreateOpen(true);
+                  }}
+                  style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}
+                >
+                  <Plus size={16} />
+                  Create Application
+                </button>
+              )}
             </>
           }
         />
@@ -284,7 +328,7 @@ export default function ApplicationsPage() {
 
       {/* ── Create application drawer ────────────────────────── */}
       <ApplicationCreateModal
-        isOpen={createOpen}
+        isOpen={!isDbTeam && createOpen}
         onClose={() => setCreateOpen(false)}
         onCreated={(msg) => {
           setMessage(msg);

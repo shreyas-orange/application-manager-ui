@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Pencil, Save, X } from "lucide-react";
+import axios from "axios";
 
 import { EmptyState, PageHeader, PageLoader, Spinner } from "@/components/ui";
 
@@ -182,7 +183,7 @@ export default function DbSyncupDetailsPage() {
   const handleSave = async () => {
     setSaveError("");
 
-    const payload: UpdateDbSyncupPayload = {};
+    const payload: UpdateDbSyncupPayload = { version: item.version };
 
     const diffField = <K extends keyof DbSyncupDetailsFormValues & keyof UpdateDbSyncupPayload>(
       field: K,
@@ -235,7 +236,7 @@ export default function DbSyncupDetailsPage() {
       };
     }
 
-    if (Object.keys(payload).length === 0) {
+    if (Object.keys(payload).length === 1) {
       setEditing(false);
       return;
     }
@@ -244,6 +245,11 @@ export default function DbSyncupDetailsPage() {
       await updateMutation.mutateAsync({ syncupId: item.id, payload });
       setEditing(false);
     } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        await refetch();
+        setSaveError("This record was changed by another user. Reload it and try again.");
+        return;
+      }
       setSaveError(err instanceof Error ? err.message : "Unable to save changes.");
     }
   };
@@ -269,6 +275,7 @@ export default function DbSyncupDetailsPage() {
       await requestEnvMutation.mutateAsync({
         syncupId: item.id,
         payload: {
+          version: item.version,
           request: {
             id: request.id,
             environments: environmentUpdates,
@@ -277,6 +284,11 @@ export default function DbSyncupDetailsPage() {
       });
       setNewEnvSelections({});
     } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        await refetch();
+        setRequestEnvError("This record was changed by another user. Reload it and try again.");
+        throw err;
+      }
       setRequestEnvError(err instanceof Error ? err.message : "Unable to request environments.");
       throw err;
     }
@@ -292,9 +304,15 @@ export default function DbSyncupDetailsPage() {
       await environmentStatusMutation.mutateAsync({
         syncupId: item.id,
         environmentId: environment.id,
+        version: item.version,
         requestStatus: status,
       });
     } catch (updateError) {
+      if (axios.isAxiosError(updateError) && updateError.response?.status === 409) {
+        await refetch();
+        setSaveError("This record was changed by another user. Reload it and try again.");
+        return;
+      }
       setSaveError(updateError instanceof Error ? updateError.message : "Unable to update environment status.");
     } finally {
       setUpdatingEnvId(null);
@@ -311,6 +329,7 @@ export default function DbSyncupDetailsPage() {
       await updateMutation.mutateAsync({
         syncupId: item.id,
         payload: {
+          version: item.version,
           request: {
             ...(request ? { id: request.id } : {}),
             environments: [{ deployment_target: cloud.toUpperCase(), environment, request_status: status }],
@@ -318,6 +337,11 @@ export default function DbSyncupDetailsPage() {
         },
       });
     } catch (updateError) {
+      if (axios.isAxiosError(updateError) && updateError.response?.status === 409) {
+        await refetch();
+        setSaveError("This record was changed by another user. Reload it and try again.");
+        return;
+      }
       setSaveError(updateError instanceof Error ? updateError.message : "Unable to set environment status.");
     }
   };

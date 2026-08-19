@@ -82,12 +82,14 @@ export function useUpdateDbSyncupEnvironmentStatus() {
     mutationFn: ({
       syncupId,
       environmentId,
+      version,
       requestStatus,
     }: {
       syncupId: number;
       environmentId: number;
+      version: number;
       requestStatus: string;
-    }) => updateDbSyncupEnvironmentStatus(syncupId, environmentId, requestStatus),
+    }) => updateDbSyncupEnvironmentStatus(syncupId, environmentId, version, requestStatus),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: dbSyncupKeys.all });
     },

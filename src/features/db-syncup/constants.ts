@@ -6,7 +6,7 @@ export const DB_SYNCUP_STATUS_OPTIONS: {
 }[] = [
   { value: "IN_PROGRESS", label: "In Progress" },
   { value: "COMPLETED",   label: "Completed" },
-  { value: "REQUESTED",   label: "Requested" },
+  { value: "REQUESTED",   label: "To-do" },
   { value: "FAILED",      label: "Failed" },
 ];
 
@@ -68,6 +68,17 @@ export function getStatusBadgeClass(
   if (["in progress", "in_progress", "requested", "ongoing", "started"].includes(s))
     return "ods-badge ods-badge-warning";
   return "ods-badge ods-badge-neutral";
+}
+
+export function getDbSyncupStatusLabel(
+  status: string | null | undefined,
+): string {
+  const value = String(status ?? "").trim();
+  if (!value) return "NA";
+
+  return DB_SYNCUP_STATUS_OPTIONS.find(
+    (option) => option.value.toUpperCase() === value.toUpperCase(),
+  )?.label ?? value;
 }
 
 export function getPriorityBadgeClass(

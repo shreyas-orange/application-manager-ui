@@ -78,7 +78,7 @@ export default function RegisterPage() {
               lineHeight: 1.2,
             }}
           >
-            DOMs
+            DOMS
           </div>
           <div
             style={{
@@ -110,7 +110,7 @@ export default function RegisterPage() {
             margin:   0,
           }}
         >
-          Register to access DOMs.
+          Register to access DOMS.
         </p>
       </div>
 

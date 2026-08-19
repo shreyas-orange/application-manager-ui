@@ -42,7 +42,7 @@ export function PublicLayout() {
             DM
           </div>
           <span style={{ color: "var(--ods-white)", fontWeight: 700, fontSize: "1rem" }}>
-            DOMs
+            DOMS
           </span>
         </Link>
 

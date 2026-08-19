@@ -153,7 +153,7 @@ export function AppLayout() {
         <NavLink to="/app/applications" className="ods-navbar-brand">
           <div className="ods-brand-icon">DM</div>
           {!sidebarCollapsed && (
-            <span>DOMs</span>
+            <span>DOMS</span>
           )}
         </NavLink>
 

@@ -49,7 +49,7 @@ export function AuthLayout() {
 
             <div>
               <div className="ods-auth-logo">
-                DOMs
+                DOMS
               </div>
               <div className="ods-auth-tagline">
                 Admin Portal

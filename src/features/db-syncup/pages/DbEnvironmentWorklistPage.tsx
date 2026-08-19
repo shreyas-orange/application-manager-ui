@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { EmptyState, PageHeader, PageLoader } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 
-import { getPriorityBadgeClass, getStatusBadgeClass } from "../constants";
+import { getDbSyncupStatusLabel, getPriorityBadgeClass, getStatusBadgeClass } from "../constants";
 import { useEnvironmentWorklist } from "../hooks/useEnvironmentWorklist";
 
 const PAGE_SIZE = 10;
@@ -117,7 +117,7 @@ export default function DbEnvironmentWorklistPage() {
               style={{ cursor: "pointer" }}
               title={`Open DB sync details for ${item.application_name || "application"}`}
               onClick={() => navigate(`/app/db-syncups/${item.db_syncup_id}?applicationId=${item.application_id}`)}
-            ><td>{item.application_name || "NA"}</td><td>{item.carto_id || "NA"}</td><td>{item.domain || "NA"}</td><td>{item.deployment_target}</td><td>{item.environment}</td><td><span className={getStatusBadgeClass(item.request_status)}>{item.request_status}</span></td><td><span className={getPriorityBadgeClass(item.priority)}>{item.priority}</span></td><td>{formatDate(item.date_of_request || item.requested_at)}</td><td>{item.requested_by_name || "NA"}</td><td>{item.assigned_to_name || "NA"}</td><td>{item.remarks || "NA"}</td></tr>
+            ><td>{item.application_name || "NA"}</td><td>{item.carto_id || "NA"}</td><td>{item.domain || "NA"}</td><td>{item.deployment_target}</td><td>{item.environment}</td><td><span className={getStatusBadgeClass(item.request_status)}>{getDbSyncupStatusLabel(item.request_status)}</span></td><td><span className={getPriorityBadgeClass(item.priority)}>{item.priority}</span></td><td>{formatDate(item.date_of_request || item.requested_at)}</td><td>{item.requested_by_name || "NA"}</td><td>{item.assigned_to_name || "NA"}</td><td>{item.remarks || "NA"}</td></tr>
           ))}
         </tbody></table></div>
 

@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/format";
 import {
   DB_SYNCUP_PRIORITY_OPTIONS,
   DB_SYNCUP_STATUS_OPTIONS,
+  getDbSyncupStatusLabel,
   ENVIRONMENT_TYPE_OPTIONS,
   getStatusBadgeClass,
 } from "../constants";
@@ -281,7 +282,7 @@ export default function DbSyncupEnvironmentsPanel({
                       </td>
                       <td>
                         <span className={getStatusBadgeClass(environment.request_status)}>
-                          {environment.request_status || "NA"}
+                          {getDbSyncupStatusLabel(environment.request_status)}
                         </span>
                       </td>
                       <td style={{ color: "var(--ods-gray-700)" }}>

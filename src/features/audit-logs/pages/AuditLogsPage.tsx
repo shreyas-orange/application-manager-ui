@@ -23,10 +23,6 @@ export default function AuditLogsPage() {
     useState("");
   const [search, setSearch] =
     useState("");
-  const [actionInput, setActionInput] = useState("");
-  const [action, setAction] = useState("");
-  const [moduleInput, setModuleInput] = useState("");
-  const [module, setModule] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
@@ -34,8 +30,6 @@ export default function AuditLogsPage() {
     const timeoutId = window.setTimeout(
       () => {
         setSearch(searchInput.trim());
-        setAction(actionInput.trim());
-        setModule(moduleInput.trim());
         setPage(1);
       },
       400,
@@ -44,7 +38,7 @@ export default function AuditLogsPage() {
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [searchInput, actionInput, moduleInput]);
+  }, [searchInput]);
 
   const {
     data,
@@ -57,8 +51,6 @@ export default function AuditLogsPage() {
     page,
     pageSize: PAGE_SIZE,
     search,
-    action,
-    module,
     fromDate,
     toDate,
   });
@@ -92,16 +84,12 @@ export default function AuditLogsPage() {
   const clearFilters = () => {
     setSearchInput("");
     setSearch("");
-    setActionInput("");
-    setAction("");
-    setModuleInput("");
-    setModule("");
     setFromDate("");
     setToDate("");
     setPage(1);
   };
 
-  const hasFilters = Boolean(search || action || module || fromDate || toDate);
+  const hasFilters = Boolean(search || fromDate || toDate);
 
   const getActionBadgeClass = (action: string): string => {
     const a = action.trim().toLowerCase();
@@ -206,24 +194,6 @@ export default function AuditLogsPage() {
               </button>
             )}
           </div>
-          <input
-            type="text"
-            className="form-control form-control-sm"
-            style={{ width: 150 }}
-            value={actionInput}
-            placeholder="Action"
-            aria-label="Filter by action"
-            onChange={(event) => setActionInput(event.target.value)}
-          />
-          <input
-            type="text"
-            className="form-control form-control-sm"
-            style={{ width: 160 }}
-            value={moduleInput}
-            placeholder="Module"
-            aria-label="Filter by module"
-            onChange={(event) => setModuleInput(event.target.value)}
-          />
           <input
             type="date"
             className="form-control form-control-sm"

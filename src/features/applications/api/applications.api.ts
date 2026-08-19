@@ -26,7 +26,7 @@ export interface SharePointSyncResponse {
 }
 
 interface ApplicationDetailsApiResponse {
-  application: Partial<Application> & Pick<Application, "id" | "application_name"> & {
+  application: Partial<Application> & Pick<Application, "id" | "application_name" | "version"> & {
     metadata?: Application["meta_data"];
   };
   meta_data?: Application["meta_data"];

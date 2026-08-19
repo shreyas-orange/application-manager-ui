@@ -340,6 +340,7 @@ export default function ApplicationDetailsDrawer({
     e.preventDefault();
 
     const payload: UpdateApplicationPayload = {
+      version: application.version,
       application: {
         application_name:    form.application_name    || null,
         carto_id:            form.carto_id            || null,

@@ -87,6 +87,7 @@ export interface ApplicationRemark {
 
 export interface Application {
   id:                 number;
+  version:            number;
   uploaded_file_id:   number | null;
   application_name:   string;
   application_status: string | null;
@@ -227,6 +228,8 @@ export interface UpdateOwnerPayload {
 }
 
 export interface UpdateApplicationPayload {
+  version: number;
+
   application?: {
     application_name?:    string | null;
     carto_id?:            string | null;

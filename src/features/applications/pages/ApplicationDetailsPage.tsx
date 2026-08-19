@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
 import {
   ArrowLeft,
   Pencil,
@@ -47,8 +48,12 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "db-syncup",   label: "Database Migrations" },
 ];
 
-function buildUpdatePayload(values: ApplicationEditFormValues): UpdateApplicationPayload {
+function buildUpdatePayload(
+  values: ApplicationEditFormValues,
+  version: number,
+): UpdateApplicationPayload {
   return {
+    version,
     application: {
       application_name:    values.application_name    || null,
       basicat:             values.basicat             || null,
@@ -144,6 +149,7 @@ export default function ApplicationDetailsPage() {
   const deleteMutation = useDeleteApplication();
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("analytics");
+  const [updateError, setUpdateError] = useState("");
 
   const form = useForm<ApplicationEditFormInput, unknown, ApplicationEditFormValues>({
     resolver: zodResolver(applicationEditSchema),
@@ -230,14 +236,20 @@ export default function ApplicationDetailsPage() {
   };
 
   const onSubmit = async (values: ApplicationEditFormValues) => {
+    setUpdateError("");
     try {
       await updateMutation.mutateAsync({
         applicationId,
-        payload: buildUpdatePayload(values),
+        payload: buildUpdatePayload(values, application.version),
       });
       setEditing(false);
-    } catch {
-      // Error displayed below via updateMutation.isError
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        setUpdateError("This record was changed by another user. Reload it and try again.");
+        await applicationQuery.refetch();
+        return;
+      }
+      setUpdateError(error instanceof Error ? error.message : "Unable to update application.");
     }
   };
 
@@ -336,11 +348,9 @@ export default function ApplicationDetailsPage() {
       {/* ── Tab: Application ─────────────────────────────────────── */}
       {activeTab === "application" && (
         <FormProvider {...form}>
-          {updateMutation.isError && (
+          {updateError && (
             <div className="ods-form-message error">
-              {updateMutation.error instanceof Error
-                ? updateMutation.error.message
-                : "Unable to update application."}
+              {updateError}
             </div>
           )}
 

@@ -143,11 +143,12 @@ export async function updateDbSyncup(
 export async function updateDbSyncupEnvironmentStatus(
   syncupId: number,
   environmentId: number,
+  version: number,
   requestStatus: string,
 ): Promise<DbSyncEnvironmentRequest> {
   const response = await apiClient.patch<DbSyncEnvironmentRequest>(
     `/db-syncups/${syncupId}/environments/${environmentId}/status`,
-    { request_status: requestStatus },
+    { version, request_status: requestStatus },
   );
   return response.data;
 }

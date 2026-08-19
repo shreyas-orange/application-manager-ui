@@ -48,6 +48,7 @@ export interface DbSyncRequest {
 
 export interface DbSyncup {
   id: number;
+  version: number;
   serial_number?: number | null;
   application_id: number;
   uploaded_file_id: number;
@@ -136,6 +137,7 @@ export interface DbSyncRequestUpdate {
 }
 
 export interface UpdateDbSyncupPayload {
+  version: number;
   application_id?: number;
   uploaded_file_id?: number | null;
   serial_number?: number | null;

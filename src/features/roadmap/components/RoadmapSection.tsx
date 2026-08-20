@@ -1,10 +1,11 @@
 // src/features/roadmap/components/RoadmapSection.tsx
 import { useState } from "react";
-import { Plus, RefreshCw } from "lucide-react";
+import { Download, Plus, RefreshCw } from "lucide-react";
 
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { getUserRole } from "@/features/auth/utils/get-user-role";
 import { useConfirmDialog } from "@/components/ui";
+import { downloadBlob, getResponseFilename } from "@/lib/download-file";
 
 import RoadmapEditDrawer from "./RoadmapEditDrawer";
 import RoadmapImportButton from "./RoadmapImportButton";
@@ -17,6 +18,7 @@ import {
   useRoadmapLookups,
   useUpdateRoadmapItem,
 } from "../hooks/useRoadmap";
+import { exportRoadmapExcel } from "../api/roadmap.api";
 import type { RoadmapItem } from "../types/roadmap.types";
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -36,6 +38,23 @@ export default function RoadmapSection({ appId }: { appId: number }) {
   const [editingItem, setEditingItem] = useState<RoadmapItem | null>(null);
   const [creating, setCreating] = useState(false);
   const [importError, setImportError] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    setImportError("");
+    setIsExporting(true);
+    try {
+      const result = await exportRoadmapExcel(appId);
+      downloadBlob(
+        result.blob,
+        getResponseFilename(result.contentDisposition, `application_${appId}_roadmap.xlsx`),
+      );
+    } catch (exportError) {
+      setImportError(exportError instanceof Error ? exportError.message : "Unable to export roadmap.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const items = data?.items ?? [];
 
@@ -139,6 +158,16 @@ export default function RoadmapSection({ appId }: { appId: number }) {
           flexWrap: "wrap",
         }}
       >
+        <button
+          type="button"
+          className="btn btn-outline-secondary btn-sm"
+          disabled={isExporting}
+          onClick={() => { void handleExport(); }}
+          style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+        >
+          <Download size={15} />
+          {isExporting ? "Exporting..." : "Export Excel"}
+        </button>
         <button
           type="button"
           className="btn btn-outline-secondary btn-sm"

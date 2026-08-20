@@ -99,6 +99,20 @@ export async function getRoadmapDetails(
   };
 }
 
+export async function exportRoadmapExcel(
+  applicationId: number,
+): Promise<{ blob: Blob; contentDisposition?: string }> {
+  const response = await apiClient.get<Blob>(
+    `/roadmap/applications/${applicationId}/roadmap-export`,
+    { responseType: "blob" },
+  );
+
+  return {
+    blob: response.data,
+    contentDisposition: response.headers["content-disposition"],
+  };
+}
+
 export async function updateRoadmapItem(
   applicationId: number,
   itemId: number,

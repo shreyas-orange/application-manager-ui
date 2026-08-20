@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import {
   CloudDownload,
+  Download,
   Plus,
   RefreshCw,
 } from "lucide-react";
@@ -19,6 +20,7 @@ import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { getUserRole } from "@/features/auth/utils/get-user-role";
 import { isDbTeamRole } from "@/features/auth/utils/is-db-team-role";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { downloadBlob, getResponseFilename } from "@/lib/download-file";
 
 import ApplicationCreateModal from "../components/ApplicationCreateModal";
 import OverviewStatCards from "../components/OverviewStatCards";
@@ -27,6 +29,7 @@ import ApplicationsTable from "../components/ApplicationsTable";
 import { useAllApplications } from "../hooks/useAllApplications";
 import { useApplicationDomains } from "../hooks/useApplicationDomains";
 import { useSharePointSync } from "../hooks/useSharePointSync";
+import { exportApplicationsExcel } from "../api/applications.api";
 import { getMigrationStatus, normalizeStatus } from "../utils/status";
 import { getApplicationOverviewSummary } from "../utils/application-overview";
 import { sanitizeDomainName } from "../utils/domain";
@@ -47,6 +50,7 @@ export default function ApplicationsPage() {
   const [createOpen, setCreateOpen]     = useState(false);
   const [message, setMessage]           = useState("");
   const [pageError, setPageError]       = useState("");
+  const [isExporting, setIsExporting]   = useState(false);
   const sharePointSync = useSharePointSync();
 
   const pageSize = 10;
@@ -136,6 +140,27 @@ export default function ApplicationsPage() {
     }
   };
 
+  const handleExport = async () => {
+    setPageError("");
+    setIsExporting(true);
+    try {
+      const result = await exportApplicationsExcel({
+        search,
+        cloud: cloudFilter === "all" ? undefined : cloudFilter,
+        domain: domainFilter === "all" ? undefined : domainFilter,
+        status: statusFilter === "all" ? undefined : statusFilter,
+      });
+      downloadBlob(
+        result.blob,
+        getResponseFilename(result.contentDisposition, "applications_by_cloud.xlsx"),
+      );
+    } catch (exportError) {
+      setPageError(getApiErrorMessage(exportError));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // ── Loading ──────────────────────────────────────────────────────
   if (isLoading) {
     return <PageLoader label="Loading applications..." />;
@@ -171,6 +196,17 @@ export default function ApplicationsPage() {
           subtitle="Manage applications, migrations and owners."
           actions={
             <>
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                disabled={isExporting}
+                onClick={() => { void handleExport(); }}
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+              >
+                <Download size={15} />
+                {isExporting ? "Exporting..." : "Export Excel"}
+              </button>
+
               {isAdmin && (
                 <button
                   type="button"

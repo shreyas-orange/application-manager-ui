@@ -64,9 +64,13 @@ async function refreshAccessToken(): Promise<string> {
     );
   }
 
+  const normalizedBaseUrl = apiBaseUrl.endsWith("/")
+    ? apiBaseUrl
+    : `${apiBaseUrl}/`;
+
   const response =
     await axios.post<RefreshResponse>(
-      `${apiBaseUrl}/auth/refresh`,
+      new URL("auth/refresh", normalizedBaseUrl).toString(),
       {
         refresh_token: refreshToken,
       },
@@ -79,11 +83,17 @@ async function refreshAccessToken(): Promise<string> {
       },
     );
 
-  tokenService.setTokens(
-    response.data.access_token,
-    response.data.refresh_token,
-    { remember: tokenService.isRemembered() },
-  );
+  if (response.data.refresh_token) {
+    tokenService.setTokens(
+      response.data.access_token,
+      response.data.refresh_token,
+      { remember: tokenService.isRemembered() },
+    );
+  } else {
+    // A refresh response may rotate only the access token. In that case keep
+    // the existing seven-day refresh token and its current storage mode.
+    tokenService.setTokens(response.data.access_token);
+  }
 
   return response.data.access_token;
 }
@@ -157,13 +167,23 @@ apiClient.interceptors.response.use(
 
       return apiClient(originalRequest);
     } catch (refreshError) {
-      tokenService.clearTokens();
+      const refreshStatus = axios.isAxiosError(refreshError)
+        ? refreshError.response?.status
+        : undefined;
+      const refreshTokenWasRejected =
+        refreshStatus === 400 ||
+        refreshStatus === 401 ||
+        refreshStatus === 403;
 
-      if (
-        window.location.pathname !==
-        "/login"
-      ) {
-        window.location.replace("/login");
+      // Network errors and temporary 5xx responses must not destroy a valid
+      // seven-day session. Clear credentials only when the refresh token is
+      // explicitly rejected by the authentication service.
+      if (refreshTokenWasRejected) {
+        tokenService.clearTokens();
+
+        if (window.location.pathname !== "/login") {
+          window.location.replace("/login");
+        }
       }
 
       return Promise.reject(

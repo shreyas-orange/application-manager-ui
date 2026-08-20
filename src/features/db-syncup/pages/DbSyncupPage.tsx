@@ -1,10 +1,11 @@
 import { type FormEvent, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, RefreshCw } from "lucide-react";
+import { Download, Plus, RefreshCw } from "lucide-react";
 
 import { useAllApplications } from "@/features/applications/hooks/useAllApplications";
 import { sanitizeDomainName } from "@/features/applications/utils/domain";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { downloadBlob, getResponseFilename } from "@/lib/download-file";
 import { EmptyState, PageHeader, PageLoader, useConfirmDialog } from "@/components/ui";
 
 import DbSyncupCreateDrawer from "../components/DbSyncupCreateDrawer";
@@ -16,6 +17,7 @@ import {
   useCreateDbSyncup,
   useDeleteDbSyncup,
 } from "../hooks/useDbSyncup";
+import { exportDbSyncupsExcel } from "../api/db-syncup.api";
 import type { CreateDbSyncupPayload, DbSyncup } from "../types/db-syncup.types";
 
 const PAGE_SIZE = 10;
@@ -33,6 +35,7 @@ export default function DbSyncupPage() {
   const [creating, setCreating] = useState(false);
   const [message, setMessage] = useState("");
   const [pageError, setPageError] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
 
   // ── Search / filters ─────────────────────────────────────────────
   const [searchInput, setSearchInput] = useState("");
@@ -149,6 +152,22 @@ export default function DbSyncupPage() {
     }
   };
 
+  const handleExport = async () => {
+    setPageError("");
+    setIsExporting(true);
+    try {
+      const result = await exportDbSyncupsExcel();
+      downloadBlob(
+        result.blob,
+        getResponseFilename(result.contentDisposition, "db_syncups_by_cloud.xlsx"),
+      );
+    } catch (exportError) {
+      setPageError(getApiErrorMessage(exportError));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (isLoading) {
     return <PageLoader label="Loading database migrations..." />;
   }
@@ -181,6 +200,17 @@ export default function DbSyncupPage() {
         subtitle="View, create and manage database migration records across applications."
         actions={
           <>
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              disabled={isExporting}
+              onClick={() => { void handleExport(); }}
+              style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              <Download size={15} />
+              {isExporting ? "Exporting..." : "Export Excel"}
+            </button>
+
             <button
               type="button"
               className="btn btn-outline-secondary"

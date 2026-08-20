@@ -1,10 +1,13 @@
 // src/features/applications/pages/AnalyticsPage.tsx
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { EmptyState, PageHeader, PageLoader } from "@/components/ui";
 import { formatMonthYear } from "@/lib/format";
 
 import { useApplicationAnalytics } from "../hooks/useApplicationAnalytics";
+import { useAllApplications } from "../hooks/useAllApplications";
+import { getApplicationOverviewSummary } from "../utils/application-overview";
+import { getCloudPrimary } from "../utils/status";
 import MonthlyMigrationCard from "../components/MonthlyMigrationCard";
 import StatusBreakdownCard from "../components/StatusBreakdownCard";
 import NamespaceAnalyticsCard from "../components/NamespaceAnalyticsCard";
@@ -21,13 +24,33 @@ type CloudChoice = "Azure" | "Bleu";
 export default function AnalyticsPage() {
   const [activeCloud, setActiveCloud] = useState<CloudChoice>("Azure");
   const { data, isLoading, isError, error } = useApplicationAnalytics(activeCloud);
+  const applicationsQuery = useAllApplications();
+
+  const cloudApplications = useMemo(
+    () => (applicationsQuery.data?.items ?? []).filter((application) => {
+      const primaryCloud = getCloudPrimary(application);
+      return activeCloud === "Azure"
+        ? primaryCloud === "Azure"
+        : primaryCloud === "Blue";
+    }),
+    [activeCloud, applicationsQuery.data?.items],
+  );
+  const applicationSummary = useMemo(
+    () => getApplicationOverviewSummary(cloudApplications),
+    [cloudApplications],
+  );
 
   // ── Filtered apps for active cloud ─────────────────────────────
   const monthlyData = (data?.monthly_migrations ?? []).map((item) => ({
     ...item,
     monthLabel: formatMonthYear(item.month),
   }));
-  const statusData = data?.status_breakdown ?? [];
+  const statusData = [
+    { name: "Completed", value: applicationSummary.completed },
+    { name: "In Progress", value: applicationSummary.inProgress },
+    { name: "Failed", value: applicationSummary.failed },
+    { name: "Pending", value: applicationSummary.pending },
+  ];
 
   // ── Monthly migration data ─────────────────────────────────────
   // ── Status breakdown ───────────────────────────────────────────
@@ -42,16 +65,22 @@ export default function AnalyticsPage() {
   };
 
   // ── Loading / Error ────────────────────────────────────────────
-  if (isLoading) {
+  if (isLoading || applicationsQuery.isLoading) {
     return <PageLoader label="Loading analytics..." />;
   }
 
-  if (isError) {
+  if (isError || applicationsQuery.isError) {
     return (
       <EmptyState
         icon="⚠️"
         title="Unable to load analytics"
-        text={error instanceof Error ? error.message : "Something went wrong."}
+        text={
+          error instanceof Error
+            ? error.message
+            : applicationsQuery.error instanceof Error
+              ? applicationsQuery.error.message
+              : "Something went wrong."
+        }
       />
     );
   }
@@ -61,7 +90,7 @@ export default function AnalyticsPage() {
     <div>
       <PageHeader
         title="Analytics"
-        subtitle={`${activeCloud} migration overview — ${data?.total_applications ?? 0} applications`}
+        subtitle={`${activeCloud} migration overview — ${applicationSummary.total} applications`}
         actions={
           <div
             style={{
@@ -104,7 +133,7 @@ export default function AnalyticsPage() {
         }}
       >
         <div className="ods-stat-card" style={{ borderTopColor: cloudColor }}>
-          <div className="ods-stat-value" style={{ color: cloudColor }}>{data?.total_applications ?? 0}</div>
+          <div className="ods-stat-value" style={{ color: cloudColor }}>{applicationSummary.total}</div>
           <div className="ods-stat-label">{activeCloud} Applications</div>
         </div>
         <div className="ods-stat-card success">

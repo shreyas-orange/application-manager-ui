@@ -20,6 +20,11 @@ export interface GetApplicationsParams {
   cloud?: string;
 }
 
+export type ExportApplicationsParams = Pick<
+  GetApplicationsParams,
+  "search" | "status" | "cloud" | "domain"
+>;
+
 export interface SharePointSyncResponse {
   message?: string;
   detail?: string;
@@ -166,6 +171,25 @@ export async function getMyApplications({
 export async function getApplicationDomains(): Promise<string[]> {
   const response = await apiClient.get<string[]>("/clouds/all/domains");
   return response.data;
+}
+
+export async function exportApplicationsExcel(
+  params: ExportApplicationsParams = {},
+): Promise<{ blob: Blob; contentDisposition?: string }> {
+  const response = await apiClient.get<Blob>("/application/export", {
+    params: {
+      search: params.search || undefined,
+      status: params.status || undefined,
+      cloud: params.cloud || undefined,
+      domain: params.domain || undefined,
+    },
+    responseType: "blob",
+  });
+
+  return {
+    blob: response.data,
+    contentDisposition: response.headers["content-disposition"],
+  };
 }
 
 export async function runSharePointSync(): Promise<SharePointSyncResponse> {

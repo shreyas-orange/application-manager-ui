@@ -16,6 +16,7 @@ import {
   getMigrationStatus,
   normalizeStatus,
 } from "../utils/status";
+import { getApplicationOverviewSummary } from "../utils/application-overview";
 import OverviewStatCards from "../components/OverviewStatCards";
 import OverviewCharts from "../components/OverviewCharts";
 import OverviewApplicationsPanel from "../components/OverviewApplicationsPanel";
@@ -76,36 +77,12 @@ export default function HomeOverviewPage() {
   const pagedApplications = filteredApplications.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // ── Summary counts (from filtered) ─────────────────────────────
-  const summary = useMemo(() => {
-    let inProgress = 0, completed = 0, failed = 0, pending = 0;
-    filteredApplications.forEach((app) => {
-      const s = normalizeStatus(getMigrationStatus(app));
-      if (s === "Completed")     completed  += 1;
-      else if (s === "In Progress") inProgress += 1;
-      else if (s === "Failed")     failed     += 1;
-      else                         pending    += 1;
-    });
-    return {
-      total: filteredApplications.length,
-      inProgress,
-      completed,
-      failed,
-      pending,
-    };
-  }, [filteredApplications]);
+  const summary = useMemo(
+    () => getApplicationOverviewSummary(filteredApplications),
+    [filteredApplications],
+  );
 
   // ── Cloud counts ───────────────────────────────────────────────
-  const cloudCounts = useMemo(() => {
-    let azure = 0, blue = 0, other = 0;
-    filteredApplications.forEach((app) => {
-      const c = getCloudPrimary(app);
-      if (c === "Azure") azure += 1;
-      else if (c === "Blue") blue += 1;
-      else other += 1;
-    });
-    return { azure, blue, other };
-  }, [filteredApplications]);
-
   // ── Monthly migration bar chart ────────────────────────────────
   const monthlyData = useMemo(() => {
     const buckets: Record<string, { azure: number; blue: number }> = {};
@@ -231,8 +208,8 @@ export default function HomeOverviewPage() {
 
       <OverviewStatCards
         total={summary.total}
-        azure={cloudCounts.azure}
-        blue={cloudCounts.blue}
+        azure={summary.azure}
+        blue={summary.blue}
         completed={summary.completed}
         inProgress={summary.inProgress}
         pending={summary.pending}

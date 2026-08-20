@@ -12,6 +12,7 @@ import {
 
 import { Spinner } from "@/components/ui";
 
+import { getOrangeSsoLoginUrl } from "../api/auth.api";
 import { useLogin } from "../hooks/useLogin";
 import { getUserRole } from "../utils/get-user-role";
 import { getAuthErrorMessage } from "../utils/auth-error";
@@ -37,6 +38,10 @@ export default function LoginPage() {
   });
 
   const isLoading = isSubmitting || loginMutation.isPending;
+
+  const loginWithOrange = (): void => {
+    window.location.assign(getOrangeSsoLoginUrl());
+  };
 
   // ── Handlers ─────────────────────────────────────────────────────
   const onSubmit = async (values: LoginFormValues): Promise<void> => {
@@ -221,6 +226,32 @@ export default function LoginPage() {
         </button>
 
       </form>
+
+      <div
+        aria-hidden="true"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.75rem",
+          margin: "1.25rem 0",
+          color: "var(--ods-gray-500)",
+          fontSize: "var(--ods-font-size-sm)",
+        }}
+      >
+        <span style={{ flex: 1, borderTop: "1px solid var(--ods-gray-300)" }} />
+        or
+        <span style={{ flex: 1, borderTop: "1px solid var(--ods-gray-300)" }} />
+      </div>
+
+      <button
+        type="button"
+        className="btn btn-outline-secondary w-100"
+        disabled={isLoading}
+        onClick={loginWithOrange}
+        style={{ padding: "0.625rem" }}
+      >
+        Login with Orange
+      </button>
 
       {/* ── Footer ────────────────────────────────────────────── */}
       <p

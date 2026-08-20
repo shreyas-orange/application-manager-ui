@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useFormContext } from "react-hook-form";
 
 import { useUsers } from "@/features/users/hooks/useUsers";
@@ -213,8 +213,7 @@ interface ApplicationEditFormFieldsProps {
 
 export default function ApplicationEditFormFields({ readOnly }: ApplicationEditFormFieldsProps) {
   const { register } = useFormContext<ApplicationEditFormInput>();
-  const [userSearch, setUserSearch] = useState("");
-  const usersQuery = useUsers({ page: 1, pageSize: 100, search: userSearch.trim() });
+  const usersQuery = useUsers({ page: 1, pageSize: 100 });
   const users = (usersQuery.data?.items ?? []).filter((user) => user.is_active);
 
   return (
@@ -250,12 +249,6 @@ export default function ApplicationEditFormFields({ readOnly }: ApplicationEditF
       </Section>
 
       <Section title="Owners">
-        {!readOnly && (
-          <div style={{ gridColumn: "1 / -1" }}>
-            <label style={LABEL_STYLE}>Search users</label>
-            <input className="form-control form-control-sm" value={userSearch} onChange={(event) => setUserSearch(event.target.value)} />
-          </div>
-        )}
         <OwnerField label="QA owner" nameField="qa_owner_name" emailField="qa_owner_email" users={users} disabled={usersQuery.isLoading} readOnly={readOnly} />
         <Field label="QA email" name="qa_owner_email" readOnly />
         <OwnerField label="DevOps owner" nameField="devops_owner_name" emailField="devops_owner_email" users={users} disabled={usersQuery.isLoading} readOnly={readOnly} />

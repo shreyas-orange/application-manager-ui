@@ -51,8 +51,9 @@ const TABS: { id: TabId; label: string }[] = [
 function buildUpdatePayload(
   values: ApplicationEditFormValues,
   version: number,
+  originalValues?: ApplicationEditFormValues,
 ): UpdateApplicationPayload {
-  return {
+  const payload: UpdateApplicationPayload = {
     version,
     application: {
       application_name:    values.application_name    || null,
@@ -117,6 +118,43 @@ function buildUpdatePayload(
     ],
     cloud_ids: values.cloud_ids,
   };
+
+  if (!originalValues) return payload;
+
+  const originalPayload = buildUpdatePayload(originalValues, version);
+  const changedPayload = getChangedFields(payload, originalPayload) as
+    | Partial<UpdateApplicationPayload>
+    | undefined;
+
+  return {
+    ...changedPayload,
+    // The API requires the version even when every editable value is unchanged.
+    version,
+  };
+}
+
+function getChangedFields(current: unknown, original: unknown): unknown | undefined {
+  if (Array.isArray(current)) {
+    return JSON.stringify(current) === JSON.stringify(original) ? undefined : current;
+  }
+
+  if (current !== null && typeof current === "object") {
+    const originalRecord =
+      original !== null && typeof original === "object"
+        ? original as Record<string, unknown>
+        : {};
+    const changedEntries = Object.entries(current as Record<string, unknown>)
+      .flatMap(([key, value]) => {
+        // Version is added explicitly after pruning.
+        if (key === "version") return [];
+        const changedValue = getChangedFields(value, originalRecord[key]);
+        return changedValue === undefined ? [] : [[key, changedValue] as const];
+      });
+
+    return changedEntries.length > 0 ? Object.fromEntries(changedEntries) : undefined;
+  }
+
+  return Object.is(current, original) ? undefined : current;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -237,10 +275,25 @@ export default function ApplicationDetailsPage() {
 
   const onSubmit = async (values: ApplicationEditFormValues) => {
     setUpdateError("");
+
+    // List responses are used as placeholder data while the full application is
+    // loading. Some list endpoints do not include the optimistic-lock version;
+    // JSON.stringify would omit an undefined version and the API would reject
+    // the request with `body.version: Field required`.
+    if (!Number.isFinite(application.version)) {
+      setUpdateError("Application version is still loading. Please try again.");
+      await applicationQuery.refetch();
+      return;
+    }
+
     try {
       await updateMutation.mutateAsync({
         applicationId,
-        payload: buildUpdatePayload(values, application.version),
+        payload: buildUpdatePayload(
+          values,
+          application.version,
+          applicationEditSchema.parse(populateApplicationForm(application)),
+        ),
       });
       setEditing(false);
     } catch (error) {
@@ -297,6 +350,7 @@ export default function ApplicationDetailsPage() {
               <button
                 type="button"
                 className="btn btn-primary"
+                disabled={applicationQuery.isPlaceholderData}
                 onClick={() => setEditing(true)}
                 style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
               >

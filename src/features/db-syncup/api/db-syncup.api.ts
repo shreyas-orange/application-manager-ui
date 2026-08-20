@@ -20,6 +20,19 @@ export async function getDbSyncupsByApplication(
   return response.data;
 }
 
+export async function exportDbSyncupsExcel(): Promise<{
+  blob: Blob;
+  contentDisposition?: string;
+}> {
+  const response = await apiClient.get<Blob>("/db-syncups/export", {
+    responseType: "blob",
+  });
+  return {
+    blob: response.data,
+    contentDisposition: response.headers["content-disposition"],
+  };
+}
+
 export interface GetEnvironmentWorklistParams {
   page?: number;
   pageSize?: number;

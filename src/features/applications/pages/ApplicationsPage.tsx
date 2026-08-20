@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import {
   CloudDownload,
+  Download,
   Plus,
   RefreshCw,
 } from "lucide-react";
@@ -19,37 +20,20 @@ import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { getUserRole } from "@/features/auth/utils/get-user-role";
 import { isDbTeamRole } from "@/features/auth/utils/is-db-team-role";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { downloadBlob, getResponseFilename } from "@/lib/download-file";
 
 import ApplicationCreateModal from "../components/ApplicationCreateModal";
-import ApplicationsSummaryCards from "../components/ApplicationsSummaryCards";
+import OverviewStatCards from "../components/OverviewStatCards";
 import ApplicationsToolbar from "../components/ApplicationsToolbar";
 import ApplicationsTable from "../components/ApplicationsTable";
 import { useAllApplications } from "../hooks/useAllApplications";
 import { useApplicationDomains } from "../hooks/useApplicationDomains";
 import { useSharePointSync } from "../hooks/useSharePointSync";
-import { getMigrationStatus } from "../utils/status";
+import { exportApplicationsExcel } from "../api/applications.api";
+import { getMigrationStatus, normalizeStatus } from "../utils/status";
+import { getApplicationOverviewSummary } from "../utils/application-overview";
 import { sanitizeDomainName } from "../utils/domain";
 import type { Application } from "../types/application.types";
-
-type SummaryStatus = "in-progress" | "completed" | "pending" | "failed" | "other";
-
-function getSummaryStatus(app: Application): SummaryStatus {
-  const status = normalizeValue(getMigrationStatus(app))
-    .replace(/\s*\/\s*/g, "/")
-    .replace(/\s+/g, " ");
-
-  if ([
-    "in progress",
-    "inprogress",
-    "in_progress",
-    "in progress/on track",
-    "in progress/at risk",
-  ].includes(status)) return "in-progress";
-  if (["completed", "complete", "done"].includes(status)) return "completed";
-  if (["failed", "failure"].includes(status)) return "failed";
-  if (status === "pending") return "pending";
-  return "other";
-}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function ApplicationsPage() {
@@ -66,6 +50,7 @@ export default function ApplicationsPage() {
   const [createOpen, setCreateOpen]     = useState(false);
   const [message, setMessage]           = useState("");
   const [pageError, setPageError]       = useState("");
+  const [isExporting, setIsExporting]   = useState(false);
   const sharePointSync = useSharePointSync();
 
   const pageSize = 10;
@@ -95,15 +80,15 @@ export default function ApplicationsPage() {
   const filteredApplications = useMemo(() => {
     return applications.filter((app) => {
       const selectedStatus = normalizeValue(statusFilter);
-      const summaryFilter: Partial<Record<string, SummaryStatus>> = {
-        "in progress": "in-progress",
-        completed: "completed",
-        pending: "pending",
-        failed: "failed",
+      const summaryFilter: Partial<Record<string, ReturnType<typeof normalizeStatus>>> = {
+        "in progress": "In Progress",
+        completed: "Completed",
+        pending: "Pending",
+        failed: "Failed",
       };
       const matchesStatus = statusFilter === "all" || (
         summaryFilter[selectedStatus]
-          ? getSummaryStatus(app) === summaryFilter[selectedStatus]
+          ? normalizeStatus(getMigrationStatus(app)) === summaryFilter[selectedStatus]
           : normalizeValue(getMigrationStatus(app)) === selectedStatus
       );
       return matchesStatus;
@@ -117,23 +102,10 @@ export default function ApplicationsPage() {
   );
 
   // ── Summary counts ───────────────────────────────────────────────
-  const summary = useMemo(() => {
-    let inProgress = 0, completed = 0, failed = 0, pending = 0;
-    applications.forEach((app) => {
-      const status = getSummaryStatus(app);
-
-      if (status === "in-progress") {
-        inProgress += 1;
-      } else if (status === "completed") {
-        completed += 1;
-      } else if (status === "failed") {
-        failed += 1;
-      } else if (status === "pending") {
-        pending += 1;
-      }
-    });
-    return { total, inProgress, completed, failed, pending };
-  }, [applications, total]);
+  const summary = useMemo(
+    () => getApplicationOverviewSummary(applications),
+    [applications],
+  );
 
   // ── Handlers ─────────────────────────────────────────────────────
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
@@ -165,6 +137,27 @@ export default function ApplicationsPage() {
       setPage(1);
     } catch (syncError) {
       setPageError(getApiErrorMessage(syncError));
+    }
+  };
+
+  const handleExport = async () => {
+    setPageError("");
+    setIsExporting(true);
+    try {
+      const result = await exportApplicationsExcel({
+        search,
+        cloud: cloudFilter === "all" ? undefined : cloudFilter,
+        domain: domainFilter === "all" ? undefined : domainFilter,
+        status: statusFilter === "all" ? undefined : statusFilter,
+      });
+      downloadBlob(
+        result.blob,
+        getResponseFilename(result.contentDisposition, "applications_by_cloud.xlsx"),
+      );
+    } catch (exportError) {
+      setPageError(getApiErrorMessage(exportError));
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -203,6 +196,17 @@ export default function ApplicationsPage() {
           subtitle="Manage applications, migrations and owners."
           actions={
             <>
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                disabled={isExporting}
+                onClick={() => { void handleExport(); }}
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+              >
+                <Download size={15} />
+                {isExporting ? "Exporting..." : "Export Excel"}
+              </button>
+
               {isAdmin && (
                 <button
                   type="button"
@@ -265,8 +269,10 @@ export default function ApplicationsPage() {
           </div>
         )}
 
-        <ApplicationsSummaryCards
+        <OverviewStatCards
           total={summary.total}
+          azure={summary.azure}
+          blue={summary.blue}
           inProgress={summary.inProgress}
           completed={summary.completed}
           pending={summary.pending}

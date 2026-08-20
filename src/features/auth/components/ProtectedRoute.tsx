@@ -37,16 +37,31 @@ export function ProtectedRoute() {
     currentUserQuery.isError ||
     !currentUserQuery.data
   ) {
-    tokenService.clearTokens();
+    // The response interceptor removes rejected credentials. A network or
+    // server error should leave the session intact and allow the user to retry.
+    if (!tokenService.hasAccessToken()) {
+      return (
+        <Navigate
+          to="/login"
+          replace
+          state={{
+            from: location.pathname,
+          }}
+        />
+      );
+    }
 
     return (
-      <Navigate
-        to="/login"
-        replace
-        state={{
-          from: location.pathname,
-        }}
-      />
+      <div className="page-loader">
+        <p>Unable to verify your session.</p>
+        <button
+          type="button"
+          className="btn btn-primary mt-3"
+          onClick={() => { void currentUserQuery.refetch(); }}
+        >
+          Try again
+        </button>
+      </div>
     );
   }
 

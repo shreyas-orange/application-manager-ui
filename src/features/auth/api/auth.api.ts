@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api-client";
+import { apiBaseUrl } from "@/lib/create-api-client";
 import { tokenService } from "@/services/token.service";
 
 import type {
@@ -11,6 +12,14 @@ import type {
   ResetPasswordPayload,
   User,
 } from "../types/auth.types";
+
+export function getOrangeSsoLoginUrl(): string {
+  const normalizedBaseUrl = apiBaseUrl.endsWith("/")
+    ? apiBaseUrl
+    : `${apiBaseUrl}/`;
+
+  return new URL("auth/sso/login", normalizedBaseUrl).toString();
+}
 
 export async function loginUser(
   payload: LoginPayload,

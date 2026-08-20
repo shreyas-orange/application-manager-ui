@@ -116,7 +116,7 @@ export default function OverviewApplicationsPanel({
                 <th>Application</th>
                 <th>Domain</th>
                 <th>DevOps Owner</th>
-                <th>DOMS</th>
+                <th>Manager</th>
                 <th>Cloud</th>
                 <th>Migration</th>
                 <th>Progress</th>
